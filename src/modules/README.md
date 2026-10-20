@@ -14,7 +14,7 @@ Ogni modulo della dashboard vive nella sua cartella, con due file:
 | workout | API allenamenti (da 1r0-gym) |
 | weight | HealthKit tramite l'API |
 | home | Home Assistant |
-| server | node-exporter / API del server |
+| server | Glances, tramite il backend di ron1nOS ([specifica](../../docs/specs/server.md)) |
 | containers | Docker Engine API |
 | downloads | qBittorrent Web API |
 | notes | da decidere |
