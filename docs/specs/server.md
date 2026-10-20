@@ -215,3 +215,15 @@ dettaglio del frontend web:
 I mockup del widget con rete e container si fanno dopo l'approvazione di
 questa specifica, con i componenti del design system (WidgetCard,
 ProgressRing, Metric, StatusPill).
+
+### Decisioni (2026-10-20)
+
+- Widget: anelli CPU/RAM/SSD, temperatura, uptime, rete e i 3 container
+  con più CPU; niente sparkline. Solo il disco di sistema.
+- Soglie del rosso: 80% per gli anelli, 85 °C per la temperatura.
+- Rete: solo velocità in ingresso e in uscita.
+- Il click sul widget non fa nulla per ora. Aggiornamento ogni 5 s.
+- Glances usa il socket Docker in sola lettura; un eventuale
+  `docker-socket-proxy` si decide con il modulo Container.
+- L'interfaccia web di Glances resta su `glances.ron1n.home`, solo tailnet.
+- Niente storico oltre l'ultima ora e niente avvisi in questa versione.
