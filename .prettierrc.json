@@ -4,7 +4,23 @@
   "singleQuote": true,
   "printWidth": 110,
   "trailingComma": "all",
-  "plugins": ["prettier-plugin-tailwindcss"],
+  "plugins": [
+    "prettier-plugin-tailwindcss"
+  ],
   "tailwindStylesheet": "./src/index.css",
-  "tailwindFunctions": ["cn", "cva"]
+  "tailwindFunctions": [
+    "cn",
+    "cva"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "*.yml",
+        "*.yaml"
+      ],
+      "options": {
+        "singleQuote": false
+      }
+    }
+  ]
 }
