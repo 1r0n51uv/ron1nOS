@@ -181,6 +181,21 @@ Campi verificati su Glances 4.5.8 in locale, tranne `sensors` e
 `containers` (da verificare sul mini PC). Il filtro delle interfacce e dei
 dischi è già in `glances.conf`.
 
+### Client web e iOS
+
+La futura app iOS di ron1nOS avrà le stesse funzioni della dashboard, quindi
+`GET /api/server/stats` è un contratto per entrambi i client, non un
+dettaglio del frontend web:
+
+- risposta JSON stabile, con unità esplicite (byte, secondi, °C) e nessun
+  testo già formattato: arrotondamenti, unità e testi li decide il client;
+- un cambiamento incompatibile del formato richiede una nuova versione
+  della rotta, non una modifica di quella esistente;
+- anche l'app iOS passa dal BFF e non chiama mai Glances direttamente;
+- l'accesso resta limitato alla tailnet (l'iPhone ha Tailscale). Se un
+  giorno l'API diventa raggiungibile da fuori, serve prima
+  un'autenticazione, comune a tutti i moduli.
+
 ### Rapporto con gli altri moduli
 
 - **Container** (`src/modules/containers`): stato dei container e riavvio.
