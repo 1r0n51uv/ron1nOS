@@ -7,11 +7,13 @@ nuovi. Il client è qBittorrent, stack `torrent` in
 [`ron1n/infra/torrent`](https://github.com/1r0n51uv/ron1n/tree/main/infra/torrent).
 
 Fa: widget con i download in corso, wizard per aggiungere un torrent da file
-`.torrent` o link magnet, scelta dei file da scaricare, avvio.
+`.torrent`, URL di un file `.torrent` o link magnet, scelta dei file da
+scaricare, avvio.
 
 Non fa, per ora: pausa, ripresa o eliminazione dei torrent, priorità per
 file dopo l'avvio, limiti di velocità, categorie, RSS, ricerca, pagina
-`Download` dedicata. Per tutto questo resta la Web UI di qBittorrent su
+`Download` dedicata (arriverà con pausa, ripresa ed eliminazione),
+notifiche a download finito, VPN per il traffico BitTorrent. Per tutto questo resta la Web UI di qBittorrent su
 `torrent.ron1n.home`.
 
 ## Requisiti
@@ -64,19 +66,25 @@ Accettazione:
 ### DL-004 · Wizard, passo 1: sorgente
 Stato: proposto
 
-Il primo passo chiede da dove viene il torrent: un file `.torrent` o un
-link magnet.
+Il primo passo chiede da dove viene il torrent: un file `.torrent`, l'URL
+di un file `.torrent` o un link magnet. Un torrent alla volta.
 
 Accettazione:
-- [ ] Due schede: `File` e `Magnet`.
+- [ ] Due schede: `File` e `Link`.
 - [ ] `File`: area di trascinamento e scelta da disco; accetta un solo file
       `.torrent` fino a 10 MB. Un file non valido mostra
       `File torrent non valido.` e non si prosegue.
-- [ ] `Magnet`: campo di testo; accetta solo link che iniziano con
-      `magnet:?` e contengono `xt=urn:btih:` (v1) o `xt=urn:btmh:` (v2).
-      Un link non valido mostra `Link magnet non valido.`
-- [ ] Incollare un link magnet in qualunque punto del passo lo mette nella
-      scheda `Magnet`.
+- [ ] `Link`: campo di testo che accetta due forme:
+      - link magnet che inizia con `magnet:?` e contiene `xt=urn:btih:`
+        (v1) o `xt=urn:btmh:` (v2);
+      - URL `http://` o `https://` di un file `.torrent`.
+      Altro testo mostra `Link non valido.`
+- [ ] Con un URL, il file viene scaricato dal server e trattato come un
+      file `.torrent` caricato. Se il download non riesce (indirizzo non
+      raggiungibile, oltre 10 MB, oltre 15 secondi, contenuto che non è un
+      torrent) il wizard mostra `Impossibile scaricare il file torrent.`
+- [ ] Incollare un link magnet o un URL in qualunque punto del passo lo
+      mette nella scheda `Link`.
 - [ ] `Avanti` è attivo solo con una sorgente valida.
 
 ### DL-005 · Wizard, passo 2: lettura dei contenuti
@@ -86,7 +94,8 @@ Prima di scegliere cosa scaricare il wizard legge nome, dimensione e
 elenco dei file del torrent.
 
 Accettazione:
-- [ ] Con un file `.torrent` i contenuti appaiono subito, senza attesa.
+- [ ] Con un file `.torrent` o un URL i contenuti appaiono appena il file
+      è letto, senza attendere i peer.
 - [ ] Con un magnet il wizard mostra `Recupero dei metadati…` con un
       indicatore di attesa finché i peer non li forniscono.
 - [ ] Dopo 60 secondi senza metadati mostra `Nessun peer ha fornito i
@@ -192,7 +201,7 @@ Nel frontend non cambia la regola dei moduli: `data.ts` passa dal mock a
 | Metodo e rotta | Uso | Chiamate qBittorrent |
 |---|---|---|
 | `GET /api/downloads` | DL-001, DL-002 | `transfer/info`, `torrents/info` |
-| `POST /api/downloads/drafts` | DL-004, DL-005: crea una bozza da file o magnet | vedi sotto |
+| `POST /api/downloads/drafts` | DL-004, DL-005: crea una bozza da file, URL o magnet | vedi sotto |
 | `GET /api/downloads/drafts/:id` | DL-005: stato metadati e albero file | `torrents/files` (solo magnet) |
 | `POST /api/downloads/drafts/:id/start` | DL-006, DL-007: file scelti e avvio | `torrents/add` o `filePrio` + `torrents/start` |
 | `DELETE /api/downloads/drafts/:id` | DL-008 | `torrents/delete` con `deleteFiles=true` (solo magnet) |
@@ -206,6 +215,8 @@ di implementazione):
   finché non si preme `Avvia`, quindi annullare è gratis. All'avvio:
   `torrents/add` con `stopped=true`, poi `filePrio` a `0` per i file
   esclusi, poi `torrents/start`.
+- **URL di un `.torrent`:** il BFF scarica il file da sé (non lo passa a
+  qBittorrent come `urls`) e da lì procede come per un file caricato.
 - **Magnet:** il BFF ricava l'infohash dal link, controlla i duplicati
   con `torrents/info?hashes=`, poi `torrents/add` con
   `stopCondition=MetadataReceived` e il tag `ron1nos-draft`; il torrent si
@@ -229,8 +240,15 @@ di implementazione):
 - Il BFF chiama `http://qbittorrent:8080` sulla rete Docker interna; il
   traffico non esce dal server.
 - Limiti sul BFF: corpo massimo 10 MB su `drafts`, solo
-  `application/x-bittorrent` o testo `magnet:`, nessun URL `http(s)`
-  arbitrario (qBittorrent scaricherebbe da qualunque indirizzo).
+  `application/x-bittorrent`, testo `magnet:` o un URL `http(s)`.
+- Download degli URL `.torrent` dal BFF, per evitare che la dashboard
+  diventi un modo per far chiamare al server indirizzi interni (SSRF):
+  solo `http`/`https`; il nome viene risolto e si rifiutano indirizzi
+  loopback, privati, link-local e della tailnet (`127.0.0.0/8`,
+  `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`,
+  `100.64.0.0/10`, `::1`, `fc00::/7`, `fe80::/10`), anche dopo ogni
+  redirect (massimo 3); timeout 15 s; massimo 10 MB letti; il contenuto
+  deve essere un torrent valido. qBittorrent non riceve mai l'URL.
 - Variabili nel `.env` dello stack ron1nOS: `QBT_URL`, `QBT_USERNAME`,
   `QBT_PASSWORD`. Nel repo solo `.env.example`.
 
@@ -244,7 +262,19 @@ I mockup del widget e dei quattro passi del wizard si fanno dopo
 l'approvazione di questa specifica, con i componenti del design system
 (WidgetCard, ProgressBar, StatusPill, Tag) e il Dialog shadcn.
 
-### Da decidere
+### Decisioni (2026-10-20)
 
-- BFF nella stessa immagine (proposta) o servizio separato.
-- VPN per il traffico BitTorrent (container gluetun), oggi esclusa.
+- Backend: BFF Node nella stessa immagine di ron1nOS, al posto di Nginx.
+- Nessuna VPN per ora; se ne riparla a parte (container gluetun).
+- Download in `/srv/downloads`, cartella unica senza categorie; la
+  porta 6881 TCP/UDP viene inoltrata sul router.
+- Widget: fino a 3 torrent attivi con nome, percentuale, barra e tempo
+  rimanente; seed solo contati; aggiornamento ogni 5 s; il click su un
+  torrent non fa nulla.
+- Wizard: file `.torrent`, URL di un `.torrent` e magnet; un torrent alla
+  volta; 60 s di attesa per i metadati; tutti i file selezionati
+  all'inizio; cartella sempre quella predefinita; nessuna opzione extra;
+  con spazio insufficiente `Avvia` è disattivato; un duplicato ferma il
+  wizard.
+- Pausa, ripresa ed eliminazione arrivano dopo, con la pagina `Download`.
+  Nessuna notifica a download finito in questa versione.
