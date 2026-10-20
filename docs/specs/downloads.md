@@ -19,7 +19,7 @@ notifiche a download finito, VPN per il traffico BitTorrent. Per tutto questo re
 ## Requisiti
 
 ### DL-001 · Widget dei download in corso
-Stato: proposto
+Stato: pianificato (#5)
 
 Nella dashboard il widget Download mostra cosa sta scaricando il server,
 aggiornato da solo.
@@ -38,7 +38,7 @@ Accettazione:
 - [ ] Durante il primo caricamento mostra lo skeleton, come gli altri widget.
 
 ### DL-002 · Stato di qBittorrent non raggiungibile
-Stato: proposto
+Stato: pianificato (#6)
 
 Se la dashboard non riesce a parlare con qBittorrent, il widget lo dice
 invece di mostrare dati vecchi o vuoti.
@@ -52,19 +52,21 @@ Accettazione:
 - [ ] Il pulsante Aggiungi (DL-003) resta visibile ma disattivato.
 
 ### DL-003 · Pulsante Aggiungi
-Stato: proposto
+Stato: pianificato (#7)
 
 Dal widget si apre il wizard per aggiungere un torrent.
 
 Accettazione:
-- [ ] Il widget ha un pulsante `Aggiungi` nella testata.
+- [ ] Il widget ha un pulsante `Aggiungi` (Button glass piccolo, icona
+      `plus`) in fondo, sulla riga riassuntiva. La testata resta alla
+      velocità: il WidgetCard ha la meta o un'azione, mai entrambe.
 - [ ] Il pulsante apre il wizard in un modale (Dialog), con la dashboard
       visibile sotto il vetro.
 - [ ] Il modale si chiude con `Esc`, con il pulsante di chiusura o con
       `Annulla`, con le regole di DL-008.
 
 ### DL-004 · Wizard, passo 1: sorgente
-Stato: proposto
+Stato: pianificato (#8)
 
 Il primo passo chiede da dove viene il torrent: un file `.torrent`, l'URL
 di un file `.torrent` o un link magnet. Un torrent alla volta.
@@ -88,7 +90,7 @@ Accettazione:
 - [ ] `Avanti` è attivo solo con una sorgente valida.
 
 ### DL-005 · Wizard, passo 2: lettura dei contenuti
-Stato: proposto
+Stato: pianificato (#9)
 
 Prima di scegliere cosa scaricare il wizard legge nome, dimensione e
 elenco dei file del torrent.
@@ -104,7 +106,7 @@ Accettazione:
       `Questo torrent è già nei download.` e non lo aggiunge di nuovo.
 
 ### DL-006 · Wizard, passo 3: scelta dei file
-Stato: proposto
+Stato: pianificato (#10)
 
 Si sceglie quali file del torrent scaricare.
 
@@ -121,7 +123,7 @@ Accettazione:
 - [ ] `Avanti` è attivo solo con almeno un file selezionato.
 
 ### DL-007 · Wizard, passo 4: riepilogo e avvio
-Stato: proposto
+Stato: pianificato (#11)
 
 L'ultimo passo riassume e avvia il download.
 
@@ -140,7 +142,7 @@ Accettazione:
       qBittorrent.
 
 ### DL-008 · Annullare il wizard
-Stato: proposto
+Stato: pianificato (#12)
 
 Chiudere il wizard prima di `Avvia` non lascia tracce.
 
@@ -151,7 +153,7 @@ Accettazione:
 - [ ] `Indietro` torna al passo precedente mantenendo le scelte fatte.
 
 ### DL-009 · Credenziali solo sul server
-Stato: proposto
+Stato: pianificato (#4)
 
 Il browser non vede mai le credenziali di qBittorrent e non parla
 direttamente con la sua Web API.
@@ -160,9 +162,10 @@ Accettazione:
 - [ ] Utente e password di qBittorrent stanno solo nel `.env` dello stack
       ron1nOS sul server; non compaiono nel bundle JavaScript, nelle
       risposte HTTP né nei log.
-- [ ] Il browser parla solo con gli endpoint `/api/downloads/*` di
-      ron1nOS; la Web API di qBittorrent non è raggiungibile da fuori del
-      server se non tramite Caddy sulla tailnet.
+- [ ] I client (dashboard web e, in futuro, app iOS) parlano solo con gli
+      endpoint `/api/v1/downloads/*` di ron1nOS; la Web API di
+      qBittorrent non è raggiungibile da fuori del server se non tramite
+      Caddy sulla tailnet.
 - [ ] Gli endpoint espongono solo le operazioni di questo modulo
       (elenco, aggiunta, lettura file, scelta file, avvio, annullamento).
 
@@ -193,19 +196,38 @@ whitelist di sottorete attiva (niente login). È meno codice, ma chiunque
 raggiunga la dashboard ha tutta la Web API, e la whitelist vale per ogni
 container sulla rete `proxy`.
 
+### Un backend per più client
+
+Le stesse funzioni arriveranno nell'app ron1nOS iOS (decisione del
+2026-10-20). Per questo il BFF è un'API vera, non un dettaglio della
+pagina web:
+
+- tutte le rotte sotto `/api/v1/`, JSON in uscita, versionate: un cambio
+  incompatibile passa a `/api/v2/` senza rompere l'app installata;
+- contratto descritto in un file OpenAPI nel repo (`api/openapi.yaml`),
+  da cui si generano i tipi per la dashboard e per l'app iOS;
+- nessuna logica solo nel browser: validazione dei magnet e degli URL,
+  controllo duplicati, spazio libero e pulizia delle bozze stanno nel
+  BFF, così l'app iOS non deve rifarle;
+- upload del `.torrent` in `multipart/form-data`, che entrambi i client
+  sanno inviare;
+- autenticazione: oggi basta la tailnet; quando arriva l'app iOS si
+  aggiunge un token per dispositivo (header `Authorization: Bearer`),
+  senza cambiare le rotte.
+
 Nel frontend non cambia la regola dei moduli: `data.ts` passa dal mock a
-`fetch('/api/downloads/...')`, il widget legge solo dagli hook.
+`fetch('/api/v1/downloads/...')`, il widget legge solo dagli hook.
 
 ### Endpoint del BFF
 
 | Metodo e rotta | Uso | Chiamate qBittorrent |
 |---|---|---|
-| `GET /api/downloads` | DL-001, DL-002 | `transfer/info`, `torrents/info` |
-| `POST /api/downloads/drafts` | DL-004, DL-005: crea una bozza da file, URL o magnet | vedi sotto |
-| `GET /api/downloads/drafts/:id` | DL-005: stato metadati e albero file | `torrents/files` (solo magnet) |
-| `POST /api/downloads/drafts/:id/start` | DL-006, DL-007: file scelti e avvio | `torrents/add` o `filePrio` + `torrents/start` |
-| `DELETE /api/downloads/drafts/:id` | DL-008 | `torrents/delete` con `deleteFiles=true` (solo magnet) |
-| `GET /api/downloads/space` | DL-007: spazio libero | `sync/maindata` (`free_space_on_disk`) |
+| `GET /api/v1/downloads` | DL-001, DL-002 | `transfer/info`, `torrents/info` |
+| `POST /api/v1/downloads/drafts` | DL-004, DL-005: crea una bozza da file, URL o magnet | vedi sotto |
+| `GET /api/v1/downloads/drafts/:id` | DL-005: stato metadati e albero file | `torrents/files` (solo magnet) |
+| `POST /api/v1/downloads/drafts/:id/start` | DL-006, DL-007: file scelti e avvio | `torrents/add` o `filePrio` + `torrents/start` |
+| `DELETE /api/v1/downloads/drafts/:id` | DL-008 | `torrents/delete` con `deleteFiles=true` (solo magnet) |
+| `GET /api/v1/downloads/space` | DL-007: spazio libero | `sync/maindata` (`free_space_on_disk`) |
 
 Sequenza prevista (da verificare sulla Web API di qBittorrent 5.3 in fase
 di implementazione):
@@ -255,7 +277,8 @@ di implementazione):
 ### Dipendenze e ordine
 
 1. Stack `torrent` attivo sul server (ron1n, `infra/torrent`).
-2. BFF nell'immagine ron1nOS e stack `infra/ron1nos` in ron1n.
+2. BFF nell'immagine ron1nOS (#4) e stack `infra/ron1nos` in ron1n
+   (1r0n51uv/ron1n#4).
 3. DL-001 e DL-002 (sola lettura), poi DL-003…DL-008 (wizard).
 
 I mockup del widget e dei quattro passi del wizard si fanno dopo
