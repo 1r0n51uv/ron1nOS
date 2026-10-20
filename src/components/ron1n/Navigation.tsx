@@ -1,7 +1,6 @@
 import { NavLink } from 'react-router'
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { cn } from '@/lib/utils'
 import { HankoMark } from './HankoMark'
 import { Icon, type IconName } from './Icon'
 
@@ -25,12 +24,9 @@ export function NavRail({ items }: { items: NavItem[] }) {
               to={it.to}
               end
               aria-label={it.label}
-              className={({ isActive }) =>
-                cn(
-                  'flex aspect-square w-full items-center justify-center rounded-control text-ink-muted transition-colors hover:bg-glass-strong hover:text-ink',
-                  isActive && 'bg-glass-hover text-ink',
-                )
-              }
+              // Classe statica: TooltipTrigger (Slot) non sa unire una className
+              // a funzione. NavLink mette aria-current="page" sulla voce attiva.
+              className="flex aspect-square w-full items-center justify-center rounded-control text-ink-muted no-underline transition-colors hover:bg-glass-strong hover:text-ink aria-[current=page]:bg-glass-hover aria-[current=page]:text-ink"
             >
               <Icon name={it.icon} size={28} />
             </NavLink>
