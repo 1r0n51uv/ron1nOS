@@ -23,13 +23,20 @@ function useSummary() {
   if (containers) {
     const n = summarize(containers).down.length
     parts.push(
-      n === 0 ? 'Tutto operativo.' : n === 1 ? 'Tutto operativo, tranne un container.' : `Tutto operativo, tranne ${n} container.`,
+      n === 0
+        ? 'Tutto operativo.'
+        : n === 1
+          ? 'Tutto operativo, tranne un container.'
+          : `Tutto operativo, tranne ${n} container.`,
     )
   }
 
   const todo: string[] = []
   const meal = nutrition && nextMeal(nutrition)
-  if (meal) todo.push(`la ${meal.name.toLowerCase()}`.replace('la pranzo', 'il pranzo').replace('la spuntino', 'lo spuntino'))
+  if (meal)
+    todo.push(
+      `la ${meal.name.toLowerCase()}`.replace('la pranzo', 'il pranzo').replace('la spuntino', 'lo spuntino'),
+    )
   if (workout && !isFinished(workout)) {
     const ratio = workout.current / workout.exercises.length
     todo.push(ratio === 0 ? "l'allenamento" : ratio < 0.75 ? 'metà allenamento' : "la fine dell'allenamento")

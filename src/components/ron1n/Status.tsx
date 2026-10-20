@@ -10,7 +10,11 @@ export function StatusDot({ tone = 'ok', className }: { tone?: 'ok' | 'alert'; c
   return (
     <span
       aria-hidden="true"
-      className={cn('size-2 shrink-0', tone === 'alert' ? 'rounded-[2px] bg-brand' : 'rounded-full bg-ink', className)}
+      className={cn(
+        'size-2 shrink-0',
+        tone === 'alert' ? 'rounded-[2px] bg-brand' : 'rounded-full bg-ink',
+        className,
+      )}
     />
   )
 }
@@ -46,7 +50,10 @@ export function AlertRow({
   pending?: boolean
 }) {
   return (
-    <div role="status" className="flex items-center gap-3 rounded-[18px] border border-brand-line bg-brand-tint-faint px-3.5 py-3">
+    <div
+      role="status"
+      className="flex items-center gap-3 rounded-[18px] border border-brand-line bg-brand-tint-faint px-3.5 py-3"
+    >
       <span aria-hidden="true" className="size-2.5 shrink-0 rounded-[2px] bg-brand" />
       <div className="min-w-0 flex-1">
         <div className="font-mono text-sm leading-[18px] text-ink">{title}</div>
@@ -84,7 +91,10 @@ export function ToggleTile({
     >
       <span
         aria-hidden="true"
-        className={cn('size-2.5 rounded-full', on ? 'bg-brand' : 'bg-glass-hover shadow-[inset_0_0_0_1px_var(--ink-muted)]')}
+        className={cn(
+          'size-2.5 rounded-full',
+          on ? 'bg-brand' : 'bg-glass-hover shadow-[inset_0_0_0_1px_var(--ink-muted)]',
+        )}
       />
       <span className="text-sm leading-[18px] font-semibold">{name}</span>
       {meta ? <span className="text-xs leading-4 text-ink-muted">{meta}</span> : null}

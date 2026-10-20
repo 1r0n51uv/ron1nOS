@@ -26,7 +26,10 @@ export function WidgetCard({
         {action ? (
           <CardAction>
             {action.to ? (
-              <Link to={action.to} className="text-[13px] leading-[18px] text-brand-text no-underline hover:underline">
+              <Link
+                to={action.to}
+                className="text-[13px] leading-[18px] text-brand-text no-underline hover:underline"
+              >
                 {action.label}
               </Link>
             ) : (

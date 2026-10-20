@@ -6,7 +6,10 @@ export function SegmentedProgress({ total, done, label }: { total: number; done:
       {Array.from({ length: total }, (_, i) => (
         <span
           key={i}
-          className={cn('h-1 flex-1 rounded-[2px]', i < done ? 'bg-ink' : i === done ? 'bg-brand' : 'bg-track')}
+          className={cn(
+            'h-1 flex-1 rounded-[2px]',
+            i < done ? 'bg-ink' : i === done ? 'bg-brand' : 'bg-track',
+          )}
         />
       ))}
     </div>
@@ -36,7 +39,9 @@ export function Metric({
       >
         {value}
       </span>
-      {unit ? <span className={cn('text-ink-muted', size === 'md' ? 'text-xs' : 'text-[15px]')}>{unit}</span> : null}
+      {unit ? (
+        <span className={cn('text-ink-muted', size === 'md' ? 'text-xs' : 'text-[15px]')}>{unit}</span>
+      ) : null}
       {delta ? <span className="ml-auto font-mono text-sm text-ink-muted">{delta}</span> : null}
     </div>
   )

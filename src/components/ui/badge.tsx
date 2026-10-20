@@ -10,10 +10,10 @@ const badgeVariants = cva(
     variants: {
       variant: {
         // Tag: etichetta maiuscola dentro un pannello.
-        tag: 'glass-chip self-start px-2.5 py-1 text-[11px] leading-[14px] font-medium tracking-[0.1em] uppercase',
+        tag: 'self-start px-2.5 py-1 text-[11px] leading-[14px] font-medium tracking-[0.1em] uppercase glass-chip',
         // StatusPill: stato di un sistema, con il punto davanti.
-        pill: 'glass-chip h-12 bg-glass px-[18px] text-[13px]',
-        'pill-sm': 'glass-chip h-9 bg-glass px-3 text-[11px] tracking-[0.08em]',
+        pill: 'h-12 bg-glass px-[18px] text-[13px] glass-chip',
+        'pill-sm': 'h-9 bg-glass px-3 text-[11px] tracking-[0.08em] glass-chip',
       },
     },
     defaultVariants: {

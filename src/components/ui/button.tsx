@@ -5,12 +5,12 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full border border-transparent font-sans text-[15px] leading-5 font-semibold text-ink transition-[background,filter] outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full border border-transparent font-sans text-[15px] leading-5 font-semibold whitespace-nowrap text-ink transition-[background,filter] outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         default: 'bg-primary text-primary-foreground shadow-glow hover:brightness-110',
-        glass: 'glass-chip font-medium hover:bg-glass-hover',
+        glass: 'font-medium glass-chip hover:bg-glass-hover',
         ghost: 'hover:bg-glass-strong',
         link: 'text-brand-text underline-offset-4 hover:underline',
       },
@@ -39,13 +39,7 @@ function Button({
   }) {
   const Comp = asChild ? Slot.Root : 'button'
 
-  return (
-    <Comp
-      data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
+  return <Comp data-slot="button" className={cn(buttonVariants({ variant, size, className }))} {...props} />
 }
 
 export { Button, buttonVariants }

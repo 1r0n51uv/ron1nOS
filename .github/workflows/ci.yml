@@ -1,4 +1,6 @@
-name: CI
+# Verifica di ogni PR. Il nome del job (ci) è il check richiesto dalla branch
+# protection: tutti i passi devono essere verdi prima del merge.
+name: ci
 
 on:
   pull_request:
@@ -7,10 +9,13 @@ on:
 
 permissions:
   contents: read
-  packages: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,24 +24,22 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run format:check
       - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
       - run: npm run build
-
-  image:
-    if: github.event_name == 'push'
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - name: Report e2e
+        if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+      - name: Build immagine (senza push)
+        uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
-          tags: |
-            ghcr.io/1r0n51uv/ron1nos:latest
-            ghcr.io/1r0n51uv/ron1nos:${{ github.sha }}
+          push: false

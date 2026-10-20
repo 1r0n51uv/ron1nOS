@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 /*
  * Token del design system ron1nOS (tokens.json). L'interfaccia esiste solo
@@ -57,10 +57,10 @@
 }
 
 @theme inline {
-  --font-display: "Chakra Petch", system-ui, sans-serif;
-  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --font-kanji: "Shippori Mincho", serif;
+  --font-display: 'Chakra Petch', system-ui, sans-serif;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-kanji: 'Shippori Mincho', serif;
 
   --color-ground: var(--ground);
   --color-ink: var(--ink);
@@ -165,8 +165,7 @@
     background:
       radial-gradient(620px 420px at 8% 0%, var(--brand-glow), transparent 62%),
       radial-gradient(520px 380px at 100% 70%, var(--brand-glow-soft), transparent 60%),
-      radial-gradient(620px 420px at 40% 120%, var(--haze), transparent 60%),
-      var(--ground);
+      radial-gradient(620px 420px at 40% 120%, var(--haze), transparent 60%), var(--ground);
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
   }
