@@ -19,7 +19,7 @@ del modulo Container). Per il dettaglio resta l'interfaccia di Glances su
 ## Requisiti
 
 ### SRV-001 · Anelli CPU, RAM e disco
-Stato: proposto
+Stato: pianificato (#15)
 
 Il widget Server mostra a colpo d'occhio quanto sono occupate le tre
 risorse principali.
@@ -33,7 +33,7 @@ Accettazione:
       `CPU 23%` o `SSD 82%, sopra soglia`.
 
 ### SRV-002 · Temperatura e uptime
-Stato: proposto
+Stato: pianificato (#16)
 
 Nella testata del widget la temperatura della CPU e da quanto il server è
 acceso.
@@ -46,7 +46,7 @@ Accettazione:
       solo l'uptime.
 
 ### SRV-003 · Rete
-Stato: proposto
+Stato: pianificato (#17)
 
 Il widget mostra quanto traffico sta passando dalla scheda di rete del
 server.
@@ -59,7 +59,7 @@ Accettazione:
       non si somma.
 
 ### SRV-004 · Consumo per container
-Stato: proposto
+Stato: pianificato (#18)
 
 Il widget dice quali container stanno usando più risorse.
 
@@ -71,18 +71,19 @@ Accettazione:
       modulo Container.
 
 ### SRV-005 · Soglie
-Stato: proposto
+Stato: pianificato (#19)
 
 Il rosso del marchio segnala solo ciò che merita attenzione.
 
 Accettazione:
 - [ ] Un anello diventa rosso (`tone="brand"`) da 80% in su.
-- [ ] La temperatura diventa rossa da 85 °C in su.
+- [ ] Da 85 °C in su sotto il titolo compare una StatusPill `alert` con
+      `CPU a 88 °C` (la meta del WidgetCard è solo testo e non si colora).
 - [ ] Senza valori oltre soglia il widget non ha nessun elemento rosso.
 - [ ] Le soglie stanno in un punto solo del codice del modulo.
 
 ### SRV-006 · Glances non raggiungibile
-Stato: proposto
+Stato: pianificato (#20)
 
 Se la dashboard non riesce a leggere le risorse, il widget lo dice invece
 di mostrare valori vecchi.
@@ -96,7 +97,7 @@ Accettazione:
       mancante viene omessa.
 
 ### SRV-007 · Aggiornamento continuo
-Stato: proposto
+Stato: pianificato (#21)
 
 Il widget segue il server senza ricaricare la pagina.
 
@@ -108,12 +109,13 @@ Accettazione:
       fermano e riprendono al ritorno.
 
 ### SRV-008 · Solo i dati che servono
-Stato: proposto
+Stato: pianificato (#14)
 
 Il browser non parla con Glances e riceve solo i numeri del widget.
 
 Accettazione:
-- [ ] Il browser chiama solo `GET /api/server/stats` di ron1nOS; l'API di
+- [ ] I client (dashboard web e, in futuro, app iOS) chiamano solo
+      `GET /api/v1/server/stats` di ron1nOS; l'API di
       Glances non è raggiungibile da fuori del server se non tramite Caddy
       sulla tailnet.
 - [ ] La risposta non contiene processi, righe di comando, variabili
@@ -141,14 +143,14 @@ serve `dist/` e le rotte `/api/*`, al posto di Nginx. Per il modulo Server il BF
   moltiplicano le chiamate.
 
 Nel frontend non cambia la regola dei moduli: `data.ts` passa dal mock a
-`fetch('/api/server/stats')`, il widget legge solo dall'hook.
+`fetch('/api/v1/server/stats')`, il widget legge solo dall'hook.
 
 Alternativa scartata: Nginx inoltra `/api/glances/` a Glances. Funziona
 anche prima del BFF, ma dà al browser tutta l'API, processi compresi.
 
 ### Endpoint del BFF
 
-`GET /api/server/stats`, risposta prevista:
+`GET /api/v1/server/stats`, risposta prevista:
 
 ```json
 {
@@ -184,17 +186,17 @@ dischi è già in `glances.conf`.
 ### Client web e iOS
 
 La futura app iOS di ron1nOS avrà le stesse funzioni della dashboard, quindi
-`GET /api/server/stats` è un contratto per entrambi i client, non un
+`GET /api/v1/server/stats` è un contratto per entrambi i client, non un
 dettaglio del frontend web:
 
 - risposta JSON stabile, con unità esplicite (byte, secondi, °C) e nessun
   testo già formattato: arrotondamenti, unità e testi li decide il client;
-- un cambiamento incompatibile del formato richiede una nuova versione
-  della rotta, non una modifica di quella esistente;
+- rotta sotto `/api/v1/` e descritta nel file OpenAPI comune
+  (`api/openapi.yaml`, vedi [downloads.md](downloads.md), "Un backend per
+  più client"); un cambiamento incompatibile passa a `/api/v2/`;
 - anche l'app iOS passa dal BFF e non chiama mai Glances direttamente;
-- l'accesso resta limitato alla tailnet (l'iPhone ha Tailscale). Se un
-  giorno l'API diventa raggiungibile da fuori, serve prima
-  un'autenticazione, comune a tutti i moduli.
+- autenticazione come gli altri moduli: oggi basta la tailnet, con l'app
+  iOS arriva il token per dispositivo, senza cambiare la rotta.
 
 ### Rapporto con gli altri moduli
 
@@ -212,9 +214,9 @@ dettaglio del frontend web:
 3. SRV-001, SRV-002, SRV-005…SRV-008 (il widget di oggi con dati veri),
    poi SRV-003 e SRV-004.
 
-I mockup del widget con rete e container si fanno dopo l'approvazione di
-questa specifica, con i componenti del design system (WidgetCard,
-ProgressRing, Metric, StatusPill).
+Mockup approvati il 2026-10-20:
+[canvas Widget Server](https://claude.ai/artifact/Sz4FfuByHL58cfjtroyLzJ)
+(normale, sopra soglia, dati parziali, offline).
 
 ### Decisioni (2026-10-20)
 
