@@ -19,18 +19,20 @@ notifiche a download finito, VPN per il traffico BitTorrent. Per tutto questo re
 ## Requisiti
 
 ### DL-001 · Widget dei download in corso
+
 Stato: pianificato (#5)
 
 Nella dashboard il widget Download mostra cosa sta scaricando il server,
 aggiornato da solo.
 
 Accettazione:
+
 - [ ] In testata la velocità totale di download in MB/s, in `font-mono`.
 - [ ] Elenca fino a 3 torrent in download, i più vicini alla fine per
       primi: nome (troncato), percentuale, barra di avanzamento, tempo
       rimanente.
-- [ ] Sotto, una riga riassuntiva con gli altri: `+N attivi · N in coda ·
-      N in seed`, omettendo le voci a zero.
+- [ ] Sotto, una riga riassuntiva con gli altri:
+      `+N attivi · N in coda · N in seed`, omettendo le voci a zero.
 - [ ] Senza download attivi mostra `Nessun download attivo.` e la riga
       riassuntiva, se c'è.
 - [ ] I dati si aggiornano ogni 5 secondi senza ricaricare la pagina e
@@ -38,25 +40,29 @@ Accettazione:
 - [ ] Durante il primo caricamento mostra lo skeleton, come gli altri widget.
 
 ### DL-002 · Stato di qBittorrent non raggiungibile
+
 Stato: pianificato (#6)
 
 Se la dashboard non riesce a parlare con qBittorrent, il widget lo dice
 invece di mostrare dati vecchi o vuoti.
 
 Accettazione:
-- [ ] Con qBittorrent spento il widget mostra `qBittorrent non
-      raggiungibile` con lo stato `offline` (StatusPill), entro due
+
+- [ ] Con qBittorrent spento il widget mostra
+      `qBittorrent non raggiungibile` con lo stato `offline` (StatusPill), entro due
       aggiornamenti.
 - [ ] Con credenziali errate mostra `Accesso a qBittorrent non riuscito`.
 - [ ] Quando il servizio torna disponibile il widget riprende da solo.
 - [ ] Il pulsante Aggiungi (DL-003) resta visibile ma disattivato.
 
 ### DL-003 · Pulsante Aggiungi
+
 Stato: pianificato (#7)
 
 Dal widget si apre il wizard per aggiungere un torrent.
 
 Accettazione:
+
 - [ ] Il widget ha un pulsante `Aggiungi` (Button glass piccolo, icona
       `plus`) in fondo, sulla riga riassuntiva. La testata resta alla
       velocità: il WidgetCard ha la meta o un'azione, mai entrambe.
@@ -66,20 +72,20 @@ Accettazione:
       `Annulla`, con le regole di DL-008.
 
 ### DL-004 · Wizard, passo 1: sorgente
+
 Stato: pianificato (#8)
 
 Il primo passo chiede da dove viene il torrent: un file `.torrent`, l'URL
 di un file `.torrent` o un link magnet. Un torrent alla volta.
 
 Accettazione:
+
 - [ ] Due schede: `File` e `Link`.
 - [ ] `File`: area di trascinamento e scelta da disco; accetta un solo file
       `.torrent` fino a 10 MB. Un file non valido mostra
       `File torrent non valido.` e non si prosegue.
-- [ ] `Link`: campo di testo che accetta due forme:
-      - link magnet che inizia con `magnet:?` e contiene `xt=urn:btih:`
-        (v1) o `xt=urn:btmh:` (v2);
-      - URL `http://` o `https://` di un file `.torrent`.
+- [ ] `Link`: campo di testo che accetta due forme: - link magnet che inizia con `magnet:?` e contiene `xt=urn:btih:`
+      (v1) o `xt=urn:btmh:` (v2); - URL `http://` o `https://` di un file `.torrent`.
       Altro testo mostra `Link non valido.`
 - [ ] Con un URL, il file viene scaricato dal server e trattato come un
       file `.torrent` caricato. Se il download non riesce (indirizzo non
@@ -90,27 +96,31 @@ Accettazione:
 - [ ] `Avanti` è attivo solo con una sorgente valida.
 
 ### DL-005 · Wizard, passo 2: lettura dei contenuti
+
 Stato: pianificato (#9)
 
 Prima di scegliere cosa scaricare il wizard legge nome, dimensione e
 elenco dei file del torrent.
 
 Accettazione:
+
 - [ ] Con un file `.torrent` o un URL i contenuti appaiono appena il file
       è letto, senza attendere i peer.
 - [ ] Con un magnet il wizard mostra `Recupero dei metadati…` con un
       indicatore di attesa finché i peer non li forniscono.
-- [ ] Dopo 60 secondi senza metadati mostra `Nessun peer ha fornito i
-      metadati.` con due scelte: `Riprova` (altri 60 secondi) e `Annulla`.
+- [ ] Dopo 60 secondi senza metadati mostra
+      `Nessun peer ha fornito i metadati.` con due scelte: `Riprova` (altri 60 secondi) e `Annulla`.
 - [ ] Se il torrent è già presente in qBittorrent il wizard si ferma con
       `Questo torrent è già nei download.` e non lo aggiunge di nuovo.
 
 ### DL-006 · Wizard, passo 3: scelta dei file
+
 Stato: pianificato (#10)
 
 Si sceglie quali file del torrent scaricare.
 
 Accettazione:
+
 - [ ] I file sono mostrati ad albero, con le cartelle del torrent, ognuno
       con casella di selezione e dimensione in `font-mono`.
 - [ ] Selezionare una cartella seleziona tutto il suo contenuto; una
@@ -123,11 +133,13 @@ Accettazione:
 - [ ] `Avanti` è attivo solo con almeno un file selezionato.
 
 ### DL-007 · Wizard, passo 4: riepilogo e avvio
+
 Stato: pianificato (#11)
 
 L'ultimo passo riassume e avvia il download.
 
 Accettazione:
+
 - [ ] Riepilogo: nome del torrent, file selezionati, dimensione da
       scaricare, cartella di destinazione (quella predefinita di
       qBittorrent, `/downloads`), spazio libero nella cartella.
@@ -142,23 +154,27 @@ Accettazione:
       qBittorrent.
 
 ### DL-008 · Annullare il wizard
+
 Stato: pianificato (#12)
 
 Chiudere il wizard prima di `Avvia` non lascia tracce.
 
 Accettazione:
+
 - [ ] Annullando in qualunque passo, in qBittorrent non resta nessun
       torrent nuovo né file scaricati.
 - [ ] Vale anche per un magnet annullato durante il recupero dei metadati.
 - [ ] `Indietro` torna al passo precedente mantenendo le scelte fatte.
 
 ### DL-009 · Credenziali solo sul server
+
 Stato: pianificato (#4)
 
 Il browser non vede mai le credenziali di qBittorrent e non parla
 direttamente con la sua Web API.
 
 Accettazione:
+
 - [ ] Utente e password di qBittorrent stanno solo nel `.env` dello stack
       ron1nOS sul server; non compaiono nel bundle JavaScript, nelle
       risposte HTTP né nei log.
@@ -220,14 +236,14 @@ Nel frontend non cambia la regola dei moduli: `data.ts` passa dal mock a
 
 ### Endpoint del BFF
 
-| Metodo e rotta | Uso | Chiamate qBittorrent |
-|---|---|---|
-| `GET /api/v1/downloads` | DL-001, DL-002 | `transfer/info`, `torrents/info` |
-| `POST /api/v1/downloads/drafts` | DL-004, DL-005: crea una bozza da file, URL o magnet | vedi sotto |
-| `GET /api/v1/downloads/drafts/:id` | DL-005: stato metadati e albero file | `torrents/files` (solo magnet) |
-| `POST /api/v1/downloads/drafts/:id/start` | DL-006, DL-007: file scelti e avvio | `torrents/add` o `filePrio` + `torrents/start` |
-| `DELETE /api/v1/downloads/drafts/:id` | DL-008 | `torrents/delete` con `deleteFiles=true` (solo magnet) |
-| `GET /api/v1/downloads/space` | DL-007: spazio libero | `sync/maindata` (`free_space_on_disk`) |
+| Metodo e rotta                            | Uso                                                  | Chiamate qBittorrent                                   |
+| ----------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
+| `GET /api/v1/downloads`                   | DL-001, DL-002                                       | `transfer/info`, `torrents/info`                       |
+| `POST /api/v1/downloads/drafts`           | DL-004, DL-005: crea una bozza da file, URL o magnet | vedi sotto                                             |
+| `GET /api/v1/downloads/drafts/:id`        | DL-005: stato metadati e albero file                 | `torrents/files` (solo magnet)                         |
+| `POST /api/v1/downloads/drafts/:id/start` | DL-006, DL-007: file scelti e avvio                  | `torrents/add` o `filePrio` + `torrents/start`         |
+| `DELETE /api/v1/downloads/drafts/:id`     | DL-008                                               | `torrents/delete` con `deleteFiles=true` (solo magnet) |
+| `GET /api/v1/downloads/space`             | DL-007: spazio libero                                | `sync/maindata` (`free_space_on_disk`)                 |
 
 Sequenza prevista (da verificare sulla Web API di qBittorrent 5.3 in fase
 di implementazione):

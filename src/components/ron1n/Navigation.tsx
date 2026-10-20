@@ -12,7 +12,7 @@ export function NavRail({ items }: { items: NavItem[] }) {
   return (
     <nav
       aria-label="Sezioni"
-      className="glass-panel sticky top-5 flex w-20 flex-col items-stretch gap-1.5 self-start rounded-rail p-2.5"
+      className="sticky top-5 flex w-20 flex-col items-stretch gap-1.5 self-start rounded-rail p-2.5 glass-panel"
     >
       <NavLink to="/" className="mb-2 block" aria-label="ron1nOS, dashboard">
         <HankoMark size={58} decorative />

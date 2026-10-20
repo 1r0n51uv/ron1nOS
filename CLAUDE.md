@@ -16,4 +16,10 @@ italiano.
   `Widget.tsx`. Il widget legge solo dall'hook. Per collegare un modulo
   vero si cambia solo la sorgente in `data.ts`.
 - Testi: brevi, calmi, niente punti esclamativi né emoji. Separatore `·`.
-- Prima di consegnare: `npm run build` e `npm run lint` puliti.
+- Ogni PR porta i suoi test: unit (Vitest, `*.test.ts(x)` accanto al file)
+  e almeno uno scenario e2e (Playwright, `e2e/`) per ciò che l'utente vede.
+  Non disattivare né saltare test per far passare la CI.
+- Stile: lo decide Prettier (`npm run format`), non a mano. ESLint con zero
+  warning.
+- Prima di consegnare: `npm run check` pulito (formato, lint, typecheck,
+  unit, build, e2e).

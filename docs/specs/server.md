@@ -19,12 +19,14 @@ del modulo Container). Per il dettaglio resta l'interfaccia di Glances su
 ## Requisiti
 
 ### SRV-001 · Anelli CPU, RAM e disco
+
 Stato: pianificato (#15)
 
 Il widget Server mostra a colpo d'occhio quanto sono occupate le tre
 risorse principali.
 
 Accettazione:
+
 - [ ] Tre anelli (ProgressRing) con didascalie `CPU`, `RAM`, `SSD` e il
       valore in percentuale intera, in `font-mono`.
 - [ ] CPU: uso totale di tutti i core. RAM: memoria usata senza cache e
@@ -33,12 +35,14 @@ Accettazione:
       `CPU 23%` o `SSD 82%, sopra soglia`.
 
 ### SRV-002 · Temperatura e uptime
+
 Stato: pianificato (#16)
 
 Nella testata del widget la temperatura della CPU e da quanto il server è
 acceso.
 
 Accettazione:
+
 - [ ] Testata nel formato `52 °C · 41 g`: temperatura della CPU (sensore
       `k10temp`, voce `Tctl`) arrotondata al grado, uptime in giorni.
 - [ ] Sotto un giorno l'uptime è in ore (`7 h`).
@@ -46,12 +50,14 @@ Accettazione:
       solo l'uptime.
 
 ### SRV-003 · Rete
+
 Stato: pianificato (#17)
 
 Il widget mostra quanto traffico sta passando dalla scheda di rete del
 server.
 
 Accettazione:
+
 - [ ] Una riga con velocità in ingresso e in uscita dell'interfaccia
       fisica, per esempio `↓ 12,4 MB/s · ↑ 0,8 MB/s`, in `font-mono`.
 - [ ] Unità che si adatta al valore: `kB/s` sotto 1 MB/s, `MB/s` sopra.
@@ -59,11 +65,13 @@ Accettazione:
       non si somma.
 
 ### SRV-004 · Consumo per container
+
 Stato: pianificato (#18)
 
 Il widget dice quali container stanno usando più risorse.
 
 Accettazione:
+
 - [ ] Elenca i 3 container in esecuzione con la CPU più alta: nome
       (troncato), CPU in percentuale di un core, RAM in MB o GB.
 - [ ] A parità di CPU (per esempio tutti a 0%) l'ordine è per RAM.
@@ -71,11 +79,13 @@ Accettazione:
       modulo Container.
 
 ### SRV-005 · Soglie
+
 Stato: pianificato (#19)
 
 Il rosso del marchio segnala solo ciò che merita attenzione.
 
 Accettazione:
+
 - [ ] Un anello diventa rosso (`tone="brand"`) da 80% in su.
 - [ ] Da 85 °C in su sotto il titolo compare una StatusPill `alert` con
       `CPU a 88 °C` (la meta del WidgetCard è solo testo e non si colora).
@@ -83,12 +93,14 @@ Accettazione:
 - [ ] Le soglie stanno in un punto solo del codice del modulo.
 
 ### SRV-006 · Glances non raggiungibile
+
 Stato: pianificato (#20)
 
 Se la dashboard non riesce a leggere le risorse, il widget lo dice invece
 di mostrare valori vecchi.
 
 Accettazione:
+
 - [ ] Con Glances spento il widget mostra `Glances non raggiungibile` con
       lo stato `offline` (StatusPill), entro due aggiornamenti.
 - [ ] Quando Glances torna disponibile il widget riprende da solo.
@@ -97,11 +109,13 @@ Accettazione:
       mancante viene omessa.
 
 ### SRV-007 · Aggiornamento continuo
+
 Stato: pianificato (#21)
 
 Il widget segue il server senza ricaricare la pagina.
 
 Accettazione:
+
 - [ ] I dati si aggiornano ogni 5 secondi senza far lampeggiare il widget.
 - [ ] Durante il primo caricamento mostra lo skeleton, come gli altri
       widget.
@@ -109,11 +123,13 @@ Accettazione:
       fermano e riprendono al ritorno.
 
 ### SRV-008 · Solo i dati che servono
+
 Stato: pianificato (#14)
 
 Il browser non parla con Glances e riceve solo i numeri del widget.
 
 Accettazione:
+
 - [ ] I client (dashboard web e, in futuro, app iOS) chiamano solo
       `GET /api/v1/server/stats` di ron1nOS; l'API di
       Glances non è raggiungibile da fuori del server se non tramite Caddy
@@ -160,24 +176,22 @@ anche prima del BFF, ma dà al browser tutta l'API, processi compresi.
   "tempC": 52,
   "uptimeSec": 3542400,
   "net": { "rxBps": 13002342, "txBps": 838860 },
-  "containers": [
-    { "name": "qbittorrent", "cpu": 14.2, "memBytes": 412000000 }
-  ]
+  "containers": [{ "name": "qbittorrent", "cpu": 14.2, "memBytes": 412000000 }]
 }
 ```
 
 `tempC` e `containers` possono mancare (SRV-002, SRV-006). Con Glances
 irraggiungibile l'endpoint risponde `503`.
 
-| Campo | Chiamata Glances (API 4) |
-|---|---|
-| `cpu` | `cpu` → `total` |
-| `ram` | `mem` → `percent` |
-| `disk` | `fs` → `percent` della voce `/rootfs` |
-| `tempC` | `sensors` → voce `Tctl` (`k10temp`) |
-| `uptimeSec` | `uptime` (restituisce una stringa `g days, h:mm:ss`, da convertire) |
-| `net` | `network` → somma di `bytes_recv_rate_per_sec` e `bytes_sent_rate_per_sec` |
-| `containers` | `containers` → `name`, `status`, `cpu_percent`, `memory_usage` |
+| Campo        | Chiamata Glances (API 4)                                                   |
+| ------------ | -------------------------------------------------------------------------- |
+| `cpu`        | `cpu` → `total`                                                            |
+| `ram`        | `mem` → `percent`                                                          |
+| `disk`       | `fs` → `percent` della voce `/rootfs`                                      |
+| `tempC`      | `sensors` → voce `Tctl` (`k10temp`)                                        |
+| `uptimeSec`  | `uptime` (restituisce una stringa `g days, h:mm:ss`, da convertire)        |
+| `net`        | `network` → somma di `bytes_recv_rate_per_sec` e `bytes_sent_rate_per_sec` |
+| `containers` | `containers` → `name`, `status`, `cpu_percent`, `memory_usage`             |
 
 Campi verificati su Glances 4.5.8 in locale, tranne `sensors` e
 `containers` (da verificare sul mini PC). Il filtro delle interfacce e dei

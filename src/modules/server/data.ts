@@ -21,7 +21,12 @@ function jitter(v: number, by: number) {
 
 // Mock: da sostituire con node-exporter o un endpoint dell'API del server.
 export function getServerStats() {
-  return mockDelay({ ...base, cpu: jitter(base.cpu, 14), ram: jitter(base.ram, 4), tempC: jitter(base.tempC, 4) })
+  return mockDelay({
+    ...base,
+    cpu: jitter(base.cpu, 14),
+    ram: jitter(base.ram, 4),
+    tempC: jitter(base.tempC, 4),
+  })
 }
 
 export function useServerStats() {

@@ -26,7 +26,7 @@ export function ServerWidget({ className }: { className?: string }) {
               label={`${r.value}%`}
               caption={r.key}
               ariaLabel={`${r.key} ${r.value}%${alert ? ', sopra soglia' : ''}`}
-                          />
+            />
           )
         })}
       </div>

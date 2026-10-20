@@ -43,9 +43,7 @@ export function WorkoutWidget({ className }: { className?: string }) {
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="text-xs text-ink-muted">Riposo</div>
-              <div className="font-mono text-[32px] leading-9 font-semibold">
-                {clock(restLeft)}
-              </div>
+              <div className="font-mono text-[32px] leading-9 font-semibold">{clock(restLeft)}</div>
             </div>
             <Button onClick={() => complete.mutate()} disabled={complete.isPending}>
               Serie fatta

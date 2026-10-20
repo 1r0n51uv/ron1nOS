@@ -48,7 +48,10 @@ export function ProgressRing({
         strokeLinecap="round"
         strokeDasharray={`${((c * v) / max).toFixed(1)} ${c.toFixed(1)}`}
         transform={`rotate(-90 ${mid} ${mid})`}
-        className={cn('fill-none transition-[stroke-dasharray] duration-500', tone === 'ink' ? 'stroke-ink' : 'stroke-brand')}
+        className={cn(
+          'fill-none transition-[stroke-dasharray] duration-500',
+          tone === 'ink' ? 'stroke-ink' : 'stroke-brand',
+        )}
       />
       <text
         x={mid}
