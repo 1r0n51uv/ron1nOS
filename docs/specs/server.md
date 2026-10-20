@@ -128,10 +128,10 @@ Glances gira in rete host e ascolta solo su `172.17.0.1:61208` (bridge
 `docker0`). La sua API non ha login e espone anche l'elenco dei processi
 con le righe di comando, quindi il browser non la chiama direttamente.
 
-Il modulo usa lo stesso backend della dashboard (**BFF**) proposto nella
+Il modulo usa lo stesso backend della dashboard (**BFF**) deciso nella
 specifica Download ([downloads.md](downloads.md), "Architettura
-dell'integrazione"): un server Node nell'immagine ron1nOS che serve `dist/`
-e le rotte `/api/*`. Per il modulo Server il BFF:
+dell'integrazione" e "Decisioni"): un server Node nell'immagine ron1nOS che
+serve `dist/` e le rotte `/api/*`, al posto di Nginx. Per il modulo Server il BFF:
 
 - chiama Glances su `http://host.docker.internal:61208/api/4/...` (nel
   compose di ron1nOS: `extra_hosts: host.docker.internal:host-gateway`);
