@@ -1,0 +1,183 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+ * Token del design system ron1nOS (tokens.json). L'interfaccia esiste solo
+ * in scuro. Il rosso del marchio si chiama "brand" per non scontrarsi con
+ * "accent" di shadcn, che indica lo sfondo di hover.
+ */
+:root {
+  --ground: #070707;
+  --ink: #f2f2f2;
+  --ink-muted: rgba(242, 242, 242, 0.75);
+  --brand: #ff2a2a;
+  --brand-text: #ff8a8a;
+  --on-brand: #0a0a0a;
+  --brand-glow: rgba(255, 42, 42, 0.3);
+  --brand-glow-soft: rgba(255, 42, 42, 0.16);
+  --brand-tint: rgba(255, 42, 42, 0.2);
+  --brand-tint-faint: rgba(255, 42, 42, 0.1);
+  --brand-line: rgba(255, 42, 42, 0.45);
+  --glass: rgba(255, 255, 255, 0.06);
+  --glass-strong: rgba(255, 255, 255, 0.1);
+  --glass-hover: rgba(255, 255, 255, 0.14);
+  --glass-bar: rgba(28, 28, 30, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.18);
+  --track: rgba(255, 255, 255, 0.1);
+  --haze: rgba(110, 110, 130, 0.2);
+
+  --shadow-panel: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 24px 48px rgba(0, 0, 0, 0.35);
+  --shadow-bar: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 20px 40px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 8px 24px rgba(255, 42, 42, 0.16);
+  --blur-panel: 28px;
+  --blur-bar: 30px;
+  --blur-chip: 20px;
+
+  /* Variabili shadcn mappate sui token ron1nOS. */
+  --radius: 1rem;
+  --background: var(--ground);
+  --foreground: var(--ink);
+  --card: var(--glass);
+  --card-foreground: var(--ink);
+  --popover: #141416;
+  --popover-foreground: var(--ink);
+  --primary: var(--brand);
+  --primary-foreground: var(--on-brand);
+  --secondary: var(--glass-strong);
+  --secondary-foreground: var(--ink);
+  --muted: var(--glass);
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--glass-hover);
+  --accent-foreground: var(--ink);
+  --destructive: var(--brand);
+  --border: var(--glass-border);
+  --input: var(--glass-border);
+  --ring: var(--brand-text);
+}
+
+@theme inline {
+  --font-display: "Chakra Petch", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-kanji: "Shippori Mincho", serif;
+
+  --color-ground: var(--ground);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-brand: var(--brand);
+  --color-brand-text: var(--brand-text);
+  --color-on-brand: var(--on-brand);
+  --color-brand-tint: var(--brand-tint);
+  --color-brand-tint-faint: var(--brand-tint-faint);
+  --color-brand-line: var(--brand-line);
+  --color-glass: var(--glass);
+  --color-glass-strong: var(--glass-strong);
+  --color-glass-hover: var(--glass-hover);
+  --color-glass-bar: var(--glass-bar);
+  --color-glass-border: var(--glass-border);
+  --color-glass-highlight: var(--glass-highlight);
+  --color-track: var(--track);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-bar: 3px;
+  --radius-control: 16px;
+  --radius-tile: 20px;
+  --radius-rail: 26px;
+  --radius-panel: 28px;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-panel: var(--shadow-panel);
+  --shadow-bar: var(--shadow-bar);
+  --shadow-glow: var(--shadow-glow);
+}
+
+/* La ricetta del vetro: riempimento, bordo, ombra con riflesso, blur. */
+@utility glass-panel {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-panel);
+  -webkit-backdrop-filter: blur(var(--blur-panel)) saturate(170%);
+  backdrop-filter: blur(var(--blur-panel)) saturate(170%);
+}
+
+@utility glass-chip {
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  -webkit-backdrop-filter: blur(var(--blur-chip));
+  backdrop-filter: blur(var(--blur-chip));
+}
+
+@utility glass-bar {
+  background: var(--glass-bar);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-bar);
+  -webkit-backdrop-filter: blur(var(--blur-bar)) saturate(180%);
+  backdrop-filter: blur(var(--blur-bar)) saturate(180%);
+}
+
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    color-scheme: dark;
+  }
+  /* Il vetro ha bisogno di qualcosa dietro: i bagliori stanno sul body. */
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--ink);
+    background:
+      radial-gradient(620px 420px at 8% 0%, var(--brand-glow), transparent 62%),
+      radial-gradient(520px 380px at 100% 70%, var(--brand-glow-soft), transparent 60%),
+      radial-gradient(620px 420px at 40% 120%, var(--haze), transparent 60%),
+      var(--ground);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+  }
+  a {
+    color: var(--brand-text);
+  }
+  a:hover {
+    color: #ffb3b3;
+  }
+  :focus-visible {
+    outline: 2px solid var(--brand-text);
+    outline-offset: 2px;
+  }
+}
