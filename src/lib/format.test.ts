@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { bytes, clock, greeting, num, rate, signed, uptime } from './format'
+import { bytes, clock, fileSize, greeting, num, rate, signed, uptime } from './format'
 
 describe('num', () => {
   // In it-IT il punto delle migliaia compare da cinque cifre (1234 resta 1234).
@@ -66,4 +66,15 @@ describe('bytes', () => {
   it('da 1 GB usa i GB con un decimale', () => {
     expect(bytes(1_240_000_000)).toBe('1,2 GB')
   })
+})
+
+describe('fileSize', () => {
+  it.each([
+    [512, '512 B'],
+    [1_000, '1 KB'],
+    [3_900_000_000, '3,9 GB'],
+    [412_000_000_000, '412 GB'],
+    [7_900_002_000, '7,9 GB'],
+    [12_500_000, '13 MB'],
+  ])('%d → %s', (v, text) => expect(fileSize(v)).toBe(text))
 })

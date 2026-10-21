@@ -73,7 +73,7 @@ Accettazione:
 
 ### DL-004 · Wizard, passo 1: sorgente
 
-Stato: pianificato (#8)
+Stato: fatto (#8)
 
 Il primo passo chiede da dove viene il torrent: un file `.torrent`, l'URL
 di un file `.torrent` o un link magnet. Un torrent alla volta.

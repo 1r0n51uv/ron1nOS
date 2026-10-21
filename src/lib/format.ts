@@ -51,3 +51,17 @@ export function bytes(value: number) {
   const b = Math.max(0, value)
   return b < 1_000_000_000 ? `${num(b / 1_000_000)} MB` : `${num(b / 1_000_000_000, 1)} GB`
 }
+
+// Dimensioni in unità decimali, come qBittorrent: 1 KB, 3,9 GB, 412 GB.
+export function fileSize(value: number) {
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let v = Math.max(0, value)
+  let i = 0
+  while (v >= 1000 && i < units.length - 1) {
+    v /= 1000
+    i++
+  }
+  // Una cifra decimale solo sotto 10 e oltre i KB.
+  const digits = i >= 2 && v < 10 ? 1 : 0
+  return `${num(v, digits)} ${units[i]}`
+}

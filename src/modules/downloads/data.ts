@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 
 import { api } from '@/lib/api'
 
@@ -33,4 +33,30 @@ export function useDownloads() {
     // aggiornamento, e riprende da solo quando torna.
     retry: false,
   })
+}
+
+// Bozze del wizard Aggiungi (POST /api/v1/downloads/drafts).
+export type DraftFile = { index: number; path: string; size: number }
+
+export type Draft = {
+  id: string
+  source: 'file' | 'url'
+  status: 'ready'
+  infoHash: string
+  name: string
+  size: number // byte
+  files: DraftFile[]
+}
+
+export type DraftSource = { kind: 'file'; file: File } | { kind: 'link'; link: string }
+
+export function createDraft(source: DraftSource) {
+  if (source.kind === 'link') return api.post<Draft>('/downloads/drafts', { link: source.link })
+  const form = new FormData()
+  form.set('file', source.file)
+  return api.post<Draft>('/downloads/drafts', form)
+}
+
+export function useCreateDraft() {
+  return useMutation({ mutationFn: createDraft })
 }
