@@ -12,7 +12,7 @@ vi.mock('./data', async (importOriginal) => ({
   useServerStats: vi.fn(),
 }))
 
-const stats = { cpu: 23, ram: 57, disk: 82, tempC: 52, uptimeDays: 41 }
+const stats = { cpu: 23.4, ram: 57.2, disk: 82.1, tempC: 52.4, uptimeDays: 41 }
 
 describe('ServerWidget', () => {
   it('mostra lo scheletro finché non ci sono dati', () => {
@@ -27,5 +27,14 @@ describe('ServerWidget', () => {
     expect(screen.getByLabelText('SSD 82%, sopra soglia')).toBeInTheDocument()
     expect(screen.getByLabelText('CPU 23%')).toBeInTheDocument()
     expect(screen.getByText('52 °C · 41 g')).toBeInTheDocument()
+  })
+
+  it('mostra CPU, RAM e SSD in percentuale intera', () => {
+    vi.mocked(useServerStats).mockReturnValue({ data: stats } as ReturnType<typeof useServerStats>)
+    renderWithProviders(<ServerWidget />)
+    expect(screen.getByText('23%')).toBeInTheDocument()
+    expect(screen.getByText('57%')).toBeInTheDocument()
+    expect(screen.getByText('82%')).toBeInTheDocument()
+    for (const caption of ['CPU', 'RAM', 'SSD']) expect(screen.getByText(caption)).toBeInTheDocument()
   })
 })

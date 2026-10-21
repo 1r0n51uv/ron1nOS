@@ -20,7 +20,7 @@ del modulo Container). Per il dettaglio resta l'interfaccia di Glances su
 
 ### SRV-001 · Anelli CPU, RAM e disco
 
-Stato: pianificato (#15)
+Stato: fatto (#25)
 
 Il widget Server mostra a colpo d'occhio quanto sono occupate le tre
 risorse principali.
