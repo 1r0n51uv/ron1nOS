@@ -555,7 +555,8 @@ pezzi di codice, ma nessun dato. Ordine proposto:
 2. **Prova YAZIO** con l'account vero, dopo aver impostato la password:
    login, lettura del diario, scrittura di una voce prodotto, ricerca per
    codice a barre, obiettivo con o senza esercizi. Decide se NUT-016 e
-   NUT-023 restano come sono.
+   NUT-023 restano come sono. Script in
+   [`scripts/yazio-probe`](../../scripts/yazio-probe/README.md).
 3. **Base dati**: database `ron1nos` nel Postgres condiviso, schema unito
    da pkm, migrazioni all'avvio. Dipende dal BFF (#4).
 4. **API**: rotte di NUT-001…017 con OpenAPI. La logica di pkm da portare
