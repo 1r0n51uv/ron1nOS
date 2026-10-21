@@ -115,7 +115,7 @@ Accettazione:
 
 ### DL-006 · Wizard, passo 3: scelta dei file
 
-Stato: pianificato (#10)
+Stato: fatto (#10)
 
 Si sceglie quali file del torrent scaricare.
 

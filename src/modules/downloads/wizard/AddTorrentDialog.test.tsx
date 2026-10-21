@@ -198,3 +198,67 @@ describe('Passo 2: magnet', () => {
     expect(avanti()).toBeDisabled()
   })
 })
+
+describe('Passo 3: scelta dei file', () => {
+  async function toFiles(draft: Draft = DRAFT) {
+    vi.mocked(api.post).mockResolvedValue(draft)
+    open()
+    chooseFile()
+    fireEvent.click(avanti())
+    await screen.findByText(`${draft.files.length} file · ${draft.files.length > 1 ? '7,9 GB' : '700 B'}`)
+    fireEvent.click(avanti())
+    return screen.getByRole('list', { name: 'File del torrent' })
+  }
+
+  const box = (name: string) => screen.getByRole('checkbox', { name })
+
+  it('parte con tutti i file scelti e mostra il totale', async () => {
+    const list = await toFiles()
+    expect(screen.getByText('AGGIUNGI TORRENT · 3 DI 4')).toBeInTheDocument()
+    expect(screen.getByText('debian-13.1.0-amd64-DVD · 4 file · 7,9 GB')).toBeInTheDocument()
+    expect(within(list).getAllByRole('checkbox')).toHaveLength(5)
+    expect(box('debian-13.1.0-amd64-DVD')).toHaveAttribute('data-state', 'checked')
+    expect(screen.getByText('4 file · 7,9 GB su 7,9 GB')).toBeInTheDocument()
+    expect(avanti()).toBeEnabled()
+  })
+
+  it('togliere un file rende parziale la cartella', async () => {
+    await toFiles()
+    fireEvent.click(box('debian-13.1.0-amd64-DVD-2.iso'))
+    expect(box('debian-13.1.0-amd64-DVD-2.iso')).toHaveAttribute('data-state', 'unchecked')
+    expect(box('debian-13.1.0-amd64-DVD')).toHaveAttribute('data-state', 'indeterminate')
+    expect(screen.getByText('3 file · 3,9 GB su 7,9 GB')).toBeInTheDocument()
+  })
+
+  it('la cartella sceglie o toglie tutto il contenuto', async () => {
+    await toFiles()
+    fireEvent.click(box('debian-13.1.0-amd64-DVD'))
+    expect(screen.getByText('0 file · 0 B su 7,9 GB')).toBeInTheDocument()
+    expect(avanti()).toBeDisabled()
+    fireEvent.click(box('debian-13.1.0-amd64-DVD'))
+    expect(screen.getByText('4 file · 7,9 GB su 7,9 GB')).toBeInTheDocument()
+  })
+
+  it('Nessuno e Tutti', async () => {
+    await toFiles()
+    fireEvent.click(screen.getByRole('button', { name: 'Nessuno' }))
+    expect(avanti()).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Tutti' }))
+    expect(screen.getByText('4 file · 7,9 GB su 7,9 GB')).toBeInTheDocument()
+  })
+
+  it('Indietro e Avanti mantengono la scelta', async () => {
+    await toFiles()
+    fireEvent.click(box('SHA256SUMS.sign'))
+    fireEvent.click(screen.getByRole('button', { name: 'Indietro' }))
+    expect(screen.getByText('AGGIUNGI TORRENT · 2 DI 4')).toBeInTheDocument()
+    fireEvent.click(avanti())
+    expect(box('SHA256SUMS.sign')).toHaveAttribute('data-state', 'unchecked')
+  })
+
+  it('con un solo file è già scelto e si prosegue subito', async () => {
+    await toFiles({ ...DRAFT, name: 'a.iso', size: 700, files: [{ index: 0, path: 'a.iso', size: 700 }] })
+    expect(box('a.iso')).toHaveAttribute('data-state', 'checked')
+    expect(avanti()).toBeEnabled()
+  })
+})
