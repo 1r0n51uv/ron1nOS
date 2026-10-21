@@ -45,3 +45,9 @@ export function rate(bytesPerSecond: number) {
   const b = Math.max(0, bytesPerSecond)
   return b < 1_000_000 ? `${num(b / 1_000)} kB/s` : `${num(b / 1_000_000, 1)} MB/s`
 }
+
+// Memoria in unità decimali: MB interi sotto 1 GB, poi GB con un decimale.
+export function bytes(value: number) {
+  const b = Math.max(0, value)
+  return b < 1_000_000_000 ? `${num(b / 1_000_000)} MB` : `${num(b / 1_000_000_000, 1)} GB`
+}

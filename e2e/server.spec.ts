@@ -24,3 +24,10 @@ test('la riga Rete mostra le velocità (SRV-003)', async ({ page }) => {
   await expect(widget.getByText('Rete', { exact: true })).toBeVisible()
   await expect(widget.getByText(/^↓ [\d,]+ (kB|MB)\/s · ↑ [\d,]+ (kB|MB)\/s$/)).toBeVisible()
 })
+
+test('la tabella mostra i 3 container che consumano di più (SRV-004)', async ({ page }) => {
+  await page.goto('/')
+  const table = serverWidget(page).getByRole('table')
+  await expect(table.getByRole('columnheader')).toHaveText(['Container', 'CPU', 'RAM'])
+  await expect(table.getByRole('row')).toHaveCount(4)
+})

@@ -13,6 +13,14 @@ export type ServerStats = {
   uptimeSec: number
   // Somma delle interfacce fisiche, in byte al secondo (SRV-003).
   net?: { rxBps: number; txBps: number }
+  // Solo i container in esecuzione; assente senza socket Docker (SRV-004).
+  containers?: ContainerUsage[]
+}
+
+export type ContainerUsage = {
+  name: string
+  cpu: number // % di un core, può superare 100
+  memBytes: number
 }
 
 // Soglia oltre la quale un valore diventa rosso.
@@ -25,6 +33,14 @@ const base: ServerStats = {
   tempC: 52,
   uptimeSec: 41 * 86_400 + 3_600,
   net: { rxBps: 12_400_000, txBps: 820_000 },
+  containers: [
+    { name: 'qbittorrent', cpu: 14.2, memBytes: 412_000_000 },
+    { name: '1r0-api', cpu: 6.1, memBytes: 188_000_000 },
+    { name: 'postgres', cpu: 3.4, memBytes: 1_240_000_000 },
+    { name: 'caddy', cpu: 0.4, memBytes: 42_000_000 },
+    { name: 'uptime-kuma', cpu: 0, memBytes: 96_000_000 },
+    { name: 'watchtower', cpu: 0, memBytes: 18_000_000 },
+  ],
 }
 
 function jitter(v: number, by: number) {
@@ -55,4 +71,9 @@ export function percent(value: number) {
 export function headerMeta({ tempC, uptimeSec }: Pick<ServerStats, 'tempC' | 'uptimeSec'>) {
   const parts = [tempC === undefined ? null : `${Math.round(tempC)} °C`, uptime(uptimeSec)]
   return parts.filter(Boolean).join(' · ')
+}
+
+// I container che consumano di più: CPU più alta, a parità la RAM (SRV-004).
+export function topContainers(list: ContainerUsage[], n = 3) {
+  return [...list].sort((a, b) => b.cpu - a.cpu || b.memBytes - a.memBytes).slice(0, n)
 }

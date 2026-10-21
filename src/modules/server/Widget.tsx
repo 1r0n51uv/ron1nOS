@@ -1,7 +1,7 @@
 import { ProgressRing, WidgetCard } from '@/components/ron1n'
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
-import { rate } from '@/lib/format'
-import { ALERT_THRESHOLD, headerMeta, percent, useServerStats } from './data'
+import { bytes, num, rate } from '@/lib/format'
+import { ALERT_THRESHOLD, headerMeta, percent, topContainers, useServerStats } from './data'
 
 export function ServerWidget({ className }: { className?: string }) {
   const { data } = useServerStats()
@@ -38,6 +38,26 @@ export function ServerWidget({ className }: { className?: string }) {
             ↓ {rate(data.net.rxBps)} · ↑ {rate(data.net.txBps)}
           </span>
         </div>
+      ) : null}
+      {data.containers?.length ? (
+        <table className="w-full table-fixed border-t border-glass-border text-sm">
+          <thead>
+            <tr className="text-xs text-ink-muted">
+              <th className="pt-3.5 pb-1 text-left font-normal">Container</th>
+              <th className="w-16 pt-3.5 pb-1 text-right font-normal">CPU</th>
+              <th className="w-[72px] pt-3.5 pb-1 text-right font-normal">RAM</th>
+            </tr>
+          </thead>
+          <tbody>
+            {topContainers(data.containers).map((c) => (
+              <tr key={c.name}>
+                <td className="truncate py-1">{c.name}</td>
+                <td className="py-1 text-right font-mono">{num(c.cpu)}%</td>
+                <td className="py-1 text-right font-mono">{bytes(c.memBytes)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       ) : null}
     </WidgetCard>
   )

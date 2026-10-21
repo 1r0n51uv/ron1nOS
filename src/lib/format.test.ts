@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { clock, greeting, num, rate, signed, uptime } from './format'
+import { bytes, clock, greeting, num, rate, signed, uptime } from './format'
 
 describe('num', () => {
   // In it-IT il punto delle migliaia compare da cinque cifre (1234 resta 1234).
@@ -55,5 +55,15 @@ describe('rate', () => {
 
   it('da 1 MB/s usa i MB/s con un decimale', () => {
     expect(rate(12_400_000)).toBe('12,4 MB/s')
+  })
+})
+
+describe('bytes', () => {
+  it('sotto 1 GB usa i MB interi', () => {
+    expect(bytes(412_300_000)).toBe('412 MB')
+  })
+
+  it('da 1 GB usa i GB con un decimale', () => {
+    expect(bytes(1_240_000_000)).toBe('1,2 GB')
   })
 })

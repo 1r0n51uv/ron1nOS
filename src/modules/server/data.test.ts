@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { headerMeta, percent } from './data'
+import { headerMeta, percent, topContainers } from './data'
 
 describe('percent', () => {
   it('arrotonda al numero intero', () => {
@@ -21,5 +21,26 @@ describe('headerMeta', () => {
 
   it('omette la temperatura se manca il sensore', () => {
     expect(headerMeta({ uptimeSec: 3 * 86_400 })).toBe('3 g')
+  })
+})
+
+describe('topContainers', () => {
+  it('ordina per CPU e a parità per RAM', () => {
+    const list = [
+      { name: 'a', cpu: 0, memBytes: 10 },
+      { name: 'b', cpu: 0, memBytes: 30 },
+      { name: 'c', cpu: 5, memBytes: 1 },
+      { name: 'd', cpu: 0, memBytes: 20 },
+    ]
+    expect(topContainers(list).map((c) => c.name)).toEqual(['c', 'b', 'd'])
+  })
+
+  it('non modifica la lista originale', () => {
+    const list = [
+      { name: 'a', cpu: 1, memBytes: 1 },
+      { name: 'b', cpu: 2, memBytes: 1 },
+    ]
+    topContainers(list)
+    expect(list[0].name).toBe('a')
   })
 })
