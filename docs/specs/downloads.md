@@ -20,7 +20,7 @@ notifiche a download finito, VPN per il traffico BitTorrent. Per tutto questo re
 
 ### DL-001 · Widget dei download in corso
 
-Stato: pianificato (#5)
+Stato: fatto (#29)
 
 Nella dashboard il widget Download mostra cosa sta scaricando il server,
 aggiornato da solo.
