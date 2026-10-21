@@ -17,3 +17,10 @@ test('la testata mostra temperatura e uptime (SRV-002)', async ({ page }) => {
   await page.goto('/')
   await expect(serverWidget(page).getByText(/^\d+ °C · \d+ (g|h)$/)).toBeVisible()
 })
+
+test('la riga Rete mostra le velocità (SRV-003)', async ({ page }) => {
+  await page.goto('/')
+  const widget = serverWidget(page)
+  await expect(widget.getByText('Rete', { exact: true })).toBeVisible()
+  await expect(widget.getByText(/^↓ [\d,]+ (kB|MB)\/s · ↑ [\d,]+ (kB|MB)\/s$/)).toBeVisible()
+})

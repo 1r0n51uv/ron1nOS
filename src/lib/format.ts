@@ -39,3 +39,9 @@ export function uptime(totalSeconds: number) {
   const hours = Math.floor(Math.max(0, totalSeconds) / 3_600)
   return hours < 24 ? `${hours} h` : `${Math.floor(hours / 24)} g`
 }
+
+// Velocità di trasferimento in unità decimali: kB/s sotto 1 MB/s, poi MB/s.
+export function rate(bytesPerSecond: number) {
+  const b = Math.max(0, bytesPerSecond)
+  return b < 1_000_000 ? `${num(b / 1_000)} kB/s` : `${num(b / 1_000_000, 1)} MB/s`
+}

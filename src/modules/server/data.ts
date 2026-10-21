@@ -11,12 +11,21 @@ export type ServerStats = {
   disk: number // %
   tempC?: number // assente senza sensore della CPU
   uptimeSec: number
+  // Somma delle interfacce fisiche, in byte al secondo (SRV-003).
+  net?: { rxBps: number; txBps: number }
 }
 
 // Soglia oltre la quale un valore diventa rosso.
 export const ALERT_THRESHOLD = 80
 
-const base: ServerStats = { cpu: 23.4, ram: 57.2, disk: 82.1, tempC: 52, uptimeSec: 41 * 86_400 + 3_600 }
+const base: ServerStats = {
+  cpu: 23.4,
+  ram: 57.2,
+  disk: 82.1,
+  tempC: 52,
+  uptimeSec: 41 * 86_400 + 3_600,
+  net: { rxBps: 12_400_000, txBps: 820_000 },
+}
 
 function jitter(v: number, by: number) {
   return Math.max(0, Math.min(100, v + (Math.random() - 0.5) * by))
