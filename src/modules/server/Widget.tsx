@@ -4,7 +4,20 @@ import { bytes, num, rate } from '@/lib/format'
 import { headerMeta, isHot, percent, THRESHOLDS, topContainers, useServerStats } from './data'
 
 export function ServerWidget({ className }: { className?: string }) {
-  const { data } = useServerStats()
+  const { data, isError } = useServerStats()
+  // Con Glances irraggiungibile niente valori vecchi: solo lo stato (SRV-006).
+  if (isError) {
+    return (
+      <WidgetCard title="Server" meta="offline" className={className}>
+        <div className="flex flex-col items-start gap-2.5">
+          <StatusPill tone="alert">Glances · offline</StatusPill>
+          <div role="status" className="text-sm text-ink-muted">
+            Glances non raggiungibile. Riprovo ogni 5 secondi.
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
   if (!data) return <WidgetSkeleton title="Server" className={className} />
 
   const rings = [
