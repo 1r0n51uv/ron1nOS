@@ -66,7 +66,7 @@ Accettazione:
 
 ### SRV-004 · Consumo per container
 
-Stato: pianificato (#18)
+Stato: fatto (#32)
 
 Il widget dice quali container stanno usando più risorse.
 
