@@ -168,7 +168,7 @@ Accettazione:
 
 ### DL-009 · Credenziali solo sul server
 
-Stato: pianificato (#4)
+Stato: fatto (#27)
 
 Il browser non vede mai le credenziali di qBittorrent e non parla
 direttamente con la sua Web API.
