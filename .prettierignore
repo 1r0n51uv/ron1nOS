@@ -1,4 +1,5 @@
 dist
+dist-server
 coverage
 package-lock.json
 docs/*.png

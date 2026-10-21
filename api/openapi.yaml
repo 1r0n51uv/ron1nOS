@@ -1,0 +1,80 @@
+# Contratto dell'API di ron1nOS, condiviso da dashboard web e app iOS.
+# Le rotte sono versionate: un cambio incompatibile va sotto /api/v2.
+openapi: 3.1.0
+info:
+  title: ron1nOS API
+  version: 1.0.0
+  description: Backend della dashboard ron1nOS. Raggiungibile solo dalla tailnet.
+servers:
+  - url: /api/v1
+paths:
+  /health:
+    get:
+      summary: Stato del backend
+      operationId: getHealth
+      responses:
+        "200":
+          description: Il backend risponde.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok: { type: boolean, const: true }
+  /downloads:
+    get:
+      summary: Velocità totale e torrent di qBittorrent
+      description: >
+        Torrent ordinati per stato (downloading, queued, seeding, stopped, error)
+        e, a parità di stato, dal più vicino alla fine.
+      operationId: getDownloads
+      responses:
+        "200":
+          description: Dati correnti di qBittorrent.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Downloads" }
+        "502":
+          description: qBittorrent ha rifiutato le credenziali del backend.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503":
+          description: qBittorrent non raggiungibile.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+components:
+  schemas:
+    Downloads:
+      type: object
+      required: [downloadSpeed, torrents]
+      properties:
+        downloadSpeed: { type: number, description: Velocità totale di download in byte/s. }
+        torrents:
+          type: array
+          items: { $ref: "#/components/schemas/Torrent" }
+    Torrent:
+      type: object
+      required: [hash, name, progress, state, etaSeconds, downloadSpeed, size]
+      properties:
+        hash: { type: string, description: Infohash. }
+        name: { type: string }
+        progress: { type: number, minimum: 0, maximum: 1 }
+        state:
+          type: string
+          enum: [downloading, queued, seeding, stopped, error]
+        etaSeconds:
+          type: [integer, "null"]
+          description: Secondi alla fine; null se non stimabile.
+        downloadSpeed: { type: number, description: byte/s }
+        size: { type: number, description: Byte selezionati per il download. }
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          enum: [qbittorrent_unreachable, qbittorrent_auth, not_found, internal]
+        message: { type: string, description: Messaggio in italiano da mostrare. }
