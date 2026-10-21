@@ -94,4 +94,21 @@ describe('ServerWidget', () => {
     renderWithProviders(<ServerWidget />)
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
+
+  it('da 85 °C segnala la temperatura con una pill', () => {
+    vi.mocked(useServerStats).mockReturnValue({
+      data: { ...stats, tempC: 87.6 },
+    } as ReturnType<typeof useServerStats>)
+    renderWithProviders(<ServerWidget />)
+    expect(screen.getByText('CPU a 88 °C')).toBeInTheDocument()
+  })
+
+  it('sotto soglia non ha elementi rossi', () => {
+    vi.mocked(useServerStats).mockReturnValue({
+      data: { ...stats, disk: 64, tempC: 52 },
+    } as ReturnType<typeof useServerStats>)
+    renderWithProviders(<ServerWidget />)
+    expect(screen.queryByText(/^CPU a/)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/sopra soglia/)).not.toBeInTheDocument()
+  })
 })

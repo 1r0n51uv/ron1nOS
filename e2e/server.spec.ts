@@ -31,3 +31,8 @@ test('la tabella mostra i 3 container che consumano di più (SRV-004)', async ({
   await expect(table.getByRole('columnheader')).toHaveText(['Container', 'CPU', 'RAM'])
   await expect(table.getByRole('row')).toHaveCount(4)
 })
+
+test('un valore sopra soglia è segnalato (SRV-005)', async ({ page }) => {
+  await page.goto('/')
+  await expect(serverWidget(page).getByRole('img', { name: /^SSD \d+%, sopra soglia$/ })).toBeVisible()
+})
