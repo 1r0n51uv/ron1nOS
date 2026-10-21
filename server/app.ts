@@ -16,6 +16,8 @@ import {
 } from './drafts.ts'
 import { toDownloads } from './downloads.ts'
 import { fetchTorrent as defaultFetchTorrent, TorrentFetchError } from './fetch-torrent.ts'
+import type { GlancesClient } from './glances.ts'
+import { GlancesUnreachableError } from './glances.ts'
 import type { QbtClient } from './qbittorrent.ts'
 import { QbtAuthError, QbtUnreachableError } from './qbittorrent.ts'
 import { InvalidTorrentError, MAX_TORRENT_BYTES, parseTorrent } from './torrentfile.ts'
@@ -32,6 +34,7 @@ type Deps = {
   qbt: QbtClient
   staticDir?: string
   drafts?: DraftService
+  glances?: GlancesClient
   fetchTorrent?: (url: string) => Promise<Buffer>
 }
 
@@ -41,6 +44,7 @@ export function createApp({
   qbt,
   staticDir,
   drafts = createDraftService({ qbt }),
+  glances,
   fetchTorrent = defaultFetchTorrent,
 }: Deps) {
   const app = new Hono()
@@ -112,6 +116,12 @@ export function createApp({
 
   app.post('/api/v1/downloads/drafts/:id/retry', async (c) => c.json(await drafts.retry(c.req.param('id'))))
 
+  // Modulo Server (docs/specs/server.md): sola lettura da Glances.
+  app.get('/api/v1/server/stats', async (c) => {
+    if (!glances) throw new GlancesUnreachableError('Glances non configurato')
+    return c.json(await glances.stats())
+  })
+
   app.all('/api/*', (c) => c.json<ApiError>({ error: 'not_found', message: 'Rotta non trovata' }, 404))
 
   app.onError((err, c) => {
@@ -120,6 +130,9 @@ export function createApp({
         { error: 'qbittorrent_unreachable', message: 'qBittorrent non raggiungibile' },
         503,
       )
+    }
+    if (err instanceof GlancesUnreachableError) {
+      return c.json<ApiError>({ error: 'glances_unreachable', message: 'Glances non raggiungibile' }, 503)
     }
     if (err instanceof QbtAuthError) {
       return c.json<ApiError>(

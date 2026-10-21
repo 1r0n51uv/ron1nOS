@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { uptime } from '@/lib/format'
-import { mockDelay } from '@/lib/mock'
+import { api } from '@/lib/api'
 
-// Stessa forma della risposta di GET /api/v1/server/stats (specifica
-// docs/specs/server.md). Le percentuali arrivano con i decimali di Glances.
+// Risposta di GET /api/v1/server/stats (specifica docs/specs/server.md,
+// contratto in api/openapi.yaml). Le percentuali hanno i decimali di Glances.
 export type ServerStats = {
   cpu: number // %
   ram: number // %
@@ -30,35 +30,8 @@ export function isHot(tempC: number | undefined): tempC is number {
   return tempC !== undefined && Math.round(tempC) >= THRESHOLDS.tempC
 }
 
-const base: ServerStats = {
-  cpu: 23.4,
-  ram: 57.2,
-  disk: 82.1,
-  tempC: 52,
-  uptimeSec: 41 * 86_400 + 3_600,
-  net: { rxBps: 12_400_000, txBps: 820_000 },
-  containers: [
-    { name: 'qbittorrent', cpu: 14.2, memBytes: 412_000_000 },
-    { name: '1r0-api', cpu: 6.1, memBytes: 188_000_000 },
-    { name: 'postgres', cpu: 3.4, memBytes: 1_240_000_000 },
-    { name: 'caddy', cpu: 0.4, memBytes: 42_000_000 },
-    { name: 'uptime-kuma', cpu: 0, memBytes: 96_000_000 },
-    { name: 'watchtower', cpu: 0, memBytes: 18_000_000 },
-  ],
-}
-
-function jitter(v: number, by: number) {
-  return Math.max(0, Math.min(100, v + (Math.random() - 0.5) * by))
-}
-
-// Mock: da sostituire con GET /api/v1/server/stats (issue #14).
-export function getServerStats(): Promise<ServerStats> {
-  return mockDelay({
-    ...base,
-    cpu: jitter(base.cpu, 14),
-    ram: jitter(base.ram, 4),
-    tempC: jitter(52, 4),
-  })
+export function getServerStats() {
+  return api.get<ServerStats>('/server/stats')
 }
 
 // La sorgente passa da un oggetto così i test possono sostituirla.
