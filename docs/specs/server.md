@@ -36,7 +36,7 @@ Accettazione:
 
 ### SRV-002 · Temperatura e uptime
 
-Stato: pianificato (#16)
+Stato: fatto (#26)
 
 Nella testata del widget la temperatura della CPU e da quanto il server è
 acceso.
