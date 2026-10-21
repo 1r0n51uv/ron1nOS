@@ -4,32 +4,34 @@ import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 
-import type { DraftStore } from './drafts.ts'
-import { createDraftStore } from './drafts.ts'
+import type { DraftService } from './drafts.ts'
+import {
+  createDraftService,
+  DraftNotFoundError,
+  DuplicateTorrentError,
+  InvalidMagnetError,
+} from './drafts.ts'
 import { toDownloads } from './downloads.ts'
 import { fetchTorrent as defaultFetchTorrent, TorrentFetchError } from './fetch-torrent.ts'
 import type { QbtClient } from './qbittorrent.ts'
 import { QbtAuthError, QbtUnreachableError } from './qbittorrent.ts'
 import { InvalidTorrentError, MAX_TORRENT_BYTES, parseTorrent } from './torrentfile.ts'
 
-export type ApiError = { error: string; message: string }
+export type ApiError = { error: string; message: string; torrent?: { name: string; state: string } }
 
 type Deps = {
   qbt: QbtClient
   staticDir?: string
-  drafts?: DraftStore
+  drafts?: DraftService
   fetchTorrent?: (url: string) => Promise<Buffer>
 }
 
 class InvalidLinkError extends Error {}
 
-// Link magnet v1 (btih) o v2 (btmh), come nel passo 1 del wizard.
-export const MAGNET = /^magnet:\?.*\bxt=urn:bt(ih|mh):/i
-
 export function createApp({
   qbt,
   staticDir,
-  drafts = createDraftStore(),
+  drafts = createDraftService({ qbt }),
   fetchTorrent = defaultFetchTorrent,
 }: Deps) {
   const app = new Hono()
@@ -58,13 +60,11 @@ export function createApp({
         const file = body.file
         if (!(file instanceof File)) throw new InvalidTorrentError()
         const torrent = Buffer.from(await file.arrayBuffer())
-        return c.json(drafts.add('file', parseTorrent(torrent), torrent), 201)
+        return c.json(await drafts.fromTorrent('file', torrent), 201)
       }
       const body = await c.req.json<{ link?: unknown }>().catch(() => ({ link: undefined }))
       const link = typeof body.link === 'string' ? body.link.trim() : ''
-      if (MAGNET.test(link)) {
-        return c.json<ApiError>({ error: 'not_implemented', message: 'Magnet non ancora supportati' }, 501)
-      }
+      if (/^magnet:/i.test(link)) return c.json(await drafts.fromMagnet(link), 201)
       if (!/^https?:\/\//i.test(link)) throw new InvalidLinkError()
       const torrent = await fetchTorrent(link)
       let meta
@@ -75,15 +75,14 @@ export function createApp({
         if (err instanceof InvalidTorrentError) throw new TorrentFetchError('non è un torrent')
         throw err
       }
-      return c.json(drafts.add('url', meta, torrent), 201)
+      return c.json(await drafts.fromTorrent('url', torrent, meta), 201)
     },
   )
 
-  app.get('/api/v1/downloads/drafts/:id', (c) => {
-    const entry = drafts.get(c.req.param('id'))
-    if (!entry) return c.json<ApiError>({ error: 'draft_not_found', message: 'Bozza non trovata' }, 404)
-    return c.json(entry.draft)
-  })
+  // Con un magnet: interrogata dal wizard finché i metadati non arrivano.
+  app.get('/api/v1/downloads/drafts/:id', async (c) => c.json(await drafts.get(c.req.param('id'))))
+
+  app.post('/api/v1/downloads/drafts/:id/retry', async (c) => c.json(await drafts.retry(c.req.param('id'))))
 
   app.all('/api/*', (c) => c.json<ApiError>({ error: 'not_found', message: 'Rotta non trovata' }, 404))
 
@@ -103,13 +102,22 @@ export function createApp({
     if (err instanceof InvalidTorrentError) {
       return c.json<ApiError>({ error: 'invalid_torrent', message: 'File torrent non valido' }, 400)
     }
-    if (err instanceof InvalidLinkError) {
+    if (err instanceof InvalidLinkError || err instanceof InvalidMagnetError) {
       return c.json<ApiError>({ error: 'invalid_link', message: 'Link non valido' }, 400)
     }
     if (err instanceof TorrentFetchError) {
       return c.json<ApiError>(
         { error: 'torrent_fetch_failed', message: 'Impossibile scaricare il file torrent' },
         422,
+      )
+    }
+    if (err instanceof DraftNotFoundError) {
+      return c.json<ApiError>({ error: 'draft_not_found', message: 'Bozza non trovata' }, 404)
+    }
+    if (err instanceof DuplicateTorrentError) {
+      return c.json<ApiError>(
+        { error: 'duplicate', message: 'Questo torrent è già nei download', torrent: err.torrent },
+        409,
       )
     }
     console.error(err)

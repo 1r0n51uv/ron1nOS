@@ -47,7 +47,33 @@ function chooseFile(name = 'debian.torrent', content = 'd4:infod4:name1:aee') {
 
 beforeEach(() => {
   vi.mocked(api.post).mockReset()
+  vi.mocked(api.get).mockReset()
 })
+
+const HASH = '3b1a1469c180f447b77021074dbbccaef62611e7'
+
+function magnet(over: Partial<Draft> = {}): Draft {
+  return {
+    ...DRAFT,
+    source: 'magnet',
+    status: 'metadata',
+    infoHash: HASH,
+    name: HASH,
+    size: 0,
+    files: [],
+    metadata: { peers: 3, waitedSeconds: 18, limitSeconds: 60 },
+    ...over,
+  }
+}
+
+function sendMagnet() {
+  open()
+  fireEvent.mouseDown(screen.getByRole('tab', { name: 'Link' }))
+  fireEvent.change(screen.getByLabelText('Link magnet o URL di un .torrent'), {
+    target: { value: `magnet:?xt=urn:btih:${HASH}` },
+  })
+  fireEvent.click(avanti())
+}
 
 describe('Passo 1: sorgente', () => {
   it('parte dalla scheda File con Avanti disattivato', () => {
@@ -126,5 +152,49 @@ describe('Passo 2: contenuti', () => {
     expect(screen.getByLabelText('Link magnet o URL di un .torrent')).toHaveValue(
       'https://example.com/d.torrent',
     )
+  })
+})
+
+describe('Passo 2: magnet', () => {
+  it('mostra l’attesa dei metadati con peer e tempo', async () => {
+    vi.mocked(api.post).mockResolvedValue(magnet())
+    vi.mocked(api.get).mockResolvedValue(magnet())
+    sendMagnet()
+    expect(await screen.findByText('Recupero dei metadati…')).toBeInTheDocument()
+    expect(screen.getByText('3 peer')).toBeInTheDocument()
+    expect(screen.getByText('0:18 su 1:00')).toBeInTheDocument()
+    expect(screen.getByText(`magnet · ${HASH}`)).toBeInTheDocument()
+    expect(avanti()).toBeDisabled()
+  })
+
+  it('quando arrivano i metadati mostra i contenuti', async () => {
+    vi.mocked(api.post).mockResolvedValue(magnet())
+    vi.mocked(api.get).mockResolvedValue({ ...DRAFT, source: 'magnet', infoHash: HASH })
+    sendMagnet()
+    expect(await screen.findByText('4 file · 7,9 GB')).toBeInTheDocument()
+    expect(api.get).toHaveBeenCalledWith('/downloads/drafts/d1')
+  })
+
+  it('dopo l’attesa propone Riprova', async () => {
+    const timeout = magnet({ status: 'timeout', metadata: { peers: 0, waitedSeconds: 60, limitSeconds: 60 } })
+    vi.mocked(api.post).mockResolvedValueOnce(timeout).mockResolvedValueOnce(magnet())
+    vi.mocked(api.get).mockResolvedValue(timeout)
+    sendMagnet()
+    expect(await screen.findByText('Nessun peer ha fornito i metadati.')).toBeInTheDocument()
+    expect(screen.getByText('Attesi 60 secondi. Puoi riprovare per altri 60.')).toBeInTheDocument()
+    vi.mocked(api.get).mockResolvedValue(magnet())
+    fireEvent.click(screen.getByRole('button', { name: 'Riprova' }))
+    expect(await screen.findByText('Recupero dei metadati…')).toBeInTheDocument()
+    expect(api.post).toHaveBeenLastCalledWith('/downloads/drafts/d1/retry')
+  })
+
+  it('un duplicato ferma il wizard con nome e stato', async () => {
+    vi.mocked(api.post).mockRejectedValue(
+      new ApiError('duplicate', '', 409, { torrent: { name: 'debian-13.1.0-amd64-DVD', state: 'seeding' } }),
+    )
+    sendMagnet()
+    expect(await screen.findByText('Questo torrent è già nei download.')).toBeInTheDocument()
+    expect(screen.getByText('debian-13.1.0-amd64-DVD · in seed')).toBeInTheDocument()
+    expect(avanti()).toBeDisabled()
   })
 })

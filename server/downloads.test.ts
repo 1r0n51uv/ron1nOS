@@ -3,9 +3,10 @@ import { describe, expect, it } from 'vitest'
 
 import { mapState, toDownloads } from './downloads.ts'
 import type { QbtTorrent } from './qbittorrent.ts'
+import { qbtTorrent } from './testing/fake-qbt.ts'
 
 function torrent(over: Partial<QbtTorrent>): QbtTorrent {
-  return { hash: 'h', name: 'n', progress: 0, state: 'downloading', eta: 60, dlspeed: 0, size: 1, ...over }
+  return qbtTorrent({ hash: 'h', name: 'n', progress: 0, eta: 60, dlspeed: 0, size: 1, ...over })
 }
 
 describe('mapState', () => {
@@ -56,5 +57,12 @@ describe('toDownloads', () => {
       downloadSpeed: 5,
       size: 9,
     })
+  })
+})
+
+describe('toDownloads · bozze', () => {
+  it('non mostra le bozze del wizard', () => {
+    const list = [torrent({ hash: 'vero' }), torrent({ hash: 'bozza', tags: 'altro, ron1nos-draft' })]
+    expect(toDownloads({ dl_info_speed: 0 }, list).torrents.map((t) => t.hash)).toEqual(['vero'])
   })
 })

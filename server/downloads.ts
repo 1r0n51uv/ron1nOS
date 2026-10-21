@@ -51,8 +51,20 @@ export function mapState(state: string): TorrentState {
   return states[state] ?? 'error'
 }
 
+// Tag delle bozze del wizard Aggiungi: torrent in qBittorrent ma non
+// ancora avviati dall'utente, quindi non ancora download.
+export const DRAFT_TAG = 'ron1nos-draft'
+
+export function isDraft(t: Pick<QbtTorrent, 'tags'>) {
+  return (t.tags ?? '')
+    .split(',')
+    .map((x) => x.trim())
+    .includes(DRAFT_TAG)
+}
+
 export function toDownloads(transfer: QbtTransferInfo, list: QbtTorrent[]): Downloads {
-  const torrents = list.map((t): Torrent => ({
+  const real = list.filter((t) => !isDraft(t))
+  const torrents = real.map((t): Torrent => ({
     hash: t.hash,
     name: t.name,
     progress: t.progress,

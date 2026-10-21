@@ -97,7 +97,7 @@ Accettazione:
 
 ### DL-005 · Wizard, passo 2: lettura dei contenuti
 
-Stato: pianificato (#9)
+Stato: fatto (#9)
 
 Prima di scegliere cosa scaricare il wizard legge nome, dimensione e
 elenco dei file del torrent.

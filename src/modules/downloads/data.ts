@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '@/lib/api'
 
@@ -40,13 +40,18 @@ export type DraftFile = { index: number; path: string; size: number }
 
 export type Draft = {
   id: string
-  source: 'file' | 'url'
-  status: 'ready'
+  source: 'file' | 'url' | 'magnet'
+  // ready: file noti · metadata: magnet in attesa dei peer · timeout: attesa finita
+  status: 'ready' | 'metadata' | 'timeout'
   infoHash: string
   name: string
   size: number // byte
   files: DraftFile[]
+  metadata?: { peers: number; waitedSeconds: number; limitSeconds: number }
 }
+
+// Torrent già presente: arriva nel corpo dell'errore 409 duplicate.
+export type DuplicateTorrent = { name: string; state: TorrentState }
 
 export type DraftSource = { kind: 'file'; file: File } | { kind: 'link'; link: string }
 
@@ -59,4 +64,24 @@ export function createDraft(source: DraftSource) {
 
 export function useCreateDraft() {
   return useMutation({ mutationFn: createDraft })
+}
+
+// Una bozza magnet si rilegge ogni secondo finché aspetta i metadati.
+export function useDraft(initial: Draft | undefined) {
+  return useQuery({
+    queryKey: ['draft', initial?.id],
+    queryFn: () => api.get<Draft>(`/downloads/drafts/${initial!.id}`),
+    enabled: !!initial,
+    initialData: initial,
+    refetchInterval: (q) => (q.state.data?.status === 'metadata' ? 1_000 : false),
+    retry: false,
+  })
+}
+
+export function useRetryDraft() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.post<Draft>(`/downloads/drafts/${id}/retry`),
+    onSuccess: (draft) => client.setQueryData(['draft', draft.id], draft),
+  })
 }

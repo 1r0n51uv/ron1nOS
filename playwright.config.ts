@@ -44,6 +44,8 @@ export default defineConfig({
         PORT: '4173',
         STATIC_DIR: 'dist',
         QBT_URL: 'http://localhost:18080',
+        // Attesa dei metadati corta per provare Riprova senza aspettare un minuto.
+        METADATA_WAIT_SECONDS: '3',
         QBT_USERNAME: 'admin',
         QBT_PASSWORD: 'admin',
       },

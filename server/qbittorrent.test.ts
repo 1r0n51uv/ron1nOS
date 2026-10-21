@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from 'vitest'
 
-import { createQbtClient, QbtAuthError, QbtUnreachableError } from './qbittorrent.ts'
+import { createQbtClient, QbtAuthError, QbtRejectedError, QbtUnreachableError } from './qbittorrent.ts'
 
 const url = 'http://qbittorrent:8080'
 
@@ -73,5 +73,63 @@ describe('createQbtClient', () => {
     const qbt = client(fetch)
     await Promise.all([qbt.torrents(), qbt.torrents(), qbt.transferInfo()])
     expect(fetch.mock.calls.filter(([u]) => String(u).endsWith('/auth/login'))).toHaveLength(1)
+  })
+})
+
+describe('createQbtClient · scrittura', () => {
+  function logged(...responses: Response[]) {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValueOnce(loginOk())
+    for (const r of responses) fetch.mockResolvedValueOnce(r)
+    return { fetch, qbt: client(fetch) }
+  }
+
+  it('filtra i torrent per hash e tag', async () => {
+    const { fetch, qbt } = logged(Response.json([]))
+    await qbt.torrents({ hashes: ['a', 'b'], tag: 'ron1nos-draft' })
+    expect(fetch.mock.calls[1][0]).toBe(`${url}/api/v2/torrents/info?hashes=a%7Cb&tag=ron1nos-draft`)
+  })
+
+  it('aggiunge un magnet in multipart con le opzioni', async () => {
+    const { fetch, qbt } = logged(new Response('Ok.'))
+    await qbt.add({ magnet: 'magnet:?xt=urn:btih:x', stopCondition: 'MetadataReceived', tags: 't' })
+    const [path, init] = fetch.mock.calls[1]
+    expect(path).toBe(`${url}/api/v2/torrents/add`)
+    const form = init?.body as FormData
+    expect(form.get('urls')).toBe('magnet:?xt=urn:btih:x')
+    expect(form.get('stopCondition')).toBe('MetadataReceived')
+    expect(form.get('tags')).toBe('t')
+  })
+
+  it('aggiunge un file .torrent fermo', async () => {
+    const { fetch, qbt } = logged(new Response('Ok.'))
+    await qbt.add({ torrent: Buffer.from('d4:infoe'), stopped: true })
+    const form = fetch.mock.calls[1][1]?.body as FormData
+    expect(form.get('torrents')).toBeInstanceOf(Blob)
+    expect(form.get('stopped')).toBe('true')
+  })
+
+  it('Fails. diventa un rifiuto', async () => {
+    const { qbt } = logged(new Response('Fails.'))
+    await expect(qbt.add({ magnet: 'm' })).rejects.toBeInstanceOf(QbtRejectedError)
+  })
+
+  it('files: null se qBittorrent non conosce il torrent', async () => {
+    const { qbt } = logged(new Response('Not Found', { status: 404 }))
+    await expect(qbt.files('x')).resolves.toBeNull()
+  })
+
+  it('filePrio, start e delete mandano i parametri della Web API', async () => {
+    const { fetch, qbt } = logged(new Response(''), new Response(''), new Response(''))
+    await qbt.filePrio('h', [1, 3], 0)
+    await qbt.start('h')
+    await qbt.delete('h', true)
+    expect(String(fetch.mock.calls[1][1]?.body)).toBe('hash=h&id=1%7C3&priority=0')
+    expect(String(fetch.mock.calls[2][1]?.body)).toBe('hashes=h')
+    expect(String(fetch.mock.calls[3][1]?.body)).toBe('hashes=h&deleteFiles=true')
+  })
+
+  it('legge lo spazio libero da sync/maindata', async () => {
+    const { qbt } = logged(Response.json({ server_state: { free_space_on_disk: 123 } }))
+    await expect(qbt.freeSpace()).resolves.toBe(123)
   })
 })

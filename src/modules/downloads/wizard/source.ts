@@ -1,3 +1,5 @@
+import type { TorrentState } from '../data'
+
 // Passo 1: cosa è una sorgente valida (DL-004). Il server rifà gli stessi
 // controlli; qui servono per attivare Avanti e dare l'errore subito.
 
@@ -36,4 +38,18 @@ export const EMPTY_SOURCE: SourceState = { tab: 'file', file: null, fileError: f
 
 export function isReady(s: SourceState) {
   return s.tab === 'file' ? !!s.file && !s.fileError : parseLink(s.link) !== null
+}
+
+export const STATE_LABEL: Record<TorrentState, string> = {
+  downloading: 'in download',
+  queued: 'in coda',
+  seeding: 'in seed',
+  stopped: 'fermo',
+  error: 'in errore',
+}
+
+// Attesa dei metadati come nel mockup: 0:18 su 1:00.
+export function waitClock(seconds: number) {
+  const s = Math.max(0, Math.floor(seconds))
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
