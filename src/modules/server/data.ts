@@ -68,7 +68,10 @@ export function useServerStats() {
   return useQuery({
     queryKey: ['server', 'stats'],
     queryFn: () => source.getServerStats(),
+    // Ogni 5 s, solo con la scheda in primo piano (SRV-007). I dati restano
+    // a schermo durante l'aggiornamento: niente skeleton né lampeggi.
     refetchInterval: 5_000,
+    refetchIntervalInBackground: false,
     // Un solo nuovo tentativo dopo 1 s: offline entro due aggiornamenti (SRV-006).
     retry: 1,
     retryDelay: 1_000,

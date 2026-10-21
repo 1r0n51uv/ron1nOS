@@ -110,7 +110,7 @@ Accettazione:
 
 ### SRV-007 · Aggiornamento continuo
 
-Stato: pianificato (#21)
+Stato: fatto (#37)
 
 Il widget segue il server senza ricaricare la pagina.
 
