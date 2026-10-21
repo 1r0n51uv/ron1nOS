@@ -13,7 +13,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { useCreateDraft, useDraft, useRetryDraft } from '../data'
+import { fileSize } from '@/lib/format'
 import { ContentsStep } from './ContentsStep'
+import { FilesStep } from './FilesStep'
 import { SourceStep } from './SourceStep'
 import type { SourceState } from './source'
 import { EMPTY_SOURCE, isReady, parseLink } from './source'
@@ -29,6 +31,11 @@ function Wizard() {
   const draft = useCreateDraft()
   const current = useDraft(draft.data)
   const retry = useRetryDraft()
+  const ready = current.data?.status === 'ready' ? current.data : undefined
+  // Scelte del passo 3, legate alla bozza: tornando indietro restano.
+  const [selection, setSelection] = useState<{ id: string; files: Set<number> } | null>(null)
+  const selected =
+    ready && selection?.id === ready.id ? selection.files : new Set(ready?.files.map((f) => f.index))
 
   function next() {
     if (step === 0) {
@@ -37,13 +44,15 @@ function Wizard() {
           ? { kind: 'file', file: source.file }
           : { kind: 'link', link: source.link.trim() },
       )
-      setStep(1)
     }
+    setStep((s) => s + 1)
   }
 
   function back() {
-    draft.reset()
-    retry.reset()
+    if (step === 1) {
+      draft.reset()
+      retry.reset()
+    }
     setStep((s) => Math.max(0, s - 1))
   }
 
@@ -56,7 +65,8 @@ function Wizard() {
     setSource((s) => ({ ...s, tab: 'link', link: text.trim() }))
   }
 
-  const canGoOn = step === 0 && isReady(source)
+  const canGoOn =
+    (step === 0 && isReady(source)) || (step === 1 && !!ready) || (step === 2 && selected.size > 0)
 
   return (
     <DialogContent onPaste={onPaste}>
@@ -65,6 +75,11 @@ function Wizard() {
           AGGIUNGI TORRENT · {step + 1} DI {STEPS.length}
         </div>
         <DialogTitle>{TITLES[step]}</DialogTitle>
+        {step >= 2 && ready ? (
+          <span className="truncate text-[13px] text-ink-muted">
+            {ready.name} · {ready.files.length} file · {fileSize(ready.size)}
+          </span>
+        ) : null}
         <DialogDescription className="sr-only">
           Aggiungi un torrent da file, link magnet o URL.
         </DialogDescription>
@@ -77,6 +92,13 @@ function Wizard() {
           error={draft.error ?? current.error ?? retry.error}
           onBack={back}
           onRetry={() => current.data && retry.mutate(current.data.id)}
+        />
+      ) : null}
+      {step === 2 && ready ? (
+        <FilesStep
+          draft={ready}
+          selected={selected}
+          onChange={(files) => setSelection({ id: ready.id, files })}
         />
       ) : null}
       <DialogFooter>
