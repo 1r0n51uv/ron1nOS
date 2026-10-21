@@ -1,19 +1,23 @@
 import { ProgressRing, WidgetCard } from '@/components/ron1n'
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
-import { ALERT_THRESHOLD, useServerStats } from './data'
+import { ALERT_THRESHOLD, percent, useServerStats } from './data'
 
 export function ServerWidget({ className }: { className?: string }) {
   const { data } = useServerStats()
   if (!data) return <WidgetSkeleton title="Server" className={className} />
 
   const rings = [
-    { key: 'CPU', value: data.cpu },
-    { key: 'RAM', value: data.ram },
-    { key: 'SSD', value: data.disk },
+    { key: 'CPU', value: percent(data.cpu) },
+    { key: 'RAM', value: percent(data.ram) },
+    { key: 'SSD', value: percent(data.disk) },
   ]
 
   return (
-    <WidgetCard title="Server" meta={`${data.tempC} °C · ${data.uptimeDays} g`} className={className}>
+    <WidgetCard
+      title="Server"
+      meta={`${Math.round(data.tempC)} °C · ${data.uptimeDays} g`}
+      className={className}
+    >
       <div className="grid grid-cols-3 justify-items-center gap-2">
         {rings.map((r) => {
           const alert = r.value >= ALERT_THRESHOLD
