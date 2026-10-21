@@ -5,22 +5,25 @@ Prefisso ID: `NUT` · Label: `mod:nutrition`
 Il modulo tiene il diario alimentare: cosa si mangia nei 5 pasti del
 giorno, calorie e macro rispetto all'obiettivo, piano settimanale, ricette,
 lista della spesa, acqua, caffeina e integratori. Si sincronizza con YAZIO
-in lettura e scrittura.
+in lettura e scrittura, e YAZIO ha la priorità.
 
 Riprende quasi tutto il modulo `1r0-diet` di
-[1r0-pkm](https://github.com/1r0n51uv/1r0-pkm) (ADR-0017…0037), con una
+[1r0-pkm](https://github.com/1r0n51uv/1r0-pkm) (ADR-0017…0037), che è
+deprecata e resta solo come riferimento, con una
 differenza di fondo: in pkm la logica sta nell'app iOS (SwiftData, outbox,
 calcoli lato client) e il backend è un archivio. Qui la logica sta nel
 backend di ron1nOS (`/api/v1`), che serve allo stesso modo la dashboard web
 e la futura app iOS: i due client sono intercambiabili.
 
 Non fa, per ora: riconoscimento del piatto da foto, notifiche dal server,
-più utenti, collegamento con altre app oltre a YAZIO e Apple Salute.
+più utenti, collegamento con altre app oltre a YAZIO. Apple Salute e i
+promemoria arrivano con l'app iOS (NUT-018, NUT-019).
 
-**Stato del documento: bozza da confermare.** Ogni requisito è `proposto`
-e porta l'origine: **pkm** (già pensato o fatto in 1r0-pkm), **pkm,
-cambia** (ripreso con modifiche) o **nuovo**. Le domande aperte sono in
-fondo, in "Da decidere". Le issue si creano solo dopo la conferma.
+**Stato del documento: confermato il 2026-10-21.** Le scelte sono in
+fondo, in "Decisioni". Ogni requisito porta l'origine: **pkm** (già
+pensato o fatto in 1r0-pkm), **pkm, cambia** (ripreso con modifiche) o
+**nuovo**. Restano `proposto` finché non hanno la loro issue; NUT-018 e
+NUT-019 sono rimandati all'app iOS, NUT-025 è `rimosso`.
 
 ## Requisiti
 
@@ -220,10 +223,14 @@ Accettazione:
 
 - [ ] Obiettivo in kcal e grammi di proteine, carboidrati, grassi, più
       acqua in ml.
-- [ ] Due modalità: `manuale` e `TDEE` (da peso e livello di attività:
-      sedentario, moderato, attivo).
-- [ ] Lo storico non si perde: ogni cambio aggiunge una riga con data di
-      inizio (ADR-0019). Il report usa l'obiettivo valido in quel giorno.
+- [ ] Con YAZIO collegato l'obiettivo si legge da YAZIO
+      (`GET /user/goals`) a ogni sincronizzazione (NUT-024) e in ron1nOS
+      non si modifica.
+- [ ] Senza YAZIO, o con la sincronizzazione spenta, si imposta a mano.
+      Niente modalità `TDEE`.
+- [ ] Lo storico non si perde: ogni cambio, da YAZIO o a mano, aggiunge
+      una riga con data di inizio (ADR-0019). Il report usa l'obiettivo
+      valido in quel giorno.
 - [ ] La modalità `fase della scheda` di pkm non c'è più: le schede di
       allenamento sono state tolte da pkm (ADR-0027).
 
@@ -235,8 +242,11 @@ Accettazione:
 
 - [ ] Quota = obiettivo di base + energia attiva del giorno, con un tetto
       di +1200 kcal (ADR-0019 emendata).
-- [ ] L'energia attiva arriva da Apple Salute tramite l'app iOS (NUT-018);
-      senza dato la quota è l'obiettivo di base.
+- [ ] L'energia attiva è la somma delle kcal degli esercizi del giorno in
+      YAZIO (`GET /user/exercises?date=`), letta con il diario (NUT-022);
+      senza YAZIO o senza esercizi la quota è l'obiettivo di base.
+- [ ] Da verificare con un account vero se YAZIO, nel suo obiettivo,
+      somma già gli esercizi: in quel caso non vanno contati due volte.
 - [ ] Il calcolo sta nel backend: web e iOS mostrano lo stesso numero.
 
 #### NUT-017 · Andamento
@@ -248,14 +258,16 @@ Accettazione:
 - [ ] Kcal e macro al giorno su 30 e 90 giorni, con media e tendenza.
 - [ ] Aderenza: percentuale di giorni entro ±150 kcal dall'obiettivo del
       giorno.
-- [ ] Peso sullo stesso asse temporale delle kcal (dal modulo Peso).
+- [ ] Peso sullo stesso asse temporale delle kcal. Arriva da YAZIO, che
+      espone solo l'ultimo valore: a ogni sincronizzazione il backend lo
+      salva se è cambiato, e lo storico parte dal collegamento.
 - [ ] Calcolato nel backend (in pkm era nel client).
 
 ### Apple Salute e promemoria (solo iOS)
 
 #### NUT-018 · Apple Salute
 
-Stato: proposto · Origine: pkm
+Stato: proposto, rimandato all'app iOS · Origine: pkm
 
 Accettazione:
 
@@ -266,7 +278,7 @@ Accettazione:
 
 #### NUT-019 · Promemoria pasti e acqua
 
-Stato: proposto · Origine: pkm
+Stato: proposto, rimandato all'app iOS · Origine: pkm
 
 Accettazione:
 
@@ -290,6 +302,8 @@ Accettazione:
       sincronizzazione.
 - [ ] Le credenziali YAZIO stanno solo sul server (vedi "Analisi
       integrazione YAZIO", Credenziali), mai nei client.
+- [ ] Prerequisito: l'account oggi entra con Apple o Google, quindi va
+      impostata una password nell'app YAZIO prima del collegamento.
 - [ ] `Sincronizza ora` forza un giro di NUT-022 e NUT-023.
 - [ ] Un interruttore spegne la sincronizzazione senza perdere dati.
 
@@ -317,10 +331,12 @@ Accettazione:
 - [ ] Le voci nuove entrano nel diario con fonte `YAZIO`; quelle cancellate
       in YAZIO spariscono anche qui.
 - [ ] Le voci inviate da ron1nOS (NUT-023) non tornano indietro doppie.
+- [ ] Conflitti: se una voce è cambiata sia in YAZIO sia in ron1nOS fra
+      due letture, vince sempre YAZIO e la riga di ron1nOS si aggiorna;
+      l'eventuale modifica di ron1nOS ancora in coda si scarta.
 - [ ] Lo slot `snack` di YAZIO diventa `Spuntino` prima delle 15:00,
       `Merenda` dopo.
-- [ ] Acqua: si importa il totale del giorno se è maggiore di quello di
-      ron1nOS.
+- [ ] Acqua: vale il totale del giorno di YAZIO.
 
 #### NUT-023 · Scrittura sul diario YAZIO
 
@@ -333,40 +349,39 @@ Accettazione:
 - [ ] Ogni riga di pasto registrata, modificata o cancellata in ron1nOS si
       riflette in YAZIO entro un minuto.
 - [ ] `Spuntino` e `Merenda` diventano `snack` (YAZIO ha 4 slot).
-- [ ] Un alimento con `product_id` YAZIO va come prodotto; gli altri vanno
-      come voce semplice con nome e nutrienti (da verificare, vedi Analisi).
+- [ ] Un alimento con `product_id` YAZIO va come prodotto.
+- [ ] Un alimento di OpenFoodFacts o USDA va come il prodotto YAZIO
+      equivalente: per codice a barre se c'è, altrimenti per nome e marca.
+      L'abbinamento si salva sull'alimento e si riusa.
+- [ ] Se non c'è un equivalente, la riga resta solo in ron1nOS con stato
+      `senza equivalente` e si può abbinare a mano (proposta).
 - [ ] L'acqua va come totale cumulativo del giorno.
 - [ ] Se YAZIO non risponde, la voce resta in coda e riprova; il diario di
-      ron1nOS non si blocca mai.
+      ron1nOS non si blocca mai e vale finché YAZIO non torna.
 - [ ] Ogni riga mostra lo stato di sincronizzazione (inviata, in coda,
       errore).
 
-#### NUT-024 · Obiettivi e peso da YAZIO
+#### NUT-024 · Obiettivi, esercizi e peso da YAZIO
 
 Stato: proposto · Origine: nuovo
 
 Accettazione:
 
-- [ ] `Importa da YAZIO` copia l'obiettivo kcal e macro di YAZIO in un
-      nuovo obiettivo manuale (NUT-015), su richiesta, mai da solo.
-- [ ] Il peso più recente di YAZIO si mostra in Impostazioni come
-      confronto; il peso di riferimento resta quello di Salute.
+- [ ] A ogni sincronizzazione si leggono obiettivo kcal e macro (NUT-015),
+      esercizi del giorno (NUT-016) e ultimo peso (NUT-017).
+- [ ] Un obiettivo cambiato in YAZIO apre una nuova riga di storico con la
+      data del giorno.
+- [ ] Il peso di YAZIO è il peso di riferimento finché non arriva Apple
+      Salute (NUT-018).
 
 ### Migrazione
 
 #### NUT-025 · Import dei dati di 1r0-pkm
 
-Stato: proposto · Origine: nuovo
+Stato: rimosso · Origine: nuovo
 
-Accettazione:
-
-- [ ] Uno script importa dal database `onepkm_prod` di pkm alimenti,
-      ricette, pasti, piani, spesa, acqua, caffeina, integratori e
-      obiettivi, mantenendo gli UUID.
-- [ ] Le righe con slot `snack` (prima di ADR-0024) vanno in `Spuntino`
-      prima delle 15:00, `Merenda` dopo.
-- [ ] Rieseguirlo non duplica nulla.
-- [ ] A fine import stampa i conteggi per tabella, confrontabili con pkm.
+pkm conteneva solo dati di prova: si parte puliti e i dati veri arrivano
+da YAZIO.
 
 ## Note
 
@@ -376,9 +391,10 @@ Il modulo usa il backend di ron1nOS (issue #4, BFF con `/api/v1` e
 OpenAPI in `api/openapi.yaml`), come Download e Server. È però il primo
 modulo con dati propri, quindi porta due cose nuove:
 
-- **Postgres.** Un database nello stack di ron1nOS (`infra/ron1nos` in
-  ron1n), immagine con tag esplicito, volume in `/srv/ron1nos/pg`, dump
-  notturno con il backup del server. Lo schema riparte dalle migrazioni di
+- **Postgres.** Un database `ron1nos`, con il suo utente, nel Postgres
+  condiviso del server che serve tutte le app ron1n (stack in `infra/` di
+  ron1n, immagine con tag esplicito, dump notturno con il backup del
+  server). Lo schema riparte dalle migrazioni di
   pkm (`0004`, `0006`…`0008`, `0010`) unite in una sola, senza `snack` e
   `phase_linked`, più le tabelle dei template e le colonne YAZIO.
   Migrazioni SQL semplici in `api/migrations/`, applicate all'avvio.
@@ -387,7 +403,8 @@ modulo con dati propri, quindi porta due cose nuove:
   Niente servizi separati finché basta.
 
 Tutta la logica sta nel backend: calcolo di macro e quota, applicazione
-dei template, generazione della spesa, aderenza, mappatura YAZIO. I client
+dei template, generazione della spesa, aderenza, mappatura YAZIO e
+abbinamento dei prodotti. I client
 mostrano e inviano. In pkm l'app iOS era offline-first con una coda locale
 (ADR-0006): la futura app iOS ron1nOS può tenere una coda per le scritture
 fatte senza rete, ma le regole restano sul server.
@@ -410,10 +427,11 @@ Tutti sotto `/api/v1/nutrition`. Le date sono giorni locali
 | `GET`/`POST /shopping`, `POST /shopping/generate` | lista della spesa                 | 011           |
 | `POST`/`DELETE /water`, `/caffeine`               | tracker                           | 012, 013      |
 | `GET`/`POST /supplements`, `POST …/{id}/taken`    | integratori                       | 014           |
-| `GET`/`POST /goals`                               | obiettivi                         | 015           |
-| `POST /health-samples`                            | energia attiva, peso, acqua (iOS) | 016, 018      |
+| `GET`/`POST /goals`                               | obiettivi (POST solo senza YAZIO) | 015           |
+| `POST /health-samples`                            | dati di Salute, con l'app iOS     | 018           |
 | `GET /report?days=30\|90`                         | andamento                         | 017           |
 | `GET /yazio`, `POST /yazio/sync`, `PATCH /yazio`  | stato e controllo YAZIO           | 020, 024      |
+| `PUT /foods/{id}/yazio-product`                   | abbinamento a mano                | 023           |
 
 Le rotte di pkm (`/v1/meal-entries`, `/v1/planned-meals`…) restano un
 riferimento per la logica, non si copiano uguali: pkm faceva upsert di
@@ -458,19 +476,18 @@ Punti che condizionano il disegno:
   divide con l'ora (NUT-022). Un pasto spostato da Spuntino a Merenda in
   ron1nOS per YAZIO non cambia.
 - **Prodotti.** Una voce "prodotto" richiede un `product_id` del catalogo
-  YAZIO. Per gli alimenti presi da OpenFoodFacts o USDA ci sono due strade:
-  inviarli come `simple_products` (nome e nutrienti, come l'aggiunta rapida
-  dell'app) oppure cercarne l'equivalente YAZIO. La forma di
-  `simple_products` in scrittura è nello schema della libreria ma non
-  provata da nessuno dei repo: va verificata con un account vero prima di
-  pianificare NUT-023.
+  YAZIO. Per gli alimenti presi da OpenFoodFacts o USDA si cerca
+  l'equivalente nel catalogo YAZIO (decisione 3); `simple_products` resta
+  fuori. Da verificare con un account vero che la ricerca per codice a
+  barre di YAZIO trovi i prodotti italiani più comuni.
 - **Id lato client.** Le voci del diario hanno un `id` UUID scelto da chi
   scrive: ron1nOS può usare lo stesso UUID della sua riga, e questo rende
   facile non duplicare in lettura.
 - **Acqua cumulativa.** Si scrive il totale del giorno, non l'aggiunta;
   chi scrive per ultimo vince.
 - **Niente notifiche di modifica.** Si legge solo a intervalli; una voce
-  cambiata in YAZIO arriva al giro successivo.
+  cambiata in YAZIO arriva al giro successivo e, in caso di conflitto,
+  sovrascrive quella di ron1nOS.
 
 #### Autenticazione
 
@@ -482,7 +499,8 @@ dell'account. Il token vale 48 ore (`expires_in: 172800`) e si rinnova con
 Conseguenze:
 
 - serve un account YAZIO con email e password: con accesso solo via Apple
-  o Google non funziona, bisogna prima impostare una password in YAZIO;
+  o Google non funziona, bisogna prima impostare una password in YAZIO
+  (è il caso dell'account attuale);
 - se YAZIO cambia `client_id`/`client_secret` (basta un aggiornamento
   dell'app) il login smette di funzionare finché non si aggiornano.
 
@@ -512,12 +530,13 @@ di salvarla in database.
 | L'API cambia            | alta        | la sync smette di funzionare (già successo: swagger `v15`, libreria `v20`)                                                  | adattatore unico (`yazio/`) con validazione delle risposte, errore visibile in NUT-020, il diario di ron1nOS continua da solo                          |
 | Chiavi dell'app ruotate | media       | login impossibile                                                                                                           | `client_id`/`client_secret` in `.env`, non nel codice                                                                                                  |
 | Limiti di frequenza     | sconosciuta | errori 429, blocco temporaneo                                                                                               | lettura ogni 15 minuti su 3 giorni, scritture in coda con attesa crescente                                                                             |
-| Dati incoerenti         | media       | doppioni o voci perse fra i due diari                                                                                       | UUID condivisi, ron1nOS fonte di verità, YAZIO specchio con import delle voci nate lì                                                                  |
+| Dati incoerenti         | media       | doppioni o voci perse fra i due diari                                                                                       | UUID condivisi, YAZIO vince sempre nei conflitti, ron1nOS tiene la copia completa per quando YAZIO non risponde                                        |
+| Equivalenti sbagliati   | media       | in YAZIO finisce un prodotto con valori diversi da quelli registrati                                                        | abbinamento per codice a barre prima del nome, abbinamento salvato e correggibile a mano                                                               |
 | Furto delle credenziali | bassa       | accesso al diario YAZIO                                                                                                     | `.env` sul server, token cifrati, accesso solo da Tailscale                                                                                            |
 
-Il punto chiave: YAZIO è un'integrazione **facoltativa e fragile**. Il
-modulo deve funzionare per intero anche con YAZIO spento o rotto, per
-questo ron1nOS resta la fonte di verità e YAZIO si aggiunge sopra.
+Il punto chiave: YAZIO ha la priorità ma è un'integrazione **fragile**.
+Quando funziona comanda lui; quando è spento o rotto il modulo continua
+per intero con la copia di ron1nOS, che si riallinea al ritorno di YAZIO.
 
 #### Libreria
 
@@ -527,57 +546,57 @@ leggendo lo swagger e `juriadams/yazio`. Non come dipendenza perché la
 libreria non dichiara una licenza e così il punto che si rompe è uno solo
 e lo controlliamo noi.
 
-### Piano di migrazione da pkm
+### Piano di lavoro
 
-pkm resta una beta (decisione del 2026-10-20): da lì si prendono
-documentazione, regole e pezzi di codice. Ordine proposto:
+pkm è deprecata (decisione 5): da lì si prendono documentazione, regole e
+pezzi di codice, ma nessun dato. Ordine proposto:
 
-1. **Specifica** (questa PR) e conferma delle funzionalità.
-2. **Base dati**: Postgres nello stack ron1nOS, schema unito da pkm,
-   migrazioni all'avvio. Dipende dal BFF (#4).
-3. **API**: rotte di NUT-001…017 con OpenAPI. La logica di pkm da portare
+1. **Specifica** (questa PR), confermata.
+2. **Prova YAZIO** con l'account vero, dopo aver impostato la password:
+   login, lettura del diario, scrittura di una voce prodotto, ricerca per
+   codice a barre, obiettivo con o senza esercizi. Decide se NUT-016 e
+   NUT-023 restano come sono.
+3. **Base dati**: database `ron1nos` nel Postgres condiviso, schema unito
+   da pkm, migrazioni all'avvio. Dipende dal BFF (#4).
+4. **API**: rotte di NUT-001…017 con OpenAPI. La logica di pkm da portare
    nel backend:
    - `foodsearch.js` (OpenFoodFacts, USDA, filtro Italia): quasi uguale;
-   - `NutritionMath` (TDEE, macro, quota, acqua) e `DietReport` (serie,
+   - `NutritionMath` (macro, quota, acqua) e `DietReport` (serie,
      aderenza, tendenza) da Swift a TypeScript, con gli stessi test di
-     `NutritionMathTests`;
+     `NutritionMathTests`, senza la parte TDEE;
    - `DietSync.applyTemplate`, `generateShoppingList`, `deleteMealItem`,
      `setPlannedMealEaten`: da Swift a regole lato server.
-4. **Web**: widget e pagina `/pasti`, un pezzo per issue.
-5. **Import da pkm** (NUT-025): `pg_dump` di `onepkm_prod` dall'EC2 e
-   script di import. I template di pkm stanno solo nel telefono (SwiftData)
-   e non sono nel database: vanno ricreati a mano (sono pochi).
-6. **YAZIO**: prima una prova con un account vero (login, lettura, scrittura
-   di una voce semplice), poi NUT-020…024.
-7. **iOS**: quando arriva l'app ron1nOS iOS, riusa da pkm viste SwiftUI,
-   HealthKit, promemoria e scanner, ma parla con `/api/v1`.
-
-Fino al passo 7 l'app pkm resta com'è sull'EC2. Il giorno del passaggio
-si fa l'ultimo import e pkm smette di scrivere: niente doppia scrittura
-fra i due backend.
+5. **Web**: widget e pagina `/pasti`, compresi template e spesa, un pezzo
+   per issue.
+6. **YAZIO**: NUT-020…024.
+7. **iOS**: quando arriva l'app ron1nOS iOS, NUT-018 e NUT-019, riusando
+   da pkm viste SwiftUI, HealthKit, promemoria e scanner.
 
 ### Rapporto con gli altri moduli
 
-- **Peso** (`src/modules/weight`): il peso arriva da Salute via iOS
-  (NUT-018) e serve a TDEE (NUT-015) e all'andamento (NUT-017). Il modulo
-  Peso avrà la sua specifica; qui si legge e basta.
+- **Peso** (`src/modules/weight`): per ora il peso arriva da YAZIO
+  (NUT-024), più avanti da Salute via iOS (NUT-018), e serve all'andamento
+  (NUT-017). Il modulo Peso avrà la sua specifica e può leggere lo stesso
+  storico.
 - **Allenamento**: nessun legame (la modalità legata alla scheda è tolta).
 
-### Da decidere
+### Decisioni
 
-Domande per il proprietario, con la proposta segnata. Le risposte vanno in
-una sezione "Decisioni".
+Prese il 2026-10-21.
 
-1. Funzionalità: per ognuna di NUT-001…025, confermare, modificare o
-   togliere.
-2. Fonte di verità: ron1nOS con YAZIO specchio e import delle voci nate in
-   YAZIO (proposta), oppure YAZIO come diario principale e ron1nOS che
-   legge.
-3. Account YAZIO: ha email e password, o accede con Apple/Google?
-4. Voci OFF/USDA verso YAZIO: voce semplice con nutrienti (proposta, da
-   verificare), cercare l'equivalente nel catalogo YAZIO, o non inviarle.
-5. Postgres: nello stack ron1nOS (proposta) o un Postgres condiviso del
-   server per tutte le app.
-6. pkm: continua a usarla ogni giorno fino all'app iOS ron1nOS (import
-   finale al passaggio, proposta) o import subito e pkm si ferma.
-7. Template e spesa via web: necessari dal primo giro o dopo il diario.
+1. **Requisiti.** Confermati NUT-001…014, NUT-017, NUT-020…024 (con le
+   modifiche che seguono). NUT-015 e NUT-016 cambiati, NUT-018 e NUT-019
+   rimandati all'app iOS, NUT-025 rimosso.
+2. **Fonte di verità.** Ibrida con priorità a YAZIO: nei conflitti vince
+   sempre YAZIO e ron1nOS si aggiorna; se YAZIO non risponde vale la copia
+   di ron1nOS, che ha già importato tutto.
+3. **Voci OFF/USDA verso YAZIO.** Si invia il prodotto YAZIO equivalente.
+4. **Account YAZIO.** Oggi accesso con Apple/Google: va impostata una
+   password in YAZIO prima del collegamento.
+5. **pkm.** Deprecata, usata solo per prova: nessun import, si parte
+   puliti.
+6. **Postgres.** Condiviso dal server per tutte le app.
+7. **Template e spesa.** Dal primo giro, insieme al diario.
+8. **Obiettivo.** Da YAZIO; manuale solo senza YAZIO; niente TDEE.
+9. **Quota.** Energia attiva dagli esercizi di YAZIO, non da Salute.
+10. **Peso.** Da YAZIO, con lo storico costruito a ogni sincronizzazione.
