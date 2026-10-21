@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
@@ -20,6 +20,12 @@ const stats: ServerStats = {
   tempC: 52.4,
   uptimeSec: 41 * 86_400 + 600,
   net: { rxBps: 12_400_000, txBps: 820_000 },
+  containers: [
+    { name: 'caddy', cpu: 0, memBytes: 42_000_000 },
+    { name: 'qbittorrent', cpu: 14.2, memBytes: 412_000_000 },
+    { name: 'postgres', cpu: 3.4, memBytes: 1_240_000_000 },
+    { name: '1r0-api', cpu: 6.1, memBytes: 188_000_000 },
+  ],
 }
 
 describe('ServerWidget', () => {
@@ -43,7 +49,8 @@ describe('ServerWidget', () => {
     expect(screen.getByText('23%')).toBeInTheDocument()
     expect(screen.getByText('57%')).toBeInTheDocument()
     expect(screen.getByText('82%')).toBeInTheDocument()
-    for (const caption of ['CPU', 'RAM', 'SSD']) expect(screen.getByText(caption)).toBeInTheDocument()
+    for (const caption of ['CPU', 'RAM', 'SSD'])
+      expect(screen.getByText(caption, { selector: 'span' })).toBeInTheDocument()
   })
 
   it("senza sensore mostra solo l'uptime", () => {
@@ -67,5 +74,24 @@ describe('ServerWidget', () => {
     } as ReturnType<typeof useServerStats>)
     renderWithProviders(<ServerWidget />)
     expect(screen.queryByText('Rete')).not.toBeInTheDocument()
+  })
+
+  it('elenca i 3 container che consumano più CPU', () => {
+    vi.mocked(useServerStats).mockReturnValue({ data: stats } as ReturnType<typeof useServerStats>)
+    renderWithProviders(<ServerWidget />)
+    const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1)
+    expect(rows.map((r) => r.textContent)).toEqual([
+      'qbittorrent14%412 MB',
+      '1r0-api6%188 MB',
+      'postgres3%1,2 GB',
+    ])
+  })
+
+  it('senza dati dei container omette la tabella', () => {
+    vi.mocked(useServerStats).mockReturnValue({
+      data: { ...stats, containers: undefined },
+    } as ReturnType<typeof useServerStats>)
+    renderWithProviders(<ServerWidget />)
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 })
