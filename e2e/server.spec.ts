@@ -36,3 +36,12 @@ test('un valore sopra soglia è segnalato (SRV-005)', async ({ page }) => {
   await page.goto('/')
   await expect(serverWidget(page).getByRole('img', { name: /^SSD \d+%, sopra soglia$/ })).toBeVisible()
 })
+
+test('il widget si aggiorna senza ricaricare la pagina (SRV-007)', async ({ page }) => {
+  await page.goto('/')
+  await expect(serverWidget(page).getByRole('img', { name: /^CPU/ })).toBeVisible()
+  // Dopo un giro di aggiornamento il widget ha ancora i dati, senza skeleton.
+  await page.waitForTimeout(5_500)
+  await expect(serverWidget(page).getByRole('img', { name: /^CPU/ })).toBeVisible()
+  await expect(serverWidget(page).locator('[aria-busy="true"]')).toHaveCount(0)
+})
