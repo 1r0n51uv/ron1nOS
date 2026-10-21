@@ -31,3 +31,7 @@ test-results
 
 # Segreti locali
 .env
+
+# Prova YAZIO
+scripts/yazio-probe/.env
+scripts/yazio-probe/yazio-probe-report.json
