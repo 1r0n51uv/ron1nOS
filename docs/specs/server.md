@@ -124,7 +124,7 @@ Accettazione:
 
 ### SRV-008 · Solo i dati che servono
 
-Stato: pianificato (#14)
+Stato: fatto (#38)
 
 Il browser non parla con Glances e riceve solo i numeri del widget.
 
