@@ -35,6 +35,7 @@ type Added = (typeof torrents)[number] & {
   files: File[] | null
   num_seeds: number
   num_leechs: number
+  added_on: number
 }
 
 // Torrent aggiunti dal backend durante il test.
@@ -106,7 +107,14 @@ function readForm(req: IncomingMessage, raw: Buffer) {
 
 function all() {
   return [
-    ...torrents.map((t): Added => ({ ...t, tags: '', files: null, num_seeds: 0, num_leechs: 0 })),
+    ...torrents.map((t): Added => ({
+      ...t,
+      tags: '',
+      files: null,
+      num_seeds: 0,
+      num_leechs: 0,
+      added_on: 0,
+    })),
     ...added,
   ]
 }
@@ -137,6 +145,7 @@ async function add(req: IncomingMessage) {
       files: null,
       num_seeds: 3,
       num_leechs: 0,
+      added_on: Math.floor(Date.now() / 1000),
     }
     if (state.metadata === 'yes') {
       setTimeout(() => {
@@ -161,6 +170,7 @@ async function add(req: IncomingMessage) {
       files: filesOf(meta),
       num_seeds: 0,
       num_leechs: 0,
+      added_on: Math.floor(Date.now() / 1000),
     }
   } else {
     return false
@@ -200,6 +210,7 @@ createServer(async (req, res) => {
       files: [],
       num_seeds: 0,
       num_leechs: 0,
+      added_on: Math.floor(Date.now() / 1000),
       ...t,
     })
     return json(200, added)

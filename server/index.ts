@@ -13,6 +13,16 @@ if (!config.qbt.username || !config.qbt.password) {
 const qbt = createQbtClient(config.qbt)
 const drafts = createDraftService({ qbt, metadataWaitMs: config.metadataWaitMs })
 const app = createApp({ qbt, drafts, staticDir: config.staticDir })
+
+// Bozze orfane del wizard: all'avvio e ogni ora.
+function sweep() {
+  drafts
+    .sweepOrphans()
+    .then((n) => n && console.log(`tolte ${n} bozze orfane da qBittorrent`))
+    .catch((err: Error) => console.warn(`pulizia delle bozze non riuscita: ${err.message}`))
+}
+sweep()
+setInterval(sweep, 60 * 60_000).unref()
 const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
   console.log(`ron1nOS in ascolto sulla porta ${info.port}`)
 })

@@ -16,6 +16,7 @@ export function qbtTorrent(over: Partial<QbtTorrent> = {}): QbtTorrent {
     tags: '',
     num_seeds: 0,
     num_leechs: 0,
+    added_on: 0,
     ...over,
   }
 }

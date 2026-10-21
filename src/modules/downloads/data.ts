@@ -62,8 +62,16 @@ export function createDraft(source: DraftSource) {
   return api.post<Draft>('/downloads/drafts', form)
 }
 
-export function useCreateDraft() {
-  return useMutation({ mutationFn: createDraft })
+// onCreated parte anche se il wizard è già stato chiuso: serve a buttare
+// una bozza arrivata dopo Annulla.
+export function useCreateDraft(onCreated?: (draft: Draft) => void) {
+  return useMutation({ mutationFn: createDraft, onSuccess: onCreated })
+}
+
+// Annulla: in qBittorrent non resta nulla (DL-008). Best effort: le bozze
+// perse le toglie comunque il backend dopo 30 minuti.
+export function discardDraft(id: string) {
+  return api.delete<void>(`/downloads/drafts/${id}`).catch(() => {})
 }
 
 // Una bozza magnet si rilegge ogni secondo finché aspetta i metadati.

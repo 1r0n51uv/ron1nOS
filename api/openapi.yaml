@@ -202,6 +202,18 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+    delete:
+      summary: Annulla una bozza
+      description: >
+        Una bozza da magnet esce da qBittorrent con i file eventualmente
+        scaricati; le altre stavano solo in memoria. Le bozze rimaste (pagina
+        chiusa, backend riavviato) il backend le toglie dopo 30 minuti.
+      operationId: discardDraft
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "204":
+          description: Bozza tolta, o già assente.
 components:
   schemas:
     Draft:

@@ -18,6 +18,7 @@ export type QbtTorrent = {
   tags: string // separati da virgola
   num_seeds: number
   num_leechs: number
+  added_on: number // secondi Unix
 }
 
 export type QbtTransferInfo = { dl_info_speed: number }

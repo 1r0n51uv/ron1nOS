@@ -99,6 +99,11 @@ export function createApp({
     return c.json(await drafts.start(c.req.param('id'), files))
   })
 
+  app.delete('/api/v1/downloads/drafts/:id', async (c) => {
+    await drafts.discard(c.req.param('id'))
+    return c.body(null, 204)
+  })
+
   // Spazio libero nella cartella predefinita di qBittorrent (DL-007).
   app.get('/api/v1/downloads/space', async (c) => {
     const [free, path] = await Promise.all([qbt.freeSpace(), qbt.defaultSavePath()])

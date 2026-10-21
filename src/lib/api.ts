@@ -16,6 +16,7 @@ export class ApiError extends Error {
 }
 
 async function parse<T>(res: Response): Promise<T> {
+  if (res.status === 204) return undefined as T
   if (res.ok) return (await res.json()) as T
   const body = (await res.json().catch(() => null)) as
     ({ error?: string; message?: string } & Record<string, unknown>) | null

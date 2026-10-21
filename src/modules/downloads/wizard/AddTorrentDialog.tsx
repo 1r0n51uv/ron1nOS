@@ -1,5 +1,5 @@
 import type { ClipboardEvent, ReactNode } from 'react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Icon } from '@/components/ron1n'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { useCreateDraft, useDraft, useRetryDraft, useSpace, useStartDraft } from '../data'
+import { discardDraft, useCreateDraft, useDraft, useRetryDraft, useSpace, useStartDraft } from '../data'
 import { fileSize } from '@/lib/format'
 import { ContentsStep } from './ContentsStep'
 import { FilesStep } from './FilesStep'
@@ -31,7 +31,21 @@ const TITLES = ['Da dove arriva il torrent', 'Lettura dei contenuti', 'Cosa scar
 function Wizard({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState(0)
   const [source, setSource] = useState<SourceState>(EMPTY_SOURCE)
-  const draft = useCreateDraft()
+  // La bozza aperta, da buttare se il wizard si chiude prima di Avvia.
+  const openDraft = useRef<string | null>(null)
+  const closed = useRef(false)
+  const draft = useCreateDraft((d) => {
+    if (closed.current) void discardDraft(d.id)
+    else openDraft.current = d.id
+  })
+  useEffect(() => {
+    closed.current = false
+    return () => {
+      closed.current = true
+      if (openDraft.current) void discardDraft(openDraft.current)
+      openDraft.current = null
+    }
+  }, [])
   const current = useDraft(draft.data)
   const retry = useRetryDraft()
   const ready = current.data?.status === 'ready' ? current.data : undefined
@@ -46,7 +60,15 @@ function Wizard({ onDone }: { onDone: () => void }) {
 
   function launch() {
     if (!ready) return
-    start.mutate({ id: ready.id, files: [...selected] }, { onSuccess: onDone })
+    start.mutate(
+      { id: ready.id, files: [...selected] },
+      {
+        onSuccess: () => {
+          openDraft.current = null // consumata dall'avvio
+          onDone()
+        },
+      },
+    )
   }
 
   function next() {
@@ -62,6 +84,8 @@ function Wizard({ onDone }: { onDone: () => void }) {
 
   function back() {
     if (step === 1) {
+      if (openDraft.current) void discardDraft(openDraft.current)
+      openDraft.current = null
       draft.reset()
       retry.reset()
     }
