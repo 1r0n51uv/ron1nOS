@@ -61,8 +61,18 @@ export function getServerStats(): Promise<ServerStats> {
   })
 }
 
+// La sorgente passa da un oggetto così i test possono sostituirla.
+export const source = { getServerStats }
+
 export function useServerStats() {
-  return useQuery({ queryKey: ['server', 'stats'], queryFn: getServerStats, refetchInterval: 5_000 })
+  return useQuery({
+    queryKey: ['server', 'stats'],
+    queryFn: () => source.getServerStats(),
+    refetchInterval: 5_000,
+    // Un solo nuovo tentativo dopo 1 s: offline entro due aggiornamenti (SRV-006).
+    retry: 1,
+    retryDelay: 1_000,
+  })
 }
 
 // Percentuale intera mostrata negli anelli (SRV-001).

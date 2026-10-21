@@ -111,4 +111,14 @@ describe('ServerWidget', () => {
     expect(screen.queryByText(/^CPU a/)).not.toBeInTheDocument()
     expect(screen.queryByLabelText(/sopra soglia/)).not.toBeInTheDocument()
   })
+
+  it('con Glances irraggiungibile mostra lo stato offline e non i valori vecchi', () => {
+    vi.mocked(useServerStats).mockReturnValue({ data: stats, isError: true } as ReturnType<
+      typeof useServerStats
+    >)
+    renderWithProviders(<ServerWidget />)
+    expect(screen.getByText('Glances · offline')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Glances non raggiungibile')
+    expect(screen.queryByText('23%')).not.toBeInTheDocument()
+  })
 })
