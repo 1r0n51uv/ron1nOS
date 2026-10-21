@@ -34,7 +34,9 @@ npm run build        # dist/ (SPA) e dist-server/ (backend)
 sotto `/api/v1`, la stessa che userà l'app iOS. Il contratto è in
 [`api/openapi.yaml`](api/openapi.yaml); ogni rotta nuova si aggiunge lì e
 nei test. Le credenziali dei servizi (qBittorrent…) arrivano da variabili
-d'ambiente e non escono mai dal backend. Variabili in
+d'ambiente e non escono mai dal backend. Nel frontend i `data.ts` chiamano
+l'API con `api` di `src/lib/api.ts`, che trasforma gli errori in `ApiError`
+(`code` come `qbittorrent_unreachable`). Variabili in
 [`.env.example`](.env.example).
 
 ### Qualità del codice
