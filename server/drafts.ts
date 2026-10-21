@@ -38,6 +38,20 @@ export type DraftEntry = {
 
 export class DraftNotFoundError extends Error {}
 export class InvalidMagnetError extends Error {}
+export class InvalidSelectionError extends Error {}
+export class StartFailedError extends Error {}
+
+export class InsufficientSpaceError extends Error {
+  readonly needed: number
+  readonly free: number
+  constructor(needed: number, free: number) {
+    super('Spazio insufficiente')
+    this.needed = needed
+    this.free = free
+  }
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export class DuplicateTorrentError extends Error {
   readonly torrent: { name: string; state: TorrentState }
@@ -82,11 +96,14 @@ export function createDraftService({
   now = Date.now,
   store = createDraftStore({ now }),
   metadataWaitMs = METADATA_WAIT_MS,
+  addWaitMs = 10_000,
 }: {
   qbt: QbtClient
   store?: DraftStore
   now?: () => number
   metadataWaitMs?: number
+  // Quanto aspettare che qBittorrent registri un .torrent appena aggiunto.
+  addWaitMs?: number
 }) {
   // Un torrent già in qBittorrent ferma il wizard, tranne le bozze
   // lasciate da un wizard precedente: quelle si riprendono.
@@ -168,9 +185,58 @@ export function createDraftService({
     return e
   }
 
+  // qBittorrent aggiunge i torrent in modo asincrono: si aspetta che
+  // compaia prima di toccarne i file.
+  async function waitAdded(hash: string) {
+    const until = Date.now() + addWaitMs
+    for (;;) {
+      if ((await qbt.files(hash)) !== null) return
+      if (Date.now() > until) throw new StartFailedError('torrent non registrato da qBittorrent')
+      await sleep(200)
+    }
+  }
+
+  // Avvio (DL-007): solo i file scelti. Un .torrent entra in qBittorrent
+  // solo qui, fermo e con il tag delle bozze, così un errore a metà si
+  // ripulisce togliendolo.
+  async function start(id: string, indexes: number[]) {
+    const e = entry(id)
+    const draft = await read(e)
+    const known = new Set(draft.files.map((f) => f.index))
+    const chosen = new Set(indexes)
+    if (draft.status !== 'ready' || !chosen.size || [...chosen].some((i) => !known.has(i))) {
+      throw new InvalidSelectionError()
+    }
+    const needed = draft.files.filter((f) => chosen.has(f.index)).reduce((s, f) => s + f.size, 0)
+    const free = await qbt.freeSpace()
+    if (needed > free) throw new InsufficientSpaceError(needed, free)
+
+    const hash = draft.infoHash
+    const excluded = draft.files.filter((f) => !chosen.has(f.index)).map((f) => f.index)
+    const added = e.torrent !== null
+    try {
+      if (e.torrent) {
+        await qbt.add({ torrent: e.torrent, stopped: true, tags: DRAFT_TAG })
+        await waitAdded(hash)
+      }
+      if (excluded.length) await qbt.filePrio(hash, excluded, 0)
+      await qbt.removeTags(hash, DRAFT_TAG)
+      await qbt.start(hash)
+    } catch (err) {
+      // Con un .torrent non deve restare nulla di parziale; un magnet resta
+      // bozza e si può riprovare.
+      if (added) await qbt.delete(hash, true).catch(() => {})
+      else await qbt.addTags(hash, DRAFT_TAG).catch(() => {})
+      throw new StartFailedError((err as Error).message)
+    }
+    store.delete(id)
+    return { hash }
+  }
+
   return {
     fromTorrent,
     fromMagnet,
+    start,
     get: async (id: string) => read(entry(id)),
     // Riprova: altri 60 secondi di attesa dei metadati.
     async retry(id: string) {

@@ -8,7 +8,10 @@ import {
   DRAFT_TAG,
   DraftNotFoundError,
   DuplicateTorrentError,
+  InsufficientSpaceError,
   InvalidMagnetError,
+  InvalidSelectionError,
+  StartFailedError,
 } from './drafts.ts'
 import { fakeQbt, qbtTorrent } from './testing/fake-qbt.ts'
 import { parseTorrent } from './torrentfile.ts'
@@ -132,5 +135,79 @@ describe('createDraftService · magnet', () => {
     const { id } = await service.fromMagnet(MAGNET)
     await expect(service.get(id)).rejects.toBeInstanceOf(DraftNotFoundError)
     await expect(service.get(id)).rejects.toBeInstanceOf(DraftNotFoundError)
+  })
+})
+
+describe('createDraftService · avvio', () => {
+  const meta = parseTorrent(DEBIAN_DVD)
+
+  async function fileDraft(over = {}) {
+    const files = vi.fn().mockResolvedValue([])
+    const qbt = fakeQbt({ files, ...over }, [])
+    const service = createDraftService({ qbt, addWaitMs: 50 })
+    const draft = await service.fromTorrent('file', DEBIAN_DVD)
+    return { qbt, service, draft }
+  }
+
+  it('aggiunge il .torrent fermo, esclude i file non scelti, toglie il tag e avvia', async () => {
+    const { qbt, service, draft } = await fileDraft()
+    await expect(service.start(draft.id, [0, 2, 3])).resolves.toEqual({ hash: meta.infoHash })
+    expect(qbt.add).toHaveBeenCalledWith({ torrent: DEBIAN_DVD, stopped: true, tags: DRAFT_TAG })
+    expect(qbt.filePrio).toHaveBeenCalledWith(meta.infoHash, [1], 0)
+    expect(qbt.removeTags).toHaveBeenCalledWith(meta.infoHash, DRAFT_TAG)
+    expect(qbt.start).toHaveBeenCalledWith(meta.infoHash)
+    // La bozza è consumata.
+    await expect(service.get(draft.id)).rejects.toBeInstanceOf(DraftNotFoundError)
+  })
+
+  it('con tutti i file non chiama filePrio', async () => {
+    const { qbt, service, draft } = await fileDraft()
+    await service.start(draft.id, [0, 1, 2, 3])
+    expect(qbt.filePrio).not.toHaveBeenCalled()
+  })
+
+  it('rifiuta una scelta vuota o con indici sconosciuti', async () => {
+    const { service, draft } = await fileDraft()
+    await expect(service.start(draft.id, [])).rejects.toBeInstanceOf(InvalidSelectionError)
+    await expect(service.start(draft.id, [9])).rejects.toBeInstanceOf(InvalidSelectionError)
+  })
+
+  it('senza spazio non aggiunge nulla', async () => {
+    const { qbt, service, draft } = await fileDraft({ freeSpace: vi.fn(async () => 1_000) })
+    const err = await service.start(draft.id, [0]).catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(InsufficientSpaceError)
+    expect(err).toMatchObject({ needed: 3_900_000_000, free: 1_000 })
+    expect(qbt.add).not.toHaveBeenCalled()
+  })
+
+  it('un errore a metà toglie il torrent aggiunto', async () => {
+    const { qbt, service, draft } = await fileDraft({ start: vi.fn().mockRejectedValue(new Error('no')) })
+    await expect(service.start(draft.id, [0])).rejects.toBeInstanceOf(StartFailedError)
+    expect(qbt.delete).toHaveBeenCalledWith(meta.infoHash, true)
+    // La bozza resta: si può riprovare.
+    await expect(service.get(draft.id)).resolves.toMatchObject({ status: 'ready' })
+  })
+
+  it('se qBittorrent non registra il torrent l’avvio fallisce e si ripulisce', async () => {
+    const { qbt, service, draft } = await fileDraft({ files: vi.fn().mockResolvedValue(null) })
+    await expect(service.start(draft.id, [0])).rejects.toBeInstanceOf(StartFailedError)
+    expect(qbt.delete).toHaveBeenCalled()
+  })
+
+  it('un magnet pronto non viene riaggiunto; se fallisce torna bozza', async () => {
+    const files = vi.fn().mockResolvedValue([
+      { index: 0, name: 'a', size: 1 },
+      { index: 1, name: 'b', size: 1 },
+    ])
+    const qbt = fakeQbt({ files, start: vi.fn().mockRejectedValue(new Error('no')) }, [
+      qbtTorrent({ hash: HASH, tags: DRAFT_TAG }),
+    ])
+    const service = createDraftService({ qbt })
+    const draft = await service.fromMagnet(MAGNET)
+    await expect(service.start(draft.id, [1])).rejects.toBeInstanceOf(StartFailedError)
+    expect(qbt.add).not.toHaveBeenCalled()
+    expect(qbt.filePrio).toHaveBeenCalledWith(HASH, [0], 0)
+    expect(qbt.addTags).toHaveBeenCalledWith(HASH, DRAFT_TAG)
+    expect(qbt.delete).not.toHaveBeenCalled()
   })
 })

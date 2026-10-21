@@ -31,8 +31,10 @@ export function fakeQbt(over: Partial<QbtClient> = {}, list: QbtTorrent[] = [qbt
     delete: vi.fn(async () => {}),
     filePrio: vi.fn(async () => {}),
     start: vi.fn(async () => {}),
+    addTags: vi.fn(async () => {}),
     removeTags: vi.fn(async () => {}),
     freeSpace: vi.fn(async () => 500_000_000_000),
+    defaultSavePath: vi.fn(async () => '/downloads'),
     ...over,
   }
 }

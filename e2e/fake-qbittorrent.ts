@@ -239,6 +239,7 @@ createServer(async (req, res) => {
     if (!t) return res.writeHead(404).end('Not Found')
     return json(200, t.files ?? [])
   }
+  if (api === 'app/defaultSavePath') return res.writeHead(200).end('/downloads')
   if (api === 'sync/maindata') return json(200, { server_state: { free_space_on_disk: state.freeSpace } })
   if (api === 'torrents/add' && req.method === 'POST') {
     return res.writeHead(200).end((await add(req)) ? 'Ok.' : 'Fails.')
@@ -249,6 +250,7 @@ createServer(async (req, res) => {
     if (!t) return res.writeHead(404).end('Not Found')
     if (api === 'torrents/delete') added = added.filter((x) => x !== t)
     else if (api === 'torrents/start') t.state = 'downloading'
+    else if (api === 'torrents/addTags') t.tags = [t.tags, form.get('tags')].filter(Boolean).join(',')
     else if (api === 'torrents/removeTags') {
       t.tags = t.tags
         .split(',')

@@ -85,3 +85,24 @@ export function useRetryDraft() {
     onSuccess: (draft) => client.setQueryData(['draft', draft.id], draft),
   })
 }
+
+export type Space = { free: number; path: string }
+
+export function useSpace(enabled: boolean) {
+  return useQuery({
+    queryKey: ['downloads', 'space'],
+    queryFn: () => api.get<Space>('/downloads/space'),
+    enabled,
+    retry: false,
+  })
+}
+
+// Avvio: poi il widget si aggiorna subito, senza aspettare i 5 secondi.
+export function useStartDraft() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, files }: { id: string; files: number[] }) =>
+      api.post<{ hash: string }>(`/downloads/drafts/${id}/start`, { files }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['downloads'] }),
+  })
+}

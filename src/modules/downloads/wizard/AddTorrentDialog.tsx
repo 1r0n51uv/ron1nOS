@@ -1,6 +1,7 @@
 import type { ClipboardEvent, ReactNode } from 'react'
 import { useState } from 'react'
 
+import { Icon } from '@/components/ron1n'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -12,20 +13,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { useCreateDraft, useDraft, useRetryDraft } from '../data'
+import { useCreateDraft, useDraft, useRetryDraft, useSpace, useStartDraft } from '../data'
 import { fileSize } from '@/lib/format'
 import { ContentsStep } from './ContentsStep'
 import { FilesStep } from './FilesStep'
+import { SummaryStep } from './SummaryStep'
 import { SourceStep } from './SourceStep'
 import type { SourceState } from './source'
 import { EMPTY_SOURCE, isReady, parseLink } from './source'
 import { STEPS } from './steps'
 import { Stepper } from './Stepper'
+import { selectedSize } from './tree'
 
 const TITLES = ['Da dove arriva il torrent', 'Lettura dei contenuti', 'Cosa scaricare', 'Riepilogo']
 
 // Montato solo a modale aperto: chiudendo si riparte da capo.
-function Wizard() {
+function Wizard({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState(0)
   const [source, setSource] = useState<SourceState>(EMPTY_SOURCE)
   const draft = useCreateDraft()
@@ -36,6 +39,15 @@ function Wizard() {
   const [selection, setSelection] = useState<{ id: string; files: Set<number> } | null>(null)
   const selected =
     ready && selection?.id === ready.id ? selection.files : new Set(ready?.files.map((f) => f.index))
+  const space = useSpace(step === 3)
+  const start = useStartDraft()
+  const needed = ready ? selectedSize(ready.files, selected) : 0
+  const canStart = !!ready && !!space.data && needed <= space.data.free && !start.isPending
+
+  function launch() {
+    if (!ready) return
+    start.mutate({ id: ready.id, files: [...selected] }, { onSuccess: onDone })
+  }
 
   function next() {
     if (step === 0) {
@@ -53,6 +65,7 @@ function Wizard() {
       draft.reset()
       retry.reset()
     }
+    start.reset()
     setStep((s) => Math.max(0, s - 1))
   }
 
@@ -101,6 +114,16 @@ function Wizard() {
           onChange={(files) => setSelection({ id: ready.id, files })}
         />
       ) : null}
+      {step === 3 && ready ? (
+        <SummaryStep
+          draft={ready}
+          selected={selected}
+          space={space.data}
+          spaceError={space.error}
+          startError={start.error}
+          onRetry={launch}
+        />
+      ) : null}
       <DialogFooter>
         <div className="flex gap-2">
           <DialogClose asChild>
@@ -112,9 +135,16 @@ function Wizard() {
             </Button>
           ) : null}
         </div>
-        <Button disabled={!canGoOn} onClick={next}>
-          Avanti
-        </Button>
+        {step === 3 ? (
+          <Button disabled={!canStart} onClick={launch}>
+            <Icon name="download" size={18} />
+            {start.isPending ? 'Avvio…' : 'Avvia'}
+          </Button>
+        ) : (
+          <Button disabled={!canGoOn} onClick={next}>
+            Avanti
+          </Button>
+        )}
       </DialogFooter>
     </DialogContent>
   )
@@ -126,7 +156,7 @@ export function AddTorrentDialog({ children }: { children: ReactNode }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      {open ? <Wizard /> : null}
+      {open ? <Wizard onDone={() => setOpen(false)} /> : null}
     </Dialog>
   )
 }
