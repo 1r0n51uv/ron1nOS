@@ -260,9 +260,10 @@ Accettazione:
 - [ ] Kcal e macro al giorno su 30 e 90 giorni, con media e tendenza.
 - [ ] Aderenza: percentuale di giorni entro ±150 kcal dall'obiettivo del
       giorno.
-- [ ] Peso sullo stesso asse temporale delle kcal. Arriva da YAZIO, che
-      espone solo l'ultimo valore: a ogni sincronizzazione il backend lo
-      salva se è cambiato, e lo storico parte dal collegamento.
+- [ ] Peso sullo stesso asse temporale delle kcal. Arriva da YAZIO: al
+      collegamento si importa lo storico
+      (`GET /user/bodyvalues/weight?start=&end=`, vedi "Esito della
+      prova"), poi a ogni sincronizzazione si aggiungono le pesate nuove.
 - [ ] Calcolato nel backend (in pkm era nel client).
 
 ### Apple Salute e promemoria (solo iOS)
@@ -370,7 +371,7 @@ Stato: proposto · Origine: nuovo
 Accettazione:
 
 - [ ] A ogni sincronizzazione si leggono obiettivo kcal e macro (NUT-015),
-      esercizi del giorno (NUT-016) e ultimo peso (NUT-017).
+      attività del giorno (NUT-016) e le pesate nuove (NUT-017).
 - [ ] Un obiettivo cambiato in YAZIO apre una nuova riga di storico con la
       data del giorno.
 - [ ] Il peso di YAZIO è il peso di riferimento finché non arriva Apple
@@ -597,6 +598,11 @@ pezzi di codice, ma nessun dato. Ordine proposto:
 7. **iOS**: quando arriva l'app ron1nOS iOS, NUT-018 e NUT-019, riusando
    da pkm viste SwiftUI, HealthKit, promemoria e scanner.
 
+Mockup da approvare:
+[canvas Modulo Nutrizione](https://claude.ai/artifact/DaU9UXLfJAmKfES2zz5rdZ)
+(widget in tre stati, pagina `/pasti`, registrazione di un pasto, template,
+ricette e spesa, andamento, impostazioni YAZIO).
+
 ### Rapporto con gli altri moduli
 
 - **Peso** (`src/modules/weight`): per ora il peso arriva da YAZIO
@@ -625,4 +631,6 @@ Prese il 2026-10-21.
 8. **Obiettivo.** Da YAZIO; manuale solo senza YAZIO; niente TDEE.
 9. **Quota.** Energia attiva da YAZIO, non da Salute: quella che il
    riepilogo del giorno somma già all'obiettivo (aggiornata dopo la prova).
-10. **Peso.** Da YAZIO, con lo storico costruito a ogni sincronizzazione.
+10. **Peso.** Da YAZIO, con lo storico importato al collegamento e
+    aggiornato a ogni sincronizzazione (corretto dopo la prova: lo storico
+    c'è).
