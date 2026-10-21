@@ -52,7 +52,10 @@ paths:
         Legge un torrent senza darlo a qBittorrent. Accetta un file .torrent
         (multipart, campo `file`, fino a 10 MB) oppure un link in JSON: l'URL
         http(s) di un .torrent, scaricato dal server con le difese SSRF della
-        specifica, o un magnet. Le bozze scadono dopo 30 minuti.
+        specifica, o un magnet. Un magnet viene aggiunto a qBittorrent con il tag
+        `ron1nos-draft`, fermo appena arrivano i metadati: la bozza parte in
+        `metadata` e va riletta finché non diventa `ready` o `timeout`.
+        Le bozze scadono dopo 30 minuti.
       operationId: createDraft
       requestBody:
         required: true
@@ -80,14 +83,37 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Il torrent è già in qBittorrent (`duplicate`); `torrent` dice quale.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
         "422":
           description: L'URL non è scaricabile o non contiene un torrent (`torrent_fetch_failed`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /downloads/drafts/{id}/retry:
+    post:
+      summary: Altri 60 secondi di attesa dei metadati di un magnet
+      operationId: retryDraft
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: La bozza, di nuovo in `metadata`.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Draft" }
+        "404":
+          description: Bozza inesistente o scaduta (`draft_not_found`).
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
   /downloads/drafts/{id}:
     get:
       summary: Rilegge una bozza
+      description: Con un magnet chiede a qBittorrent se i metadati sono arrivati.
       operationId: getDraft
       parameters:
         - { name: id, in: path, required: true, schema: { type: string } }
@@ -109,14 +135,27 @@ components:
       required: [id, source, status, infoHash, name, size, files]
       properties:
         id: { type: string }
-        source: { type: string, enum: [file, url] }
-        status: { type: string, enum: [ready] }
+        source: { type: string, enum: [file, url, magnet] }
+        status:
+          type: string
+          enum: [ready, metadata, timeout]
+          description: >
+            ready: file noti. metadata: magnet in attesa dei peer. timeout: attesa
+            finita senza metadati, si può chiamare retry.
         infoHash: { type: string, description: Infohash v1, o v2 troncato a 40 caratteri. }
         name: { type: string }
         size: { type: number, description: Byte totali del torrent. }
         files:
           type: array
           items: { $ref: "#/components/schemas/DraftFile" }
+        metadata:
+          type: object
+          description: Solo per i magnet in metadata o timeout.
+          required: [peers, waitedSeconds, limitSeconds]
+          properties:
+            peers: { type: integer }
+            waitedSeconds: { type: integer }
+            limitSeconds: { type: integer }
     DraftFile:
       type: object
       required: [index, path, size]
@@ -160,7 +199,13 @@ components:
             - invalid_link
             - torrent_fetch_failed
             - draft_not_found
-            - not_implemented
+            - duplicate
             - not_found
             - internal
         message: { type: string, description: Messaggio in italiano da mostrare. }
+        torrent:
+          type: object
+          description: Solo con `duplicate`, il torrent già presente.
+          properties:
+            name: { type: string }
+            state: { type: string, enum: [downloading, queued, seeding, stopped, error] }

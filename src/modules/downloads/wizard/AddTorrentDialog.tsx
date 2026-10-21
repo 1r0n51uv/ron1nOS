@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { useCreateDraft } from '../data'
+import { useCreateDraft, useDraft, useRetryDraft } from '../data'
 import { ContentsStep } from './ContentsStep'
 import { SourceStep } from './SourceStep'
 import type { SourceState } from './source'
@@ -27,6 +27,8 @@ function Wizard() {
   const [step, setStep] = useState(0)
   const [source, setSource] = useState<SourceState>(EMPTY_SOURCE)
   const draft = useCreateDraft()
+  const current = useDraft(draft.data)
+  const retry = useRetryDraft()
 
   function next() {
     if (step === 0) {
@@ -41,6 +43,7 @@ function Wizard() {
 
   function back() {
     draft.reset()
+    retry.reset()
     setStep((s) => Math.max(0, s - 1))
   }
 
@@ -68,7 +71,14 @@ function Wizard() {
       </DialogHeader>
       <Stepper current={step} />
       {step === 0 ? <SourceStep value={source} onChange={setSource} /> : null}
-      {step === 1 ? <ContentsStep draft={draft.data} error={draft.error} onBack={back} /> : null}
+      {step === 1 ? (
+        <ContentsStep
+          draft={current.data}
+          error={draft.error ?? current.error ?? retry.error}
+          onBack={back}
+          onRetry={() => current.data && retry.mutate(current.data.id)}
+        />
+      ) : null}
       <DialogFooter>
         <div className="flex gap-2">
           <DialogClose asChild>

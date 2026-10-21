@@ -4,18 +4,27 @@
 export class ApiError extends Error {
   readonly code: string
   readonly status: number
+  // Il corpo dell'errore, per i campi in più (es. il torrent duplicato).
+  readonly body: Record<string, unknown>
 
-  constructor(code: string, message: string, status: number) {
+  constructor(code: string, message: string, status: number, body: Record<string, unknown> = {}) {
     super(message)
     this.code = code
     this.status = status
+    this.body = body
   }
 }
 
 async function parse<T>(res: Response): Promise<T> {
   if (res.ok) return (await res.json()) as T
-  const body = (await res.json().catch(() => null)) as { error?: string; message?: string } | null
-  throw new ApiError(body?.error ?? 'http_error', body?.message ?? `HTTP ${res.status}`, res.status)
+  const body = (await res.json().catch(() => null)) as
+    ({ error?: string; message?: string } & Record<string, unknown>) | null
+  throw new ApiError(
+    body?.error ?? 'http_error',
+    body?.message ?? `HTTP ${res.status}`,
+    res.status,
+    body ?? {},
+  )
 }
 
 async function send<T>(path: string, init?: RequestInit): Promise<T> {

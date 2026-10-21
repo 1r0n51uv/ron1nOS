@@ -4,26 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { DEBIAN_DVD } from '../e2e/torrents.ts'
 import { createApp } from './app.ts'
 import { TorrentFetchError } from './fetch-torrent.ts'
-import type { QbtClient } from './qbittorrent.ts'
 import { QbtAuthError, QbtUnreachableError } from './qbittorrent.ts'
-
-function fakeQbt(over: Partial<QbtClient> = {}): QbtClient {
-  return {
-    transferInfo: vi.fn(async () => ({ dl_info_speed: 2048 })),
-    torrents: vi.fn(async () => [
-      {
-        hash: 'a',
-        name: 'debian.iso',
-        progress: 0.5,
-        state: 'downloading',
-        eta: 120,
-        dlspeed: 2048,
-        size: 10,
-      },
-    ]),
-    ...over,
-  }
-}
+import { fakeQbt, qbtTorrent } from './testing/fake-qbt.ts'
 
 describe('API /api/v1', () => {
   it('health risponde ok', async () => {
@@ -158,5 +140,37 @@ describe('API /api/v1/downloads/drafts', () => {
     const res = await createApp({ qbt: fakeQbt() }).request('/api/v1/downloads/drafts/nessuna')
     expect(res.status).toBe(404)
     expect(await res.json()).toMatchObject({ error: 'draft_not_found' })
+  })
+
+  it('un magnet crea una bozza in attesa dei metadati', async () => {
+    const qbt = fakeQbt({}, [])
+    const app = createApp({ qbt })
+    const res = await link(app, 'magnet:?xt=urn:btih:3b1a1469c180f447b77021074dbbccaef62611e7')
+    expect(res.status).toBe(201)
+    const draft = (await res.json()) as { id: string }
+    expect(draft).toMatchObject({ source: 'magnet', status: 'metadata' })
+    expect(qbt.add).toHaveBeenCalled()
+
+    const retry = await app.request(`/api/v1/downloads/drafts/${draft.id}/retry`, { method: 'POST' })
+    expect(retry.status).toBe(200)
+  })
+
+  it('un magnet senza hash risponde 400 invalid_link', async () => {
+    const res = await link(createApp({ qbt: fakeQbt() }), 'magnet:?dn=x')
+    expect(res.status).toBe(400)
+    expect(await res.json()).toMatchObject({ error: 'invalid_link' })
+  })
+
+  it('un torrent già presente risponde 409 con nome e stato', async () => {
+    const qbt = fakeQbt({}, [
+      qbtTorrent({ hash: '3b1a1469c180f447b77021074dbbccaef62611e7', name: 'debian', state: 'uploading' }),
+    ])
+    const res = await link(createApp({ qbt }), 'magnet:?xt=urn:btih:3b1a1469c180f447b77021074dbbccaef62611e7')
+    expect(res.status).toBe(409)
+    expect(await res.json()).toEqual({
+      error: 'duplicate',
+      message: 'Questo torrent è già nei download',
+      torrent: { name: 'debian', state: 'seeding' },
+    })
   })
 })

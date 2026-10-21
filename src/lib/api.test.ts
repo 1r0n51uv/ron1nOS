@@ -29,6 +29,14 @@ describe('api', () => {
     expect(err).toMatchObject({ code: 'qbittorrent_unreachable', status: 503 })
   })
 
+  it('tiene i campi in più del corpo dell’errore', async () => {
+    stubFetch(async () =>
+      Response.json({ error: 'duplicate', message: 'm', torrent: { name: 'x' } }, { status: 409 }),
+    )
+    const err = (await api.get('/x').catch((e: unknown) => e)) as ApiError
+    expect(err.body.torrent).toEqual({ name: 'x' })
+  })
+
   it('segnala il backend irraggiungibile', async () => {
     stubFetch(async () => {
       throw new TypeError('Failed to fetch')

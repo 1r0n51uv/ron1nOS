@@ -5,6 +5,8 @@ export type Config = {
   port: number
   staticDir: string
   qbt: { url: string; username: string; password: string }
+  // Attesa dei metadati di un magnet prima di proporre Riprova (DL-005).
+  metadataWaitMs: number
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -16,5 +18,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       username: env.QBT_USERNAME ?? '',
       password: env.QBT_PASSWORD ?? '',
     },
+    metadataWaitMs: Number(env.METADATA_WAIT_SECONDS ?? 60) * 1000,
   }
 }
