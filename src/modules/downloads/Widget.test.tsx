@@ -5,7 +5,8 @@ import { renderWithProviders } from '@/test/render'
 import type * as data from './data'
 import type { Downloads, Torrent } from './data'
 import { useDownloads } from './data'
-import { eta, summary } from './format'
+import { ApiError } from '@/lib/api'
+import { eta, problem, summary } from './format'
 import { DownloadsWidget } from './Widget'
 
 vi.mock('./data', async (importOriginal) => ({
@@ -26,8 +27,8 @@ function torrent(over: Partial<Torrent>): Torrent {
   }
 }
 
-function withData(d: Downloads | undefined) {
-  vi.mocked(useDownloads).mockReturnValue({ data: d } as ReturnType<typeof useDownloads>)
+function withData(d: Downloads | undefined, error: Error | null = null) {
+  vi.mocked(useDownloads).mockReturnValue({ data: d, error } as ReturnType<typeof useDownloads>)
 }
 
 describe('eta', () => {
@@ -55,7 +56,34 @@ describe('summary', () => {
   })
 })
 
+describe('problem', () => {
+  it('distingue credenziali errate da servizio spento', () => {
+    expect(problem(new ApiError('qbittorrent_auth', '', 502))).toBe('Accesso a qBittorrent non riuscito')
+    expect(problem(new ApiError('qbittorrent_unreachable', '', 503))).toBe('qBittorrent non raggiungibile')
+    expect(problem(new ApiError('network', '', 0))).toBe('qBittorrent non raggiungibile')
+  })
+})
+
 describe('DownloadsWidget', () => {
+  it('con qBittorrent spento lo dice, anche se aveva dati', () => {
+    withData(
+      { downloadSpeed: 1, torrents: [torrent({ name: 'vecchio.iso' })] },
+      new ApiError('qbittorrent_unreachable', '', 503),
+    )
+    renderWithProviders(<DownloadsWidget />)
+    expect(screen.getByText('qBittorrent · offline')).toBeInTheDocument()
+    expect(screen.getByText('qBittorrent non raggiungibile. Riprovo ogni 5 secondi.')).toBeInTheDocument()
+    expect(screen.queryByText('vecchio.iso')).not.toBeInTheDocument()
+  })
+
+  it('con credenziali errate mostra l’accesso non riuscito', () => {
+    withData(undefined, new ApiError('qbittorrent_auth', '', 502))
+    renderWithProviders(<DownloadsWidget />)
+    expect(
+      screen.getByText('Accesso a qBittorrent non riuscito. Riprovo ogni 5 secondi.'),
+    ).toBeInTheDocument()
+  })
+
   it('mostra lo scheletro al primo caricamento', () => {
     withData(undefined)
     renderWithProviders(<DownloadsWidget />)

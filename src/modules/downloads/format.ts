@@ -1,4 +1,5 @@
 // Testi del widget Download, separati per poterli testare da soli.
+import { ApiError } from '@/lib/api'
 import type { Downloads } from './data'
 
 // Quanti torrent attivi mostrare per intero; gli altri finiscono nel riepilogo.
@@ -24,4 +25,11 @@ export function summary({ torrents }: Downloads) {
   ]
     .filter(Boolean)
     .join(' · ')
+}
+
+// Messaggio da mostrare quando il backend non riesce a leggere qBittorrent.
+export function problem(error: unknown) {
+  if (error instanceof ApiError && error.code === 'qbittorrent_auth')
+    return 'Accesso a qBittorrent non riuscito'
+  return 'qBittorrent non raggiungibile'
 }

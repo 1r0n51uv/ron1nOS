@@ -1,10 +1,10 @@
-import { WidgetCard } from '@/components/ron1n'
+import { StatusPill, WidgetCard } from '@/components/ron1n'
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
 import { Progress } from '@/components/ui/progress'
 import { num } from '@/lib/format'
 import type { Torrent } from './data'
 import { useDownloads } from './data'
-import { eta, summary, VISIBLE } from './format'
+import { eta, problem, summary, VISIBLE } from './format'
 
 function TorrentRow({ torrent }: { torrent: Torrent }) {
   const pct = Math.floor(torrent.progress * 100)
@@ -23,7 +23,18 @@ function TorrentRow({ torrent }: { torrent: Torrent }) {
 }
 
 export function DownloadsWidget({ className }: { className?: string }) {
-  const { data } = useDownloads()
+  const { data, error } = useDownloads()
+  // Un errore vince sui dati vecchi: meglio dire che non sappiamo.
+  if (error) {
+    return (
+      <WidgetCard title="Download" meta="offline" className={className}>
+        <div className="flex flex-col items-start gap-2.5" role="status">
+          <StatusPill tone="alert">qBittorrent · offline</StatusPill>
+          <div className="text-sm text-ink-muted">{problem(error)}. Riprovo ogni 5 secondi.</div>
+        </div>
+      </WidgetCard>
+    )
+  }
   if (!data) return <WidgetSkeleton title="Download" className={className} />
 
   const active = data.torrents.filter((t) => t.state === 'downloading').slice(0, VISIBLE)

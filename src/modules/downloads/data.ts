@@ -25,5 +25,12 @@ export function getDownloads() {
 }
 
 export function useDownloads() {
-  return useQuery({ queryKey: ['downloads'], queryFn: getDownloads, refetchInterval: 5_000 })
+  return useQuery({
+    queryKey: ['downloads'],
+    queryFn: getDownloads,
+    refetchInterval: 5_000,
+    // Niente retry: se qBittorrent è giù il widget lo dice al prossimo
+    // aggiornamento, e riprende da solo quando torna.
+    retry: false,
+  })
 }
