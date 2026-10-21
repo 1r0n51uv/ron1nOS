@@ -1,6 +1,6 @@
 import { ProgressRing, WidgetCard } from '@/components/ron1n'
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
-import { ALERT_THRESHOLD, percent, useServerStats } from './data'
+import { ALERT_THRESHOLD, headerMeta, percent, useServerStats } from './data'
 
 export function ServerWidget({ className }: { className?: string }) {
   const { data } = useServerStats()
@@ -13,11 +13,7 @@ export function ServerWidget({ className }: { className?: string }) {
   ]
 
   return (
-    <WidgetCard
-      title="Server"
-      meta={`${Math.round(data.tempC)} °C · ${data.uptimeDays} g`}
-      className={className}
-    >
+    <WidgetCard title="Server" meta={headerMeta(data)} className={className}>
       <div className="grid grid-cols-3 justify-items-center gap-2">
         {rings.map((r) => {
           const alert = r.value >= ALERT_THRESHOLD

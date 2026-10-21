@@ -12,3 +12,8 @@ test('il widget Server mostra gli anelli CPU, RAM e SSD (SRV-001)', async ({ pag
     await expect(widget.getByRole('img', { name: new RegExp(`^${key} \\d{1,3}%`) })).toBeVisible()
   }
 })
+
+test('la testata mostra temperatura e uptime (SRV-002)', async ({ page }) => {
+  await page.goto('/')
+  await expect(serverWidget(page).getByText(/^\d+ °C · \d+ (g|h)$/)).toBeVisible()
+})

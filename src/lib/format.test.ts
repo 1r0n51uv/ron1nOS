@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { clock, greeting, num, signed } from './format'
+import { clock, greeting, num, signed, uptime } from './format'
 
 describe('num', () => {
   // In it-IT il punto delle migliaia compare da cinque cifre (1234 resta 1234).
@@ -32,5 +32,17 @@ describe('greeting', () => {
     [21, 'Buonasera.'],
   ])('alle %i dice %s', (hour, expected) => {
     expect(greeting(new Date(2026, 9, 20, hour))).toBe(expected)
+  })
+})
+
+describe('uptime', () => {
+  it('sotto un giorno usa le ore', () => {
+    expect(uptime(7 * 3_600 + 59 * 60)).toBe('7 h')
+    expect(uptime(0)).toBe('0 h')
+  })
+
+  it('da un giorno in su usa i giorni', () => {
+    expect(uptime(24 * 3_600)).toBe('1 g')
+    expect(uptime(41 * 86_400 + 3_600)).toBe('41 g')
   })
 })

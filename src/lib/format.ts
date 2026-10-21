@@ -33,3 +33,9 @@ export function greeting(d: Date) {
   if (h < 18) return 'Buon pomeriggio.'
   return 'Buonasera.'
 }
+
+// Da quanto è acceso un sistema: ore sotto il giorno, poi giorni.
+export function uptime(totalSeconds: number) {
+  const hours = Math.floor(Math.max(0, totalSeconds) / 3_600)
+  return hours < 24 ? `${hours} h` : `${Math.floor(hours / 24)} g`
+}
