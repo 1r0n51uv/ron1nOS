@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import type { ClipboardEvent, ReactNode } from 'react'
+import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -11,36 +12,89 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Stepper } from './Stepper'
+import { useCreateDraft } from '../data'
+import { ContentsStep } from './ContentsStep'
+import { SourceStep } from './SourceStep'
+import type { SourceState } from './source'
+import { EMPTY_SOURCE, isReady, parseLink } from './source'
 import { STEPS } from './steps'
+import { Stepper } from './Stepper'
 
-const TITLES = ['Da dove arriva il torrent', 'Contenuti', 'Cosa scaricare', 'Riepilogo']
+const TITLES = ['Da dove arriva il torrent', 'Lettura dei contenuti', 'Cosa scaricare', 'Riepilogo']
 
-// Guscio del wizard (DL-003). I passi arrivano con DL-004…DL-007.
-// Il trigger è il pulsante del widget: alla chiusura il focus torna lì.
-export function AddTorrentDialog({ children }: { children: ReactNode }) {
-  const step = 0
+// Montato solo a modale aperto: chiudendo si riparte da capo.
+function Wizard() {
+  const [step, setStep] = useState(0)
+  const [source, setSource] = useState<SourceState>(EMPTY_SOURCE)
+  const draft = useCreateDraft()
+
+  function next() {
+    if (step === 0) {
+      draft.mutate(
+        source.tab === 'file' && source.file
+          ? { kind: 'file', file: source.file }
+          : { kind: 'link', link: source.link.trim() },
+      )
+      setStep(1)
+    }
+  }
+
+  function back() {
+    draft.reset()
+    setStep((s) => Math.max(0, s - 1))
+  }
+
+  // Un link incollato fuori dal campo apre la scheda Link (DL-004).
+  function onPaste(e: ClipboardEvent) {
+    if (step !== 0 || e.target instanceof HTMLInputElement) return
+    const text = e.clipboardData.getData('text')
+    if (!parseLink(text)) return
+    e.preventDefault()
+    setSource((s) => ({ ...s, tab: 'link', link: text.trim() }))
+  }
+
+  const canGoOn = step === 0 && isReady(source)
+
   return (
-    <Dialog>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <div className="font-mono text-xs tracking-[0.2em] text-ink-muted">
-            AGGIUNGI TORRENT · {step + 1} DI {STEPS.length}
-          </div>
-          <DialogTitle>{TITLES[step]}</DialogTitle>
-          <DialogDescription className="sr-only">
-            Aggiungi un torrent da file, link magnet o URL.
-          </DialogDescription>
-        </DialogHeader>
-        <Stepper current={step} />
-        <DialogFooter>
+    <DialogContent onPaste={onPaste}>
+      <DialogHeader>
+        <div className="font-mono text-xs tracking-[0.2em] text-ink-muted">
+          AGGIUNGI TORRENT · {step + 1} DI {STEPS.length}
+        </div>
+        <DialogTitle>{TITLES[step]}</DialogTitle>
+        <DialogDescription className="sr-only">
+          Aggiungi un torrent da file, link magnet o URL.
+        </DialogDescription>
+      </DialogHeader>
+      <Stepper current={step} />
+      {step === 0 ? <SourceStep value={source} onChange={setSource} /> : null}
+      {step === 1 ? <ContentsStep draft={draft.data} error={draft.error} onBack={back} /> : null}
+      <DialogFooter>
+        <div className="flex gap-2">
           <DialogClose asChild>
             <Button variant="glass">Annulla</Button>
           </DialogClose>
-          <Button disabled>Avanti</Button>
-        </DialogFooter>
-      </DialogContent>
+          {step > 0 ? (
+            <Button variant="glass" onClick={back}>
+              Indietro
+            </Button>
+          ) : null}
+        </div>
+        <Button disabled={!canGoOn} onClick={next}>
+          Avanti
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  )
+}
+
+// Il trigger è il pulsante del widget: alla chiusura il focus torna lì.
+export function AddTorrentDialog({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      {open ? <Wizard /> : null}
     </Dialog>
   )
 }

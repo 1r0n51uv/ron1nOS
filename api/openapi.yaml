@@ -45,8 +45,85 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+  /downloads/drafts:
+    post:
+      summary: Crea una bozza del wizard Aggiungi
+      description: >
+        Legge un torrent senza darlo a qBittorrent. Accetta un file .torrent
+        (multipart, campo `file`, fino a 10 MB) oppure un link in JSON: l'URL
+        http(s) di un .torrent, scaricato dal server con le difese SSRF della
+        specifica, o un magnet. Le bozze scadono dopo 30 minuti.
+      operationId: createDraft
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+          application/json:
+            schema:
+              type: object
+              required: [link]
+              properties:
+                link: { type: string, description: "magnet:?xt=urn:btih:… o https://…/file.torrent" }
+      responses:
+        "201":
+          description: Bozza pronta, con i file del torrent.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Draft" }
+        "400":
+          description: File non torrent (`invalid_torrent`) o link non valido (`invalid_link`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: L'URL non è scaricabile o non contiene un torrent (`torrent_fetch_failed`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /downloads/drafts/{id}:
+    get:
+      summary: Rilegge una bozza
+      operationId: getDraft
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: La bozza.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Draft" }
+        "404":
+          description: Bozza inesistente o scaduta (`draft_not_found`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 components:
   schemas:
+    Draft:
+      type: object
+      required: [id, source, status, infoHash, name, size, files]
+      properties:
+        id: { type: string }
+        source: { type: string, enum: [file, url] }
+        status: { type: string, enum: [ready] }
+        infoHash: { type: string, description: Infohash v1, o v2 troncato a 40 caratteri. }
+        name: { type: string }
+        size: { type: number, description: Byte totali del torrent. }
+        files:
+          type: array
+          items: { $ref: "#/components/schemas/DraftFile" }
+    DraftFile:
+      type: object
+      required: [index, path, size]
+      properties:
+        index: { type: integer, description: Indice del file per qBittorrent. }
+        path: { type: string, description: Percorso con la cartella del torrent, separato da /. }
+        size: { type: number, description: byte }
     Downloads:
       type: object
       required: [downloadSpeed, torrents]
@@ -76,5 +153,14 @@ components:
       properties:
         error:
           type: string
-          enum: [qbittorrent_unreachable, qbittorrent_auth, not_found, internal]
+          enum:
+            - qbittorrent_unreachable
+            - qbittorrent_auth
+            - invalid_torrent
+            - invalid_link
+            - torrent_fetch_failed
+            - draft_not_found
+            - not_implemented
+            - not_found
+            - internal
         message: { type: string, description: Messaggio in italiano da mostrare. }
