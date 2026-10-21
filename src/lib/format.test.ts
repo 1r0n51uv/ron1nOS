@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { clock, greeting, num, signed, uptime } from './format'
+import { clock, greeting, num, rate, signed, uptime } from './format'
 
 describe('num', () => {
   // In it-IT il punto delle migliaia compare da cinque cifre (1234 resta 1234).
@@ -44,5 +44,16 @@ describe('uptime', () => {
   it('da un giorno in su usa i giorni', () => {
     expect(uptime(24 * 3_600)).toBe('1 g')
     expect(uptime(41 * 86_400 + 3_600)).toBe('41 g')
+  })
+})
+
+describe('rate', () => {
+  it('sotto 1 MB/s usa i kB/s interi', () => {
+    expect(rate(820_400)).toBe('820 kB/s')
+    expect(rate(0)).toBe('0 kB/s')
+  })
+
+  it('da 1 MB/s usa i MB/s con un decimale', () => {
+    expect(rate(12_400_000)).toBe('12,4 MB/s')
   })
 })

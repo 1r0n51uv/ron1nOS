@@ -1,5 +1,6 @@
 import { ProgressRing, WidgetCard } from '@/components/ron1n'
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
+import { rate } from '@/lib/format'
 import { ALERT_THRESHOLD, headerMeta, percent, useServerStats } from './data'
 
 export function ServerWidget({ className }: { className?: string }) {
@@ -30,6 +31,14 @@ export function ServerWidget({ className }: { className?: string }) {
           )
         })}
       </div>
+      {data.net ? (
+        <div className="flex items-baseline justify-between gap-3 border-t border-glass-border pt-3.5">
+          <span className="text-[13px] text-ink-muted">Rete</span>
+          <span className="font-mono text-sm">
+            ↓ {rate(data.net.rxBps)} · ↑ {rate(data.net.txBps)}
+          </span>
+        </div>
+      ) : null}
     </WidgetCard>
   )
 }

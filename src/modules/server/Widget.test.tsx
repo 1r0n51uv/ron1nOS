@@ -13,7 +13,14 @@ vi.mock('./data', async (importOriginal) => ({
   useServerStats: vi.fn(),
 }))
 
-const stats: ServerStats = { cpu: 23.4, ram: 57.2, disk: 82.1, tempC: 52.4, uptimeSec: 41 * 86_400 + 600 }
+const stats: ServerStats = {
+  cpu: 23.4,
+  ram: 57.2,
+  disk: 82.1,
+  tempC: 52.4,
+  uptimeSec: 41 * 86_400 + 600,
+  net: { rxBps: 12_400_000, txBps: 820_000 },
+}
 
 describe('ServerWidget', () => {
   it('mostra lo scheletro finché non ci sono dati', () => {
@@ -45,5 +52,20 @@ describe('ServerWidget', () => {
     } as ReturnType<typeof useServerStats>)
     renderWithProviders(<ServerWidget />)
     expect(screen.getByText('7 h')).toBeInTheDocument()
+  })
+
+  it('mostra la velocità di rete in ingresso e in uscita', () => {
+    vi.mocked(useServerStats).mockReturnValue({ data: stats } as ReturnType<typeof useServerStats>)
+    renderWithProviders(<ServerWidget />)
+    expect(screen.getByText('Rete')).toBeInTheDocument()
+    expect(screen.getByText('↓ 12,4 MB/s · ↑ 820 kB/s')).toBeInTheDocument()
+  })
+
+  it('senza dati di rete omette la riga', () => {
+    vi.mocked(useServerStats).mockReturnValue({
+      data: { ...stats, net: undefined },
+    } as ReturnType<typeof useServerStats>)
+    renderWithProviders(<ServerWidget />)
+    expect(screen.queryByText('Rete')).not.toBeInTheDocument()
   })
 })
