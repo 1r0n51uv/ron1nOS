@@ -173,4 +173,47 @@ describe('API /api/v1/downloads/drafts', () => {
       torrent: { name: 'debian', state: 'seeding' },
     })
   })
+
+  it('start avvia con i file scelti; scelta non valida 400; spazio 409', async () => {
+    const qbt = fakeQbt({ files: vi.fn().mockResolvedValue([]) }, [])
+    const app = createApp({ qbt })
+    const draft = (await (await upload(app, DEBIAN_DVD)).json()) as { id: string }
+    const start = (files: unknown) =>
+      app.request(`/api/v1/downloads/drafts/${draft.id}/start`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ files }),
+      })
+
+    expect((await start('tutti')).status).toBe(400)
+    vi.mocked(qbt.freeSpace).mockResolvedValueOnce(10)
+    const full = await start([0])
+    expect(full.status).toBe(409)
+    expect(await full.json()).toMatchObject({ error: 'insufficient_space', needed: 3_900_000_000, free: 10 })
+
+    const ok = await start([0, 1])
+    expect(ok.status).toBe(200)
+    expect(qbt.start).toHaveBeenCalled()
+  })
+
+  it('start fallito risponde 502 start_failed', async () => {
+    const qbt = fakeQbt(
+      { files: vi.fn().mockResolvedValue([]), add: vi.fn().mockRejectedValue(new Error('x')) },
+      [],
+    )
+    const app = createApp({ qbt })
+    const draft = (await (await upload(app, DEBIAN_DVD)).json()) as { id: string }
+    const res = await app.request(`/api/v1/downloads/drafts/${draft.id}/start`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ files: [0] }),
+    })
+    expect(res.status).toBe(502)
+    expect(await res.json()).toMatchObject({ error: 'start_failed' })
+  })
+
+  it('space restituisce spazio libero e cartella', async () => {
+    const res = await createApp({ qbt: fakeQbt() }).request('/api/v1/downloads/space')
+    expect(await res.json()).toEqual({ free: 500_000_000_000, path: '/downloads' })
+  })
 })

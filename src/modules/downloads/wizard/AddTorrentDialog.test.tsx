@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type * as apiModule from '@/lib/api'
@@ -260,5 +260,63 @@ describe('Passo 3: scelta dei file', () => {
     await toFiles({ ...DRAFT, name: 'a.iso', size: 700, files: [{ index: 0, path: 'a.iso', size: 700 }] })
     expect(box('a.iso')).toHaveAttribute('data-state', 'checked')
     expect(avanti()).toBeEnabled()
+  })
+})
+
+describe('Passo 4: riepilogo e avvio', () => {
+  async function toSummary(free = 412_000_000_000) {
+    vi.mocked(api.post).mockResolvedValueOnce(DRAFT)
+    vi.mocked(api.get).mockImplementation(async (path: string) =>
+      path === '/downloads/space' ? { free, path: '/downloads' } : DRAFT,
+    )
+    open()
+    chooseFile()
+    fireEvent.click(avanti())
+    await screen.findByText('4 file · 7,9 GB')
+    fireEvent.click(avanti())
+    fireEvent.click(screen.getByRole('checkbox', { name: 'debian-13.1.0-amd64-DVD-2.iso' }))
+    fireEvent.click(avanti())
+    await screen.findByText('Riepilogo')
+  }
+
+  const avvia = () => screen.getByRole('button', { name: 'Avvia' })
+
+  it('riassume file, dimensione, spazio e cartella', async () => {
+    await toSummary()
+    expect(screen.getByText('AGGIUNGI TORRENT · 4 DI 4')).toBeInTheDocument()
+    expect(screen.getByText('3 file su 4')).toBeInTheDocument()
+    expect(await screen.findByText('dopo il download: 408 GB')).toBeInTheDocument()
+    expect(screen.getByText('/downloads')).toBeInTheDocument()
+    expect(avvia()).toBeEnabled()
+    expect(api.get).toHaveBeenCalledWith('/downloads/space')
+  })
+
+  it('con spazio insufficiente avvisa e Avvia resta disattivato', async () => {
+    await toSummary(2_100_000_000)
+    expect(
+      await screen.findByText('Servono 3,9 GB, liberi 2,1 GB. Togli qualche file al passo precedente.'),
+    ).toBeInTheDocument()
+    expect(avvia()).toBeDisabled()
+  })
+
+  it('Avvia manda i file scelti e chiude il modale', async () => {
+    await toSummary()
+    await screen.findByText('dopo il download: 408 GB')
+    vi.mocked(api.post).mockResolvedValueOnce({ hash: 'h' })
+    fireEvent.click(avvia())
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(api.post).toHaveBeenLastCalledWith('/downloads/drafts/d1/start', { files: [0, 2, 3] })
+  })
+
+  it('se l’avvio fallisce resta sul riepilogo con Riprova', async () => {
+    await toSummary()
+    await screen.findByText('dopo il download: 408 GB')
+    vi.mocked(api.post).mockRejectedValueOnce(new ApiError('start_failed', '', 502))
+    fireEvent.click(avvia())
+    expect(await screen.findByText('Avvio non riuscito. Riprova.')).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    vi.mocked(api.post).mockResolvedValueOnce({ hash: 'h' })
+    fireEvent.click(screen.getByRole('button', { name: 'Riprova' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 })

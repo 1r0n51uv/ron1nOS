@@ -41,8 +41,10 @@ export type QbtClient = {
   delete(hash: string, deleteFiles: boolean): Promise<void>
   filePrio(hash: string, indexes: number[], priority: number): Promise<void>
   start(hash: string): Promise<void>
+  addTags(hash: string, tags: string): Promise<void>
   removeTags(hash: string, tags: string): Promise<void>
   freeSpace(): Promise<number>
+  defaultSavePath(): Promise<string>
 }
 
 type Options = {
@@ -159,10 +161,16 @@ export function createQbtClient({
     filePrio: (hash, indexes, priority) =>
       post('/api/v2/torrents/filePrio', { hash, id: indexes.join('|'), priority: String(priority) }),
     start: (hash) => post('/api/v2/torrents/start', { hashes: hash }),
+    addTags: (hash, tags) => post('/api/v2/torrents/addTags', { hashes: hash, tags }),
     removeTags: (hash, tags) => post('/api/v2/torrents/removeTags', { hashes: hash, tags }),
     async freeSpace() {
       const data = await get<{ server_state?: { free_space_on_disk?: number } }>('/api/v2/sync/maindata')
       return data.server_state?.free_space_on_disk ?? 0
+    },
+    async defaultSavePath() {
+      const res = await request('/api/v2/app/defaultSavePath')
+      if (!res.ok) throw new QbtUnreachableError(`app/defaultSavePath: HTTP ${res.status}`)
+      return (await res.text()).trim()
     },
   } satisfies QbtClient
 }

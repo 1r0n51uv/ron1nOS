@@ -134,7 +134,7 @@ Accettazione:
 
 ### DL-007 · Wizard, passo 4: riepilogo e avvio
 
-Stato: pianificato (#11)
+Stato: fatto (#11)
 
 L'ultimo passo riassume e avvia il download.
 
