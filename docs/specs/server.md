@@ -51,7 +51,7 @@ Accettazione:
 
 ### SRV-003 · Rete
 
-Stato: pianificato (#17)
+Stato: fatto (#31)
 
 Il widget mostra quanto traffico sta passando dalla scheda di rete del
 server.
