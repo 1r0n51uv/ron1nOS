@@ -41,7 +41,7 @@ Accettazione:
 
 ### DL-002 · Stato di qBittorrent non raggiungibile
 
-Stato: pianificato (#6)
+Stato: fatto (#30)
 
 Se la dashboard non riesce a parlare con qBittorrent, il widget lo dice
 invece di mostrare dati vecchi o vuoti.
