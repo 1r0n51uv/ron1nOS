@@ -36,7 +36,7 @@ Accettazione:
 
 ### SRV-002 · Temperatura e uptime
 
-Stato: pianificato (#16)
+Stato: fatto (#26)
 
 Nella testata del widget la temperatura della CPU e da quanto il server è
 acceso.
@@ -51,7 +51,7 @@ Accettazione:
 
 ### SRV-003 · Rete
 
-Stato: pianificato (#17)
+Stato: fatto (#31)
 
 Il widget mostra quanto traffico sta passando dalla scheda di rete del
 server.
@@ -66,7 +66,7 @@ Accettazione:
 
 ### SRV-004 · Consumo per container
 
-Stato: pianificato (#18)
+Stato: fatto (#32)
 
 Il widget dice quali container stanno usando più risorse.
 
@@ -80,7 +80,7 @@ Accettazione:
 
 ### SRV-005 · Soglie
 
-Stato: pianificato (#19)
+Stato: fatto (#34)
 
 Il rosso del marchio segnala solo ciò che merita attenzione.
 
@@ -94,7 +94,7 @@ Accettazione:
 
 ### SRV-006 · Glances non raggiungibile
 
-Stato: pianificato (#20)
+Stato: fatto (#35)
 
 Se la dashboard non riesce a leggere le risorse, il widget lo dice invece
 di mostrare valori vecchi.
@@ -110,7 +110,7 @@ Accettazione:
 
 ### SRV-007 · Aggiornamento continuo
 
-Stato: pianificato (#21)
+Stato: fatto (#37)
 
 Il widget segue il server senza ricaricare la pagina.
 
@@ -124,7 +124,7 @@ Accettazione:
 
 ### SRV-008 · Solo i dati che servono
 
-Stato: pianificato (#14)
+Stato: fatto (#38)
 
 Il browser non parla con Glances e riceve solo i numeri del widget.
 

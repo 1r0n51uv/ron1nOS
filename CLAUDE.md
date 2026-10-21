@@ -15,6 +15,10 @@ italiano.
 - Ogni modulo ha `data.ts` (tipi, sorgente, hook React Query) e
   `Widget.tsx`. Il widget legge solo dall'hook. Per collegare un modulo
   vero si cambia solo la sorgente in `data.ts`.
+- Backend in `server/` (Hono): rotte JSON sotto `/api/v1`, pensate per
+  tutti i client (web e app iOS). Logica e validazione stanno qui, non nel
+  browser. Ogni rotta nuova va in `api/openapi.yaml`. Segreti solo da
+  variabili d'ambiente.
 - Testi: brevi, calmi, niente punti esclamativi né emoji. Separatore `·`.
 - Ogni PR porta i suoi test: unit (Vitest, `*.test.ts(x)` accanto al file)
   e almeno uno scenario e2e (Playwright, `e2e/`) per ciò che l'utente vede.

@@ -1,9 +1,23 @@
-import { ProgressRing, WidgetCard } from '@/components/ron1n'
+import { ProgressRing, StatusPill, WidgetCard } from '@/components/ron1n'
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
-import { ALERT_THRESHOLD, percent, useServerStats } from './data'
+import { bytes, num, rate } from '@/lib/format'
+import { headerMeta, isHot, percent, THRESHOLDS, topContainers, useServerStats } from './data'
 
 export function ServerWidget({ className }: { className?: string }) {
-  const { data } = useServerStats()
+  const { data, isError } = useServerStats()
+  // Con Glances irraggiungibile niente valori vecchi: solo lo stato (SRV-006).
+  if (isError) {
+    return (
+      <WidgetCard title="Server" meta="offline" className={className}>
+        <div className="flex flex-col items-start gap-2.5">
+          <StatusPill tone="alert">Glances · offline</StatusPill>
+          <div role="status" className="text-sm text-ink-muted">
+            Glances non raggiungibile. Riprovo ogni 5 secondi.
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
   if (!data) return <WidgetSkeleton title="Server" className={className} />
 
   const rings = [
@@ -13,14 +27,17 @@ export function ServerWidget({ className }: { className?: string }) {
   ]
 
   return (
-    <WidgetCard
-      title="Server"
-      meta={`${Math.round(data.tempC)} °C · ${data.uptimeDays} g`}
-      className={className}
-    >
+    <WidgetCard title="Server" meta={headerMeta(data)} className={className}>
+      {isHot(data.tempC) ? (
+        <div className="flex">
+          <StatusPill tone="alert" size="small">
+            CPU a {Math.round(data.tempC)} °C
+          </StatusPill>
+        </div>
+      ) : null}
       <div className="grid grid-cols-3 justify-items-center gap-2">
         {rings.map((r) => {
-          const alert = r.value >= ALERT_THRESHOLD
+          const alert = r.value >= THRESHOLDS.percent
           return (
             <ProgressRing
               key={r.key}
@@ -34,6 +51,34 @@ export function ServerWidget({ className }: { className?: string }) {
           )
         })}
       </div>
+      {data.net ? (
+        <div className="flex items-baseline justify-between gap-3 border-t border-glass-border pt-3.5">
+          <span className="text-[13px] text-ink-muted">Rete</span>
+          <span className="font-mono text-sm">
+            ↓ {rate(data.net.rxBps)} · ↑ {rate(data.net.txBps)}
+          </span>
+        </div>
+      ) : null}
+      {data.containers?.length ? (
+        <table className="w-full table-fixed border-t border-glass-border text-sm">
+          <thead>
+            <tr className="text-xs text-ink-muted">
+              <th className="pt-3.5 pb-1 text-left font-normal">Container</th>
+              <th className="w-16 pt-3.5 pb-1 text-right font-normal">CPU</th>
+              <th className="w-[72px] pt-3.5 pb-1 text-right font-normal">RAM</th>
+            </tr>
+          </thead>
+          <tbody>
+            {topContainers(data.containers).map((c) => (
+              <tr key={c.name}>
+                <td className="truncate py-1">{c.name}</td>
+                <td className="py-1 text-right font-mono">{num(c.cpu)}%</td>
+                <td className="py-1 text-right font-mono">{bytes(c.memBytes)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : null}
     </WidgetCard>
   )
 }

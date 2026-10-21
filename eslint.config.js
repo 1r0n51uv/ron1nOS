@@ -9,7 +9,7 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage']),
+  globalIgnores(['dist', 'dist-server', 'coverage']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -38,6 +38,11 @@ export default defineConfig([
     // Configurazione, e2e e, quando arriverà, il backend: girano in Node.
     files: ['*.config.{js,ts}', 'e2e/**/*.ts', 'server/**/*.ts'],
     languageOptions: { globals: globals.node },
+  },
+  {
+    // Il processo del backend scrive i suoi messaggi di avvio su stdout.
+    files: ['server/index.ts'],
+    rules: { 'no-console': 'off' },
   },
   prettier,
 ])

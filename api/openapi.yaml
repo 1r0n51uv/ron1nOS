@@ -1,0 +1,348 @@
+# Contratto dell'API di ron1nOS, condiviso da dashboard web e app iOS.
+# Le rotte sono versionate: un cambio incompatibile va sotto /api/v2.
+openapi: 3.1.0
+info:
+  title: ron1nOS API
+  version: 1.0.0
+  description: Backend della dashboard ron1nOS. Raggiungibile solo dalla tailnet.
+servers:
+  - url: /api/v1
+paths:
+  /health:
+    get:
+      summary: Stato del backend
+      operationId: getHealth
+      responses:
+        "200":
+          description: Il backend risponde.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok: { type: boolean, const: true }
+  /downloads:
+    get:
+      summary: Velocità totale e torrent di qBittorrent
+      description: >
+        Torrent ordinati per stato (downloading, queued, seeding, stopped, error)
+        e, a parità di stato, dal più vicino alla fine.
+      operationId: getDownloads
+      responses:
+        "200":
+          description: Dati correnti di qBittorrent.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Downloads" }
+        "502":
+          description: qBittorrent ha rifiutato le credenziali del backend.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503":
+          description: qBittorrent non raggiungibile.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /downloads/drafts:
+    post:
+      summary: Crea una bozza del wizard Aggiungi
+      description: >
+        Legge un torrent senza darlo a qBittorrent. Accetta un file .torrent
+        (multipart, campo `file`, fino a 10 MB) oppure un link in JSON: l'URL
+        http(s) di un .torrent, scaricato dal server con le difese SSRF della
+        specifica, o un magnet. Un magnet viene aggiunto a qBittorrent con il tag
+        `ron1nos-draft`, fermo appena arrivano i metadati: la bozza parte in
+        `metadata` e va riletta finché non diventa `ready` o `timeout`.
+        Le bozze scadono dopo 30 minuti.
+      operationId: createDraft
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+          application/json:
+            schema:
+              type: object
+              required: [link]
+              properties:
+                link: { type: string, description: "magnet:?xt=urn:btih:… o https://…/file.torrent" }
+      responses:
+        "201":
+          description: Bozza pronta, con i file del torrent.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Draft" }
+        "400":
+          description: File non torrent (`invalid_torrent`) o link non valido (`invalid_link`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Il torrent è già in qBittorrent (`duplicate`); `torrent` dice quale.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: L'URL non è scaricabile o non contiene un torrent (`torrent_fetch_failed`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /downloads/drafts/{id}/start:
+    post:
+      summary: Avvia il download con i file scelti
+      description: >
+        Con un .torrent lo aggiunge a qBittorrent solo ora, fermo, esclude i file
+        non scelti e lo avvia; se qualcosa fallisce a metà il torrent viene tolto.
+        Con un magnet esclude i file, toglie il tag delle bozze e lo avvia.
+        La bozza è consumata.
+      operationId: startDraft
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [files]
+              properties:
+                files:
+                  type: array
+                  minItems: 1
+                  items: { type: integer }
+                  description: Indici dei file scelti (DraftFile.index).
+      responses:
+        "200":
+          description: Download avviato.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [hash]
+                properties:
+                  hash: { type: string }
+        "400":
+          description: Scelta vuota o con indici sconosciuti (`invalid_selection`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Bozza inesistente o scaduta (`draft_not_found`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Spazio insufficiente (`insufficient_space`), con `needed` e `free`.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "502":
+          description: qBittorrent non ha accettato il torrent (`start_failed`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /downloads/space:
+    get:
+      summary: Spazio libero nella cartella predefinita di qBittorrent
+      operationId: getSpace
+      responses:
+        "200":
+          description: Byte liberi e cartella.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [free, path]
+                properties:
+                  free: { type: number, description: byte }
+                  path: { type: string, description: "Cartella predefinita, es. /downloads." }
+        "503":
+          description: qBittorrent non raggiungibile.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /downloads/drafts/{id}/retry:
+    post:
+      summary: Altri 60 secondi di attesa dei metadati di un magnet
+      operationId: retryDraft
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: La bozza, di nuovo in `metadata`.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Draft" }
+        "404":
+          description: Bozza inesistente o scaduta (`draft_not_found`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /downloads/drafts/{id}:
+    get:
+      summary: Rilegge una bozza
+      description: Con un magnet chiede a qBittorrent se i metadati sono arrivati.
+      operationId: getDraft
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: La bozza.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Draft" }
+        "404":
+          description: Bozza inesistente o scaduta (`draft_not_found`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+    delete:
+      summary: Annulla una bozza
+      description: >
+        Una bozza da magnet esce da qBittorrent con i file eventualmente
+        scaricati; le altre stavano solo in memoria. Le bozze rimaste (pagina
+        chiusa, backend riavviato) il backend le toglie dopo 30 minuti.
+      operationId: discardDraft
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "204":
+          description: Bozza tolta, o già assente.
+  /server/stats:
+    get:
+      summary: Risorse del server lette da Glances
+      description: >
+        CPU, RAM, disco di sistema, temperatura, uptime, rete e consumo dei
+        container in esecuzione. Mai processi, righe di comando, IP o immagini.
+      operationId: getServerStats
+      responses:
+        "200":
+          description: Lettura corrente (in cache per 2 secondi).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ServerStats" }
+        "503":
+          description: Glances non raggiungibile.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+components:
+  schemas:
+    Draft:
+      type: object
+      required: [id, source, status, infoHash, name, size, files]
+      properties:
+        id: { type: string }
+        source: { type: string, enum: [file, url, magnet] }
+        status:
+          type: string
+          enum: [ready, metadata, timeout]
+          description: >
+            ready: file noti. metadata: magnet in attesa dei peer. timeout: attesa
+            finita senza metadati, si può chiamare retry.
+        infoHash: { type: string, description: Infohash v1, o v2 troncato a 40 caratteri. }
+        name: { type: string }
+        size: { type: number, description: Byte totali del torrent. }
+        files:
+          type: array
+          items: { $ref: "#/components/schemas/DraftFile" }
+        metadata:
+          type: object
+          description: Solo per i magnet in metadata o timeout.
+          required: [peers, waitedSeconds, limitSeconds]
+          properties:
+            peers: { type: integer }
+            waitedSeconds: { type: integer }
+            limitSeconds: { type: integer }
+    DraftFile:
+      type: object
+      required: [index, path, size]
+      properties:
+        index: { type: integer, description: Indice del file per qBittorrent. }
+        path: { type: string, description: Percorso con la cartella del torrent, separato da /. }
+        size: { type: number, description: byte }
+    ServerStats:
+      type: object
+      required: [cpu, ram, disk, uptimeSec]
+      properties:
+        cpu: { type: number, description: Uso totale della CPU in percentuale. }
+        ram: { type: number, description: Memoria usata in percentuale, senza cache. }
+        disk: { type: number, description: Spazio occupato sul disco di sistema in percentuale. }
+        tempC: { type: number, description: Temperatura della CPU in °C; assente senza sensore. }
+        uptimeSec: { type: integer, description: Secondi da quando il server è acceso. }
+        net:
+          type: object
+          description: Interfacce fisiche; assente se Glances non la fornisce.
+          required: [rxBps, txBps]
+          properties:
+            rxBps: { type: number, description: byte/s in ingresso }
+            txBps: { type: number, description: byte/s in uscita }
+        containers:
+          type: array
+          description: Solo i container in esecuzione; assente senza socket Docker.
+          items: { $ref: "#/components/schemas/ContainerUsage" }
+    ContainerUsage:
+      type: object
+      required: [name, cpu, memBytes]
+      properties:
+        name: { type: string }
+        cpu: { type: number, description: Percentuale di un core, può superare 100. }
+        memBytes: { type: number }
+    Downloads:
+      type: object
+      required: [downloadSpeed, torrents]
+      properties:
+        downloadSpeed: { type: number, description: Velocità totale di download in byte/s. }
+        torrents:
+          type: array
+          items: { $ref: "#/components/schemas/Torrent" }
+    Torrent:
+      type: object
+      required: [hash, name, progress, state, etaSeconds, downloadSpeed, size]
+      properties:
+        hash: { type: string, description: Infohash. }
+        name: { type: string }
+        progress: { type: number, minimum: 0, maximum: 1 }
+        state:
+          type: string
+          enum: [downloading, queued, seeding, stopped, error]
+        etaSeconds:
+          type: [integer, "null"]
+          description: Secondi alla fine; null se non stimabile.
+        downloadSpeed: { type: number, description: byte/s }
+        size: { type: number, description: Byte selezionati per il download. }
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          enum:
+            - qbittorrent_unreachable
+            - qbittorrent_auth
+            - invalid_torrent
+            - invalid_link
+            - torrent_fetch_failed
+            - draft_not_found
+            - duplicate
+            - invalid_selection
+            - insufficient_space
+            - start_failed
+            - glances_unreachable
+            - not_found
+            - internal
+        message: { type: string, description: Messaggio in italiano da mostrare. }
+        torrent:
+          type: object
+          description: Solo con `duplicate`, il torrent già presente.
+          properties:
+            name: { type: string }
+            state: { type: string, enum: [downloading, queued, seeding, stopped, error] }
+        needed: { type: number, description: Solo con `insufficient_space`, byte da scaricare. }
+        free: { type: number, description: Solo con `insufficient_space`, byte liberi. }

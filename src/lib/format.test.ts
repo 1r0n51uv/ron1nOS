@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { clock, greeting, num, signed } from './format'
+import { bytes, clock, fileSize, greeting, num, rate, signed, uptime } from './format'
 
 describe('num', () => {
   // In it-IT il punto delle migliaia compare da cinque cifre (1234 resta 1234).
@@ -33,4 +33,48 @@ describe('greeting', () => {
   ])('alle %i dice %s', (hour, expected) => {
     expect(greeting(new Date(2026, 9, 20, hour))).toBe(expected)
   })
+})
+
+describe('uptime', () => {
+  it('sotto un giorno usa le ore', () => {
+    expect(uptime(7 * 3_600 + 59 * 60)).toBe('7 h')
+    expect(uptime(0)).toBe('0 h')
+  })
+
+  it('da un giorno in su usa i giorni', () => {
+    expect(uptime(24 * 3_600)).toBe('1 g')
+    expect(uptime(41 * 86_400 + 3_600)).toBe('41 g')
+  })
+})
+
+describe('rate', () => {
+  it('sotto 1 MB/s usa i kB/s interi', () => {
+    expect(rate(820_400)).toBe('820 kB/s')
+    expect(rate(0)).toBe('0 kB/s')
+  })
+
+  it('da 1 MB/s usa i MB/s con un decimale', () => {
+    expect(rate(12_400_000)).toBe('12,4 MB/s')
+  })
+})
+
+describe('bytes', () => {
+  it('sotto 1 GB usa i MB interi', () => {
+    expect(bytes(412_300_000)).toBe('412 MB')
+  })
+
+  it('da 1 GB usa i GB con un decimale', () => {
+    expect(bytes(1_240_000_000)).toBe('1,2 GB')
+  })
+})
+
+describe('fileSize', () => {
+  it.each([
+    [512, '512 B'],
+    [1_000, '1 KB'],
+    [3_900_000_000, '3,9 GB'],
+    [412_000_000_000, '412 GB'],
+    [7_900_002_000, '7,9 GB'],
+    [12_500_000, '13 MB'],
+  ])('%d → %s', (v, text) => expect(fileSize(v)).toBe(text))
 })

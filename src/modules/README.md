@@ -16,5 +16,5 @@ Ogni modulo della dashboard vive nella sua cartella, con due file:
 | home       | Home Assistant                                                                   |
 | server     | Glances, tramite il backend di ron1nOS ([specifica](../../docs/specs/server.md)) |
 | containers | Docker Engine API                                                                |
-| downloads  | qBittorrent Web API                                                              |
+| downloads  | qBittorrent Web API, tramite il backend (`/api/v1/downloads`)                    |
 | notes      | da decidere                                                                      |

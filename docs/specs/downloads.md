@@ -20,7 +20,7 @@ notifiche a download finito, VPN per il traffico BitTorrent. Per tutto questo re
 
 ### DL-001 · Widget dei download in corso
 
-Stato: pianificato (#5)
+Stato: fatto (#29)
 
 Nella dashboard il widget Download mostra cosa sta scaricando il server,
 aggiornato da solo.
@@ -41,7 +41,7 @@ Accettazione:
 
 ### DL-002 · Stato di qBittorrent non raggiungibile
 
-Stato: pianificato (#6)
+Stato: fatto (#30)
 
 Se la dashboard non riesce a parlare con qBittorrent, il widget lo dice
 invece di mostrare dati vecchi o vuoti.
@@ -57,7 +57,7 @@ Accettazione:
 
 ### DL-003 · Pulsante Aggiungi
 
-Stato: pianificato (#7)
+Stato: fatto (#7)
 
 Dal widget si apre il wizard per aggiungere un torrent.
 
@@ -73,7 +73,7 @@ Accettazione:
 
 ### DL-004 · Wizard, passo 1: sorgente
 
-Stato: pianificato (#8)
+Stato: fatto (#8)
 
 Il primo passo chiede da dove viene il torrent: un file `.torrent`, l'URL
 di un file `.torrent` o un link magnet. Un torrent alla volta.
@@ -97,7 +97,7 @@ Accettazione:
 
 ### DL-005 · Wizard, passo 2: lettura dei contenuti
 
-Stato: pianificato (#9)
+Stato: fatto (#9)
 
 Prima di scegliere cosa scaricare il wizard legge nome, dimensione e
 elenco dei file del torrent.
@@ -115,7 +115,7 @@ Accettazione:
 
 ### DL-006 · Wizard, passo 3: scelta dei file
 
-Stato: pianificato (#10)
+Stato: fatto (#10)
 
 Si sceglie quali file del torrent scaricare.
 
@@ -134,7 +134,7 @@ Accettazione:
 
 ### DL-007 · Wizard, passo 4: riepilogo e avvio
 
-Stato: pianificato (#11)
+Stato: fatto (#11)
 
 L'ultimo passo riassume e avvia il download.
 
@@ -155,7 +155,7 @@ Accettazione:
 
 ### DL-008 · Annullare il wizard
 
-Stato: pianificato (#12)
+Stato: fatto (#12)
 
 Chiudere il wizard prima di `Avvia` non lascia tracce.
 
@@ -168,7 +168,7 @@ Accettazione:
 
 ### DL-009 · Credenziali solo sul server
 
-Stato: pianificato (#4)
+Stato: fatto (#27)
 
 Il browser non vede mai le credenziali di qBittorrent e non parla
 direttamente con la sua Web API.

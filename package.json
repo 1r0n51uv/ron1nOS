@@ -14,13 +14,17 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run test:e2e",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "dev:server": "node --watch --env-file-if-exists=.env server/index.ts",
+    "start": "node dist-server/index.js"
   },
   "dependencies": {
+    "@hono/node-server": "^2.1.5",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query": "^5.104.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "hono": "^4.13.13",
     "lucide-react": "^1.60.0",
     "radix-ui": "^1.8.1",
     "react": "^19.3.1",
