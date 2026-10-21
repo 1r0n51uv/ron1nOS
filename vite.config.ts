@@ -8,10 +8,12 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(import.meta.dirname, './src') },
   },
+  // In sviluppo le chiamate /api vanno al backend (npm run dev:server).
+  server: { proxy: { '/api': 'http://localhost:8080' } },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ['src/**/*.test.{ts,tsx}', 'server/**/*.test.ts'],
     css: false,
   },
 })
