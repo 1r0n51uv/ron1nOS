@@ -80,7 +80,7 @@ Accettazione:
 
 ### SRV-005 · Soglie
 
-Stato: pianificato (#19)
+Stato: fatto (#34)
 
 Il rosso del marchio segnala solo ciò che merita attenzione.
 

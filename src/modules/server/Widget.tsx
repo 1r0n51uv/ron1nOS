@@ -1,7 +1,7 @@
-import { ProgressRing, WidgetCard } from '@/components/ron1n'
+import { ProgressRing, StatusPill, WidgetCard } from '@/components/ron1n'
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
 import { bytes, num, rate } from '@/lib/format'
-import { ALERT_THRESHOLD, headerMeta, percent, topContainers, useServerStats } from './data'
+import { headerMeta, isHot, percent, THRESHOLDS, topContainers, useServerStats } from './data'
 
 export function ServerWidget({ className }: { className?: string }) {
   const { data } = useServerStats()
@@ -15,9 +15,16 @@ export function ServerWidget({ className }: { className?: string }) {
 
   return (
     <WidgetCard title="Server" meta={headerMeta(data)} className={className}>
+      {isHot(data.tempC) ? (
+        <div className="flex">
+          <StatusPill tone="alert" size="small">
+            CPU a {Math.round(data.tempC)} °C
+          </StatusPill>
+        </div>
+      ) : null}
       <div className="grid grid-cols-3 justify-items-center gap-2">
         {rings.map((r) => {
-          const alert = r.value >= ALERT_THRESHOLD
+          const alert = r.value >= THRESHOLDS.percent
           return (
             <ProgressRing
               key={r.key}

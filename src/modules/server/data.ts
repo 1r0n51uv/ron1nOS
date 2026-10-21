@@ -23,8 +23,12 @@ export type ContainerUsage = {
   memBytes: number
 }
 
-// Soglia oltre la quale un valore diventa rosso.
-export const ALERT_THRESHOLD = 80
+// Soglie del rosso (SRV-005): anelli in percentuale, temperatura della CPU.
+export const THRESHOLDS = { percent: 80, tempC: 85 }
+
+export function isHot(tempC: number | undefined): tempC is number {
+  return tempC !== undefined && Math.round(tempC) >= THRESHOLDS.tempC
+}
 
 const base: ServerStats = {
   cpu: 23.4,

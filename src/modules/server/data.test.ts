@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { headerMeta, percent, topContainers } from './data'
+import { headerMeta, isHot, percent, THRESHOLDS, topContainers } from './data'
 
 describe('percent', () => {
   it('arrotonda al numero intero', () => {
@@ -42,5 +42,17 @@ describe('topContainers', () => {
     ]
     topContainers(list)
     expect(list[0].name).toBe('a')
+  })
+})
+
+describe('soglie', () => {
+  it('anelli rossi da 80% e temperatura da 85 °C', () => {
+    expect(THRESHOLDS).toEqual({ percent: 80, tempC: 85 })
+  })
+
+  it('isHot considera la temperatura arrotondata', () => {
+    expect(isHot(84.4)).toBe(false)
+    expect(isHot(84.5)).toBe(true)
+    expect(isHot(undefined)).toBe(false)
   })
 })
