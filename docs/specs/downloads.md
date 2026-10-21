@@ -57,7 +57,7 @@ Accettazione:
 
 ### DL-003 · Pulsante Aggiungi
 
-Stato: pianificato (#7)
+Stato: fatto (#7)
 
 Dal widget si apre il wizard per aggiungere un torrent.
 
