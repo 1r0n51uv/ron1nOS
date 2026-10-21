@@ -22,7 +22,7 @@ promemoria arrivano con l'app iOS (NUT-018, NUT-019).
 **Stato del documento: confermato il 2026-10-21.** Le scelte sono in
 fondo, in "Decisioni". Ogni requisito porta l'origine: **pkm** (già
 pensato o fatto in 1r0-pkm), **pkm, cambia** (ripreso con modifiche) o
-**nuovo**. Restano `proposto` finché non hanno la loro issue; NUT-018 e
+**nuovo**. Ogni requisito confermato ha la sua issue; NUT-018 e
 NUT-019 sono rimandati all'app iOS, NUT-025 è `rimosso`. L'integrazione
 YAZIO è fattibile: lo conferma la prova del 2026-10-21 (vedi "Esito della
 prova").
@@ -33,7 +33,7 @@ prova").
 
 #### NUT-001 · Widget Nutrizione
 
-Stato: proposto · Origine: pkm, cambia
+Stato: pianificato (#46) · Origine: pkm, cambia
 
 Il widget in dashboard mostra la giornata di oggi.
 
@@ -49,7 +49,7 @@ Accettazione:
 
 #### NUT-002 · Pagina Nutrizione
 
-Stato: proposto · Origine: pkm, cambia
+Stato: pianificato (#47) · Origine: pkm, cambia
 
 Una pagina `/pasti` con tutto il giorno, come la schermata Dieta unificata
 di pkm (ADR-0036): striscia dei giorni (10 indietro, 13 avanti, oggi
@@ -66,7 +66,7 @@ Accettazione:
 
 #### NUT-003 · Registrare un pasto
 
-Stato: proposto · Origine: pkm
+Stato: pianificato (#48) · Origine: pkm
 
 Si aggiunge un alimento a uno slot di un giorno qualsiasi.
 
@@ -81,7 +81,7 @@ Accettazione:
 
 #### NUT-004 · Ricerca alimenti
 
-Stato: proposto · Origine: pkm, cambia
+Stato: pianificato (#49) · Origine: pkm, cambia
 
 Il backend cerca in più fonti e unisce i risultati, senza duplicati per
 nome.
@@ -97,7 +97,7 @@ Accettazione:
 
 #### NUT-005 · Codice a barre
 
-Stato: proposto · Origine: pkm, cambia
+Stato: pianificato (#50) · Origine: pkm, cambia
 
 Accettazione:
 
@@ -108,7 +108,7 @@ Accettazione:
 
 #### NUT-006 · Alimenti personali
 
-Stato: proposto · Origine: pkm
+Stato: pianificato (#51) · Origine: pkm
 
 Accettazione:
 
@@ -118,7 +118,7 @@ Accettazione:
 
 #### NUT-007 · Correggere un pasto
 
-Stato: proposto · Origine: pkm
+Stato: pianificato (#52) · Origine: pkm
 
 Accettazione:
 
@@ -132,7 +132,7 @@ Accettazione:
 
 #### NUT-008 · Ricette
 
-Stato: proposto · Origine: pkm
+Stato: pianificato (#53) · Origine: pkm
 
 Accettazione:
 
@@ -143,7 +143,7 @@ Accettazione:
 
 #### NUT-009 · Pianificare un pasto
 
-Stato: proposto · Origine: pkm
+Stato: pianificato (#54) · Origine: pkm
 
 Accettazione:
 
@@ -156,7 +156,7 @@ Accettazione:
 
 #### NUT-010 · Template settimanale
 
-Stato: proposto · Origine: pkm, cambia
+Stato: pianificato (#55) · Origine: pkm, cambia
 
 Una dieta settimanale con nome (es. "massa", "definizione"): per ogni
 giorno e slot una ricetta o un alimento singolo (ADR-0029, ADR-0032).
@@ -173,7 +173,7 @@ Accettazione:
 
 #### NUT-011 · Lista della spesa
 
-Stato: proposto · Origine: pkm
+Stato: pianificato (#56) · Origine: pkm
 
 Accettazione:
 
@@ -187,7 +187,7 @@ Accettazione:
 
 #### NUT-012 · Acqua
 
-Stato: proposto · Origine: pkm
+Stato: pianificato (#57) · Origine: pkm
 
 Accettazione:
 
@@ -197,7 +197,7 @@ Accettazione:
 
 #### NUT-013 · Caffeina
 
-Stato: proposto · Origine: pkm
+Stato: pianificato (#58) · Origine: pkm
 
 Accettazione:
 
@@ -207,7 +207,7 @@ Accettazione:
 
 #### NUT-014 · Integratori
 
-Stato: proposto · Origine: pkm
+Stato: pianificato (#59) · Origine: pkm
 
 Accettazione:
 
@@ -219,7 +219,7 @@ Accettazione:
 
 #### NUT-015 · Obiettivo nutrizionale
 
-Stato: proposto · Origine: pkm, cambia
+Stato: pianificato (#60) · Origine: pkm, cambia
 
 Accettazione:
 
@@ -238,7 +238,7 @@ Accettazione:
 
 #### NUT-016 · Quota del giorno
 
-Stato: proposto · Origine: pkm, cambia
+Stato: pianificato (#66) · Origine: pkm, cambia
 
 Accettazione:
 
@@ -253,7 +253,7 @@ Accettazione:
 
 #### NUT-017 · Andamento
 
-Stato: proposto · Origine: pkm, cambia
+Stato: pianificato (#67) · Origine: pkm, cambia
 
 Accettazione:
 
@@ -296,7 +296,7 @@ Accettazione:
 
 #### NUT-020 · Collegamento all'account YAZIO
 
-Stato: proposto · Origine: nuovo
+Stato: pianificato (#61) · Origine: nuovo
 
 Accettazione:
 
@@ -312,7 +312,7 @@ Accettazione:
 
 #### NUT-021 · Catalogo YAZIO nella ricerca
 
-Stato: proposto · Origine: nuovo
+Stato: pianificato (#63) · Origine: nuovo
 
 Accettazione:
 
@@ -323,7 +323,7 @@ Accettazione:
 
 #### NUT-022 · Lettura dal diario YAZIO
 
-Stato: proposto · Origine: nuovo
+Stato: pianificato (#64) · Origine: nuovo
 
 Ciò che si registra direttamente nell'app YAZIO compare in ron1nOS.
 
@@ -343,7 +343,7 @@ Accettazione:
 
 #### NUT-023 · Scrittura sul diario YAZIO
 
-Stato: proposto · Origine: nuovo
+Stato: pianificato (#65) · Origine: nuovo
 
 Ciò che si registra in ron1nOS (web o iOS) finisce anche in YAZIO.
 
@@ -366,7 +366,7 @@ Accettazione:
 
 #### NUT-024 · Obiettivi, esercizi e peso da YAZIO
 
-Stato: proposto · Origine: nuovo
+Stato: pianificato (#62) · Origine: nuovo
 
 Accettazione:
 
@@ -598,7 +598,7 @@ pezzi di codice, ma nessun dato. Ordine proposto:
 7. **iOS**: quando arriva l'app ron1nOS iOS, NUT-018 e NUT-019, riusando
    da pkm viste SwiftUI, HealthKit, promemoria e scanner.
 
-Mockup da approvare:
+Mockup approvati il 2026-10-21:
 [canvas Modulo Nutrizione](https://claude.ai/artifact/DaU9UXLfJAmKfES2zz5rdZ)
 (widget in tre stati, pagina `/pasti`, registrazione di un pasto, template,
 ricette e spesa, andamento, impostazioni YAZIO).
