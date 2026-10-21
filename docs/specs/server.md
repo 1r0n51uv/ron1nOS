@@ -94,7 +94,7 @@ Accettazione:
 
 ### SRV-006 · Glances non raggiungibile
 
-Stato: pianificato (#20)
+Stato: fatto (#35)
 
 Se la dashboard non riesce a leggere le risorse, il widget lo dice invece
 di mostrare valori vecchi.
