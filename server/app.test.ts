@@ -216,4 +216,12 @@ describe('API /api/v1/downloads/drafts', () => {
     const res = await createApp({ qbt: fakeQbt() }).request('/api/v1/downloads/space')
     expect(await res.json()).toEqual({ free: 500_000_000_000, path: '/downloads' })
   })
+
+  it('DELETE toglie la bozza e risponde 204', async () => {
+    const app = createApp({ qbt: fakeQbt() })
+    const draft = (await (await upload(app, DEBIAN_DVD)).json()) as { id: string }
+    const res = await app.request(`/api/v1/downloads/drafts/${draft.id}`, { method: 'DELETE' })
+    expect(res.status).toBe(204)
+    expect((await app.request(`/api/v1/downloads/drafts/${draft.id}`)).status).toBe(404)
+  })
 })

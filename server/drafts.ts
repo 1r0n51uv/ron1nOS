@@ -233,10 +233,33 @@ export function createDraftService({
     return { hash }
   }
 
+  // Annulla (DL-008): una bozza da magnet esce da qBittorrent con i file
+  // eventualmente scaricati; le altre stavano solo in memoria.
+  async function discard(id: string) {
+    const e = store.get(id)
+    if (!e) return
+    store.delete(id)
+    if (e.draft.source !== 'magnet') return
+    const [t] = await qbt.torrents({ hashes: [e.draft.infoHash] })
+    if (t && isDraft(t)) await qbt.delete(t.hash, true)
+  }
+
+  // Bozze rimaste in qBittorrent (pagina chiusa, backend riavviato): via
+  // quelle più vecchie di 30 minuti. Gira all'avvio e ogni ora.
+  async function sweepOrphans() {
+    const limit = now() - DRAFT_TTL_MS
+    const list = await qbt.torrents({ tag: DRAFT_TAG })
+    const old = list.filter((t) => isDraft(t) && t.added_on * 1000 < limit)
+    for (const t of old) await qbt.delete(t.hash, true)
+    return old.length
+  }
+
   return {
     fromTorrent,
     fromMagnet,
     start,
+    discard,
+    sweepOrphans,
     get: async (id: string) => read(entry(id)),
     // Riprova: altri 60 secondi di attesa dei metadati.
     async retry(id: string) {

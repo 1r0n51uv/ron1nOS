@@ -211,3 +211,46 @@ describe('createDraftService · avvio', () => {
     expect(qbt.delete).not.toHaveBeenCalled()
   })
 })
+
+describe('createDraftService · annulla', () => {
+  it('una bozza magnet esce da qBittorrent con i file', async () => {
+    const qbt = fakeQbt({}, [qbtTorrent({ hash: HASH, tags: DRAFT_TAG })])
+    const service = createDraftService({ qbt })
+    const { id } = await service.fromMagnet(MAGNET)
+    await service.discard(id)
+    expect(qbt.delete).toHaveBeenCalledWith(HASH, true)
+    await expect(service.get(id)).rejects.toBeInstanceOf(DraftNotFoundError)
+  })
+
+  it('non tocca un torrent che non è più una bozza', async () => {
+    const list = [qbtTorrent({ hash: HASH, tags: DRAFT_TAG })]
+    const qbt = fakeQbt({}, list)
+    const service = createDraftService({ qbt })
+    const { id } = await service.fromMagnet(MAGNET)
+    list[0].tags = ''
+    await service.discard(id)
+    expect(qbt.delete).not.toHaveBeenCalled()
+  })
+
+  it('una bozza da file non chiama qBittorrent', async () => {
+    const qbt = fakeQbt({}, [])
+    const service = createDraftService({ qbt })
+    const { id } = await service.fromTorrent('file', DEBIAN_DVD)
+    await service.discard(id)
+    expect(qbt.delete).not.toHaveBeenCalled()
+    await service.discard('sconosciuta')
+  })
+
+  it('toglie le bozze orfane più vecchie di 30 minuti', async () => {
+    const now = 1_000_000_000_000
+    const qbt = fakeQbt({}, [])
+    vi.mocked(qbt.torrents).mockResolvedValue([
+      qbtTorrent({ hash: 'vecchia', tags: DRAFT_TAG, added_on: (now - 31 * 60_000) / 1000 }),
+      qbtTorrent({ hash: 'nuova', tags: DRAFT_TAG, added_on: (now - 5 * 60_000) / 1000 }),
+    ])
+    await expect(createDraftService({ qbt, now: () => now }).sweepOrphans()).resolves.toBe(1)
+    expect(qbt.torrents).toHaveBeenCalledWith({ tag: DRAFT_TAG })
+    expect(qbt.delete).toHaveBeenCalledWith('vecchia', true)
+    expect(qbt.delete).toHaveBeenCalledTimes(1)
+  })
+})

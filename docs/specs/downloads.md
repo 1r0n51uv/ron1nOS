@@ -155,7 +155,7 @@ Accettazione:
 
 ### DL-008 · Annullare il wizard
 
-Stato: pianificato (#12)
+Stato: fatto (#12)
 
 Chiudere il wizard prima di `Avvia` non lascia tracce.
 

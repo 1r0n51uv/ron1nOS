@@ -48,6 +48,7 @@ function chooseFile(name = 'debian.torrent', content = 'd4:infod4:name1:aee') {
 beforeEach(() => {
   vi.mocked(api.post).mockReset()
   vi.mocked(api.get).mockReset()
+  vi.mocked(api.delete).mockReset().mockResolvedValue(undefined)
 })
 
 const HASH = '3b1a1469c180f447b77021074dbbccaef62611e7'
@@ -318,5 +319,60 @@ describe('Passo 4: riepilogo e avvio', () => {
     vi.mocked(api.post).mockResolvedValueOnce({ hash: 'h' })
     fireEvent.click(screen.getByRole('button', { name: 'Riprova' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+})
+
+describe('Annulla (DL-008)', () => {
+  it.each([
+    ['Annulla', () => fireEvent.click(screen.getByRole('button', { name: 'Annulla' }))],
+    ['Esc', () => fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })],
+  ])('chiudere con %s butta la bozza', async (_, close) => {
+    vi.mocked(api.post).mockResolvedValue(magnet())
+    vi.mocked(api.get).mockResolvedValue(magnet())
+    vi.mocked(api.delete).mockResolvedValue(undefined)
+    sendMagnet()
+    await screen.findByText('Recupero dei metadati…')
+    close()
+    await waitFor(() => expect(api.delete).toHaveBeenCalledWith('/downloads/drafts/d1'))
+  })
+
+  it('Indietro dal passo 2 butta la bozza e tiene il link', async () => {
+    vi.mocked(api.post).mockResolvedValue(magnet())
+    vi.mocked(api.get).mockResolvedValue(magnet())
+    vi.mocked(api.delete).mockResolvedValue(undefined)
+    sendMagnet()
+    await screen.findByText('Recupero dei metadati…')
+    fireEvent.click(screen.getByRole('button', { name: 'Indietro' }))
+    expect(api.delete).toHaveBeenCalledWith('/downloads/drafts/d1')
+    expect(screen.getByLabelText('Link magnet o URL di un .torrent')).toHaveValue(
+      `magnet:?xt=urn:btih:${HASH}`,
+    )
+  })
+
+  it('una bozza arrivata dopo la chiusura viene buttata', async () => {
+    let resolve: (d: Draft) => void = () => {}
+    vi.mocked(api.post).mockReturnValue(new Promise((r) => (resolve = r)))
+    vi.mocked(api.delete).mockResolvedValue(undefined)
+    sendMagnet()
+    fireEvent.click(screen.getByRole('button', { name: 'Annulla' }))
+    resolve(magnet())
+    await waitFor(() => expect(api.delete).toHaveBeenCalledWith('/downloads/drafts/d1'))
+  })
+
+  it('dopo Avvia non butta nulla', async () => {
+    vi.mocked(api.post).mockResolvedValueOnce(DRAFT).mockResolvedValueOnce({ hash: 'h' })
+    vi.mocked(api.get).mockImplementation(async (path: string) =>
+      path === '/downloads/space' ? { free: 412_000_000_000, path: '/downloads' } : DRAFT,
+    )
+    open()
+    chooseFile()
+    fireEvent.click(avanti())
+    await screen.findByText('4 file · 7,9 GB')
+    fireEvent.click(avanti())
+    fireEvent.click(avanti())
+    await screen.findByText('dopo il download: 404 GB')
+    fireEvent.click(screen.getByRole('button', { name: 'Avvia' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(api.delete).not.toHaveBeenCalled()
   })
 })
