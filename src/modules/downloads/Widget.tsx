@@ -1,10 +1,12 @@
-import { StatusPill, WidgetCard } from '@/components/ron1n'
+import { Icon, StatusPill, WidgetCard } from '@/components/ron1n'
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
+import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { num } from '@/lib/format'
 import type { Torrent } from './data'
 import { useDownloads } from './data'
 import { eta, problem, summary, VISIBLE } from './format'
+import { AddTorrentDialog } from './wizard/AddTorrentDialog'
 
 function TorrentRow({ torrent }: { torrent: Torrent }) {
   const pct = Math.floor(torrent.progress * 100)
@@ -22,6 +24,21 @@ function TorrentRow({ torrent }: { torrent: Torrent }) {
   )
 }
 
+// Riga in fondo al widget: riassunto a sinistra, Aggiungi a destra.
+function Footer({ text, disabled }: { text: string; disabled?: boolean }) {
+  return (
+    <div className="mt-auto flex items-center justify-between gap-3">
+      <div className="text-[13px] text-ink-muted">{text}</div>
+      <AddTorrentDialog>
+        <Button variant="glass" size="sm" disabled={disabled}>
+          <Icon name="plus" size={16} />
+          Aggiungi
+        </Button>
+      </AddTorrentDialog>
+    </div>
+  )
+}
+
 export function DownloadsWidget({ className }: { className?: string }) {
   const { data, error } = useDownloads()
   // Un errore vince sui dati vecchi: meglio dire che non sappiamo.
@@ -32,6 +49,7 @@ export function DownloadsWidget({ className }: { className?: string }) {
           <StatusPill tone="alert">qBittorrent · offline</StatusPill>
           <div className="text-sm text-ink-muted">{problem(error)}. Riprovo ogni 5 secondi.</div>
         </div>
+        <Footer text="" disabled />
       </WidgetCard>
     )
   }
@@ -55,7 +73,7 @@ export function DownloadsWidget({ className }: { className?: string }) {
       ) : (
         <div className="text-sm text-ink-muted">Nessun download attivo.</div>
       )}
-      {rest ? <div className="text-[13px] text-ink-muted">{rest}</div> : null}
+      <Footer text={rest} />
     </WidgetCard>
   )
 }

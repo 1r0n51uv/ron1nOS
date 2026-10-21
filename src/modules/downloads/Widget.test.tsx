@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
@@ -116,5 +116,39 @@ describe('DownloadsWidget', () => {
     renderWithProviders(<DownloadsWidget />)
     expect(screen.getByText('Nessun download attivo.')).toBeInTheDocument()
     expect(screen.getByText('1 in seed')).toBeInTheDocument()
+  })
+
+  it('con qBittorrent spento il pulsante Aggiungi resta visibile ma disattivato', () => {
+    withData(undefined, new ApiError('qbittorrent_unreachable', '', 503))
+    renderWithProviders(<DownloadsWidget />)
+    expect(screen.getByRole('button', { name: 'Aggiungi' })).toBeDisabled()
+  })
+})
+
+describe('Aggiungi', () => {
+  function open() {
+    withData({ downloadSpeed: 0, torrents: [] })
+    renderWithProviders(<DownloadsWidget />)
+    fireEvent.click(screen.getByRole('button', { name: 'Aggiungi' }))
+    return screen.getByRole('dialog', { name: 'Da dove arriva il torrent' })
+  }
+
+  it('apre il wizard al primo passo', () => {
+    const dialog = open()
+    expect(within(dialog).getByText('AGGIUNGI TORRENT · 1 DI 4')).toBeInTheDocument()
+    const steps = within(dialog).getByRole('list', { name: 'Passi' })
+    expect(within(steps).getAllByRole('listitem')).toHaveLength(4)
+    expect(within(steps).getByText('Sorgente').closest('li')).toHaveAttribute('aria-current', 'step')
+    expect(within(dialog).getByRole('button', { name: 'Avanti' })).toBeDisabled()
+  })
+
+  it.each([
+    ['Annulla', () => fireEvent.click(screen.getByRole('button', { name: 'Annulla' }))],
+    ['Chiudi', () => fireEvent.click(screen.getByRole('button', { name: 'Chiudi' }))],
+    ['Esc', () => fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })],
+  ])('si chiude con %s', async (_, close) => {
+    open()
+    close()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 })
