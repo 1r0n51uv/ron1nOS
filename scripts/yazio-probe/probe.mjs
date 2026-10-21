@@ -143,7 +143,8 @@ async function main() {
       `/products/search?${new URLSearchParams({ query: q, sex: 'male', countries: 'IT', locales: 'it_IT' })}`,
     )
     const list = Array.isArray(s.json) ? s.json : []
-    if (q === 'mela') writable = list[0] ?? null
+    // La ricerca mette davanti anche l'anguria: si prende la mela per nome.
+    if (q === 'mela') writable = list.find((x) => x.name?.trim().toLowerCase() === 'mela') ?? null
     step(`ricerca "${q}"`, s.ok && list.length > 0, {
       status: s.status,
       results: list.length,
@@ -180,7 +181,7 @@ async function main() {
   // 10. Acqua e peso.
   const water = await get(`/user/water-intake?date=${today}`)
   step('acqua oggi', water.ok, { status: water.status, shape: shape(water.json) })
-  const weight = await get('/user/bodyvalues/weight/last')
+  const weight = await get(`/user/bodyvalues/weight/last?date=${today}`)
   step('ultimo peso', weight.ok, { status: weight.status, shape: shape(weight.json) })
   const history = await get(`/user/bodyvalues/weight?start=${day(-90)}&end=${today}`)
   step('storico peso (non documentato)', history.ok, { status: history.status, shape: shape(history.json) })

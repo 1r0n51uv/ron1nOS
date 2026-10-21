@@ -23,7 +23,9 @@ promemoria arrivano con l'app iOS (NUT-018, NUT-019).
 fondo, in "Decisioni". Ogni requisito porta l'origine: **pkm** (già
 pensato o fatto in 1r0-pkm), **pkm, cambia** (ripreso con modifiche) o
 **nuovo**. Restano `proposto` finché non hanno la loro issue; NUT-018 e
-NUT-019 sono rimandati all'app iOS, NUT-025 è `rimosso`.
+NUT-019 sono rimandati all'app iOS, NUT-025 è `rimosso`. L'integrazione
+YAZIO è fattibile: lo conferma la prova del 2026-10-21 (vedi "Esito della
+prova").
 
 ## Requisiti
 
@@ -242,11 +244,11 @@ Accettazione:
 
 - [ ] Quota = obiettivo di base + energia attiva del giorno, con un tetto
       di +1200 kcal (ADR-0019 emendata).
-- [ ] L'energia attiva è la somma delle kcal degli esercizi del giorno in
-      YAZIO (`GET /user/exercises?date=`), letta con il diario (NUT-022);
-      senza YAZIO o senza esercizi la quota è l'obiettivo di base.
-- [ ] Da verificare con un account vero se YAZIO, nel suo obiettivo,
-      somma già gli esercizi: in quel caso non vanno contati due volte.
+- [ ] L'energia attiva viene da YAZIO: con `consume_activity_calories`
+      attivo, il riepilogo del giorno (`GET /user/widgets/daily-summary`)
+      dà `activity_energy` e un obiettivo che la comprende già. Si usa
+      quel valore applicando solo il tetto, senza sommare di nuovo gli
+      esercizi. Senza YAZIO la quota è l'obiettivo di base.
 - [ ] Il calcolo sta nel backend: web e iOS mostrano lo stesso numero.
 
 #### NUT-017 · Andamento
@@ -462,10 +464,10 @@ sincronizzazione di ron1nOS parla direttamente con l'API.
 | Diario       | `GET /user/consumed-items?date=`: prodotti, porzioni di ricetta, voci semplici | `POST /user/consumed-items`, `DELETE` per id |
 | Riepilogo    | `GET /user/widgets/daily-summary?date=`                                        | no                                           |
 | Acqua        | `GET /user/water-intake?date=`                                                 | `POST`, valore **cumulativo** del giorno     |
-| Prodotti     | `GET /products/search`, `GET /products/{id}`                                   | no (creare prodotti non è documentato)       |
+| Prodotti     | `GET /products/search` (anche per EAN), `GET /products/{id}`                   | no (creare prodotti non è documentato)       |
 | Ricette      | `GET /user/recipes`, `GET /recipes/{id}`                                       | solo `DELETE`                                |
 | Obiettivi    | `GET /user/goals`                                                              | no                                           |
-| Peso         | `GET /user/bodyvalues/weight/last` (solo l'ultimo)                             | no                                           |
+| Peso         | `GET /user/bodyvalues/weight/last?date=`, storico `?start=&end=`               | no                                           |
 | Esercizi     | `GET /user/exercises?date=`                                                    | no                                           |
 | Suggerimenti | `GET /user/products/suggested`                                                 | no                                           |
 
@@ -478,8 +480,8 @@ Punti che condizionano il disegno:
 - **Prodotti.** Una voce "prodotto" richiede un `product_id` del catalogo
   YAZIO. Per gli alimenti presi da OpenFoodFacts o USDA si cerca
   l'equivalente nel catalogo YAZIO (decisione 3); `simple_products` resta
-  fuori. Da verificare con un account vero che la ricerca per codice a
-  barre di YAZIO trovi i prodotti italiani più comuni.
+  fuori. Non c'è una ricerca per codice a barre: l'EAN passato a
+  `/products/search` trova il prodotto (vedi "Esito della prova").
 - **Id lato client.** Le voci del diario hanno un `id` UUID scelto da chi
   scrive: ron1nOS può usare lo stesso UUID della sua riga, e questo rende
   facile non duplicare in lettura.
@@ -546,17 +548,39 @@ leggendo lo swagger e `juriadams/yazio`. Non come dipendenza perché la
 libreria non dichiara una licenza e così il punto che si rompe è uno solo
 e lo controlliamo noi.
 
+#### Esito della prova
+
+Fatta il 2026-10-21 con l'account vero e
+[`scripts/yazio-probe`](../../scripts/yazio-probe/README.md), anche con
+`--write`. Esito: **integrazione fattibile**, il disegno resta com'è salvo
+NUT-016.
+
+| Prova                 | Esito                                                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Login                 | `v15` e `v20` accettano email e password; token di 48 ore, il refresh funziona                                         |
+| Obiettivo ed esercizi | il riepilogo somma già l'energia attiva: base 2021 kcal, obiettivo del giorno 2098 senza esercizi registrati (NUT-016) |
+| Diario                | lettura di 3 giorni ok; scrittura di una voce con UUID nostro, rilettura con lo stesso id e cancellazione: tutto ok    |
+| Ricerca per nome (IT) | 50 risultati per richiesta; in testa anche voci tedesche ("Banane" per "pane"): il riordino spetta a noi (NUT-021)     |
+| Codice a barre        | `/products/barcode/{ean}` e `/products/ean/{ean}` danno 404; l'EAN in `/products/search` trova i 2 prodotti provati    |
+| Acqua                 | lettura e scrittura ok: si scrive `[{ date, water_intake }]` e il totale del giorno si aggiorna (0 → 250 ml)           |
+| Peso                  | `weight/last` vuole `date`; lo storico `?start=&end=` (non documentato) dà `{ date, value }`                           |
+
+Resta aperto, senza bloccare:
+
+- la forma delle voci vere (porzioni, ricette, voci semplici): il diario
+  provato era vuoto, si rilancia lo script dopo qualche pasto registrato;
+- limiti di frequenza: 31 chiamate senza errori, il tetto resta ignoto;
+- termini di servizio, come in "Rischi".
+
 ### Piano di lavoro
 
 pkm è deprecata (decisione 5): da lì si prendono documentazione, regole e
 pezzi di codice, ma nessun dato. Ordine proposto:
 
 1. **Specifica** (questa PR), confermata.
-2. **Prova YAZIO** con l'account vero, dopo aver impostato la password:
-   login, lettura del diario, scrittura di una voce prodotto, ricerca per
-   codice a barre, obiettivo con o senza esercizi. Decide se NUT-016 e
-   NUT-023 restano come sono. Script in
-   [`scripts/yazio-probe`](../../scripts/yazio-probe/README.md).
+2. **Prova YAZIO** con l'account vero, fatta il 2026-10-21: fattibile,
+   NUT-023 resta com'è e NUT-016 prende la quota dal riepilogo di YAZIO
+   (vedi "Esito della prova").
 3. **Base dati**: database `ron1nos` nel Postgres condiviso, schema unito
    da pkm, migrazioni all'avvio. Dipende dal BFF (#4).
 4. **API**: rotte di NUT-001…017 con OpenAPI. La logica di pkm da portare
@@ -599,5 +623,6 @@ Prese il 2026-10-21.
 6. **Postgres.** Condiviso dal server per tutte le app.
 7. **Template e spesa.** Dal primo giro, insieme al diario.
 8. **Obiettivo.** Da YAZIO; manuale solo senza YAZIO; niente TDEE.
-9. **Quota.** Energia attiva dagli esercizi di YAZIO, non da Salute.
+9. **Quota.** Energia attiva da YAZIO, non da Salute: quella che il
+   riepilogo del giorno somma già all'obiettivo (aggiornata dopo la prova).
 10. **Peso.** Da YAZIO, con lo storico costruito a ogni sincronizzazione.
