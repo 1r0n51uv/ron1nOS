@@ -7,7 +7,7 @@ const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined
 
 export default defineConfig({
   testDir: './e2e',
-  // Un solo worker: i test condividono lo stato del qBittorrent finto.
+  // Un solo worker: i test condividono lo stato dei servizi finti.
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
@@ -29,11 +29,16 @@ export default defineConfig({
     },
   ],
   // Il backend compilato (npm run build) serve la SPA e l'API, collegato a
-  // un qBittorrent finto: lo stesso percorso della produzione.
+  // un qBittorrent e a un Glances finti: lo stesso percorso della produzione.
   webServer: [
     {
       command: 'node e2e/fake-qbittorrent.ts',
       url: 'http://localhost:18080/__fake/health',
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: 'node e2e/fake-glances.ts',
+      url: 'http://localhost:18081/__fake/health',
       reuseExistingServer: !process.env.CI,
     },
     {
@@ -48,6 +53,7 @@ export default defineConfig({
         METADATA_WAIT_SECONDS: '3',
         QBT_USERNAME: 'admin',
         QBT_PASSWORD: 'admin',
+        GLANCES_URL: 'http://localhost:18081',
       },
     },
   ],

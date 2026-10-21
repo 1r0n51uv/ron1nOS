@@ -214,6 +214,24 @@ paths:
       responses:
         "204":
           description: Bozza tolta, o già assente.
+  /server/stats:
+    get:
+      summary: Risorse del server lette da Glances
+      description: >
+        CPU, RAM, disco di sistema, temperatura, uptime, rete e consumo dei
+        container in esecuzione. Mai processi, righe di comando, IP o immagini.
+      operationId: getServerStats
+      responses:
+        "200":
+          description: Lettura corrente (in cache per 2 secondi).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ServerStats" }
+        "503":
+          description: Glances non raggiungibile.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 components:
   schemas:
     Draft:
@@ -249,6 +267,33 @@ components:
         index: { type: integer, description: Indice del file per qBittorrent. }
         path: { type: string, description: Percorso con la cartella del torrent, separato da /. }
         size: { type: number, description: byte }
+    ServerStats:
+      type: object
+      required: [cpu, ram, disk, uptimeSec]
+      properties:
+        cpu: { type: number, description: Uso totale della CPU in percentuale. }
+        ram: { type: number, description: Memoria usata in percentuale, senza cache. }
+        disk: { type: number, description: Spazio occupato sul disco di sistema in percentuale. }
+        tempC: { type: number, description: Temperatura della CPU in °C; assente senza sensore. }
+        uptimeSec: { type: integer, description: Secondi da quando il server è acceso. }
+        net:
+          type: object
+          description: Interfacce fisiche; assente se Glances non la fornisce.
+          required: [rxBps, txBps]
+          properties:
+            rxBps: { type: number, description: byte/s in ingresso }
+            txBps: { type: number, description: byte/s in uscita }
+        containers:
+          type: array
+          description: Solo i container in esecuzione; assente senza socket Docker.
+          items: { $ref: "#/components/schemas/ContainerUsage" }
+    ContainerUsage:
+      type: object
+      required: [name, cpu, memBytes]
+      properties:
+        name: { type: string }
+        cpu: { type: number, description: Percentuale di un core, può superare 100. }
+        memBytes: { type: number }
     Downloads:
       type: object
       required: [downloadSpeed, torrents]
@@ -289,6 +334,7 @@ components:
             - invalid_selection
             - insufficient_space
             - start_failed
+            - glances_unreachable
             - not_found
             - internal
         message: { type: string, description: Messaggio in italiano da mostrare. }

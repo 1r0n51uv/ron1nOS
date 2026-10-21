@@ -7,6 +7,7 @@ export type Config = {
   qbt: { url: string; username: string; password: string }
   // Attesa dei metadati di un magnet prima di proporre Riprova (DL-005).
   metadataWaitMs: number
+  glances: { url: string }
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -19,5 +20,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       password: env.QBT_PASSWORD ?? '',
     },
     metadataWaitMs: Number(env.METADATA_WAIT_SECONDS ?? 60) * 1000,
+    // Glances gira in rete host (infra/glances): dal container si raggiunge
+    // con host.docker.internal.
+    glances: {
+      url: (env.GLANCES_URL ?? 'http://host.docker.internal:61208').replace(/\/+$/, ''),
+    },
   }
 }
