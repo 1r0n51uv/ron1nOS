@@ -5,6 +5,7 @@ import { loadConfig } from './config.ts'
 import { createDb, startDatabase } from './db.ts'
 import { createDraftService } from './drafts.ts'
 import { createGlancesClient } from './glances.ts'
+import { createExternalSearch } from './nutrition/foodsearch.ts'
 import { createQbtClient } from './qbittorrent.ts'
 
 const config = loadConfig()
@@ -23,6 +24,7 @@ const app = createApp({
   glances: createGlancesClient(config.glances),
   staticDir: config.staticDir,
   database,
+  nutrition: { external: createExternalSearch(config.foods) },
 })
 
 // Bozze orfane del wizard: all'avvio e ogni ora.

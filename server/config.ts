@@ -1,6 +1,7 @@
 // Configurazione del backend, tutta da variabili d'ambiente (.env dello
 // stack sul server). Le credenziali di qBittorrent restano qui e non
 // arrivano mai ai client.
+import type { ExternalConfig } from './nutrition/foodsearch.ts'
 import type { YazioConfig } from './yazio/client.ts'
 
 export type Config = {
@@ -14,6 +15,8 @@ export type Config = {
   databaseUrl?: string
   // Account YAZIO (modulo Nutrizione): attivo solo con tutte le variabili.
   yazio?: YazioConfig & { tokenKey: string }
+  // OpenFoodFacts e USDA per la ricerca alimenti (NUT-004, NUT-005).
+  foods: ExternalConfig
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -33,6 +36,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     },
     databaseUrl: env.DATABASE_URL || undefined,
     yazio: yazioConfig(env),
+    foods: {
+      offUrl: (env.OFF_URL ?? 'https://world.openfoodfacts.org').replace(/\/+$/, ''),
+      offItalyUrl: (env.OFF_ITALY_URL ?? 'https://it.openfoodfacts.org').replace(/\/+$/, ''),
+      usdaUrl: (env.USDA_URL ?? 'https://api.nal.usda.gov/fdc/v1').replace(/\/+$/, ''),
+      // DEMO_KEY basta per poche ricerche al giorno; una chiave gratuita su api.data.gov.
+      usdaKey: env.USDA_API_KEY || 'DEMO_KEY',
+    },
   }
 }
 

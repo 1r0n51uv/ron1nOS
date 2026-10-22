@@ -45,6 +45,11 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
+      command: 'node e2e/fake-foods.ts',
+      url: 'http://localhost:18083/__fake/health',
+      reuseExistingServer: !process.env.CI,
+    },
+    {
       command: 'node dist-server/index.js',
       url: 'http://localhost:4173/api/v1/health',
       reuseExistingServer: !process.env.CI,
@@ -59,6 +64,9 @@ export default defineConfig({
         GLANCES_URL: 'http://localhost:18081',
         // Postgres vero: in CI il servizio del job, in locale lo stesso utente.
         DATABASE_URL: E2E_DATABASE_URL,
+        OFF_URL: 'http://localhost:18083/off',
+        OFF_ITALY_URL: 'http://localhost:18083/off-it',
+        USDA_URL: 'http://localhost:18083/usda',
       },
     },
   ],
