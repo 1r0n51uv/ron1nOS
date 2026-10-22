@@ -2,12 +2,19 @@
 
 Prefisso ID: `DOC` · Label: `mod:documents`
 
-Il modulo è un archivio dei documenti personali: carta d'identità,
-passaporto, patente, tessera sanitaria e codice fiscale, contratti e
-qualsiasi altro documento. Per ognuno si caricano i file (immagini, PDF o
-altro) e si compilano i campi con i valori del documento. In consultazione
-i documenti importanti sono in evidenza, ogni campo si copia con un tocco
-e i file si copiano o si scaricano.
+Il modulo è un archivio di documenti e file personali. Si parte sempre da
+un file (immagine, PDF o altro) e si sceglie cosa è:
+
+- **un documento con tipo** (carta d'identità, passaporto, patente…): compare
+  il form con i campi di quel tipo da compilare;
+- **un file con info**: per esempio un PDF generico, con un titolo e le
+  informazioni che si vogliono copiare al volo, come campi liberi;
+- **un file libero**: solo un titolo, da tenere perché servirà più avanti.
+
+I tipi si configurano dall'interfaccia: oltre a quelli già pronti se ne
+creano di nuovi con i propri campi. In consultazione gli elementi
+importanti sono in evidenza, ogni campo si copia con un tocco e i file si
+copiano o si scaricano. Nel testo "documento" indica uno qualsiasi dei tre.
 
 Riprende le idee della bozza di design del modulo `documenti` di 1r0-pkm
 (ADR-0040, mai realizzata), con una differenza di fondo: lì la cifratura
@@ -59,7 +66,7 @@ Una pagina `/documenti` con tutti i documenti.
 
 Accettazione:
 
-- [ ] In alto i documenti fissati, sotto gli altri raggruppati per tipo.
+- [ ] In alto i documenti fissati, sotto gli altri raggruppati per tipo; quelli senza tipo stanno nel gruppo `File`.
 - [ ] Ricerca per titolo e tag; filtri per tipo e titolare (DOC-007).
 - [ ] Ogni documento mostra tipo, titolo, titolare, scadenza e una
       miniatura del primo allegato se è un'immagine.
@@ -69,8 +76,9 @@ Accettazione:
 
 Stato: proposto
 
-I tipi sono definiti in codice, ognuno con i suoi campi fissi. Aggiungere
-un tipo o un campo non richiede migrazioni.
+Ogni tipo ha un nome, un'icona e un elenco di campi. I tipi stanno nel
+database e si gestiscono dalla UI (DOC-016); questi sono già pronti alla
+prima installazione:
 
 | Tipo              | Campi                                                                                              |
 | ----------------- | -------------------------------------------------------------------------------------------------- |
@@ -78,8 +86,6 @@ un tipo o un campo non richiede migrazioni.
 | `passport`        | numero, cognome, nome, nazionalità, data di nascita, autorità, data di rilascio                    |
 | `driving_license` | numero, cognome, nome, data di nascita, categorie, rilasciata da, data di rilascio                 |
 | `health_card`     | codice fiscale, numero tessera, cognome, nome                                                      |
-| `contract`        | nessun campo fisso: allegati e campi liberi (DOC-006)                                              |
-| `other`           | nessun campo fisso: allegati e campi liberi (DOC-006)                                              |
 
 Accettazione:
 
@@ -88,9 +94,12 @@ Accettazione:
 - [ ] La data di scadenza è comune a tutti i tipi e sta fuori dai campi.
 - [ ] Il backend valida i campi contro il tipo: chiavi sconosciute
       rifiutate, date in formato `YYYY-MM-DD`.
-- [ ] I tipi e i loro campi si leggono da `GET /documents/types`, così
-      web e iOS non li duplicano.
-- [ ] Il tipo non si cambia dopo la creazione.
+- [ ] I tipi e i loro campi si leggono da `GET /types`, così web e iOS non
+      li duplicano.
+- [ ] Un documento senza tipo è un file con info o un file libero: ha solo
+      titolo e, se servono, campi liberi (DOC-006).
+- [ ] Il tipo si può assegnare o cambiare anche dopo: i valori dei campi
+      che il nuovo tipo non ha diventano campi liberi, niente si perde.
 
 #### DOC-004 · Dettaglio del documento
 
@@ -114,11 +123,17 @@ Stato: proposto
 
 Accettazione:
 
-- [ ] Si sceglie il tipo, poi un form con titolo (precompilato con il
-      nome del tipo), titolare, campi del tipo, campi liberi, scadenza,
-      tag e note.
-- [ ] Tutti i campi sono facoltativi tranne tipo e titolo.
-- [ ] Gli allegati si aggiungono nello stesso form (DOC-011).
+- [ ] Si parte dal file: lo si trascina o lo si sceglie (uno o più, DOC-011),
+      poi si sceglie cosa è: `Documento` (con il suo tipo), `File con info`
+      o `File libero`.
+- [ ] `Documento`: form con titolo (precompilato con il nome del tipo),
+      titolare, campi del tipo, campi liberi, scadenza, tag e note.
+- [ ] `File con info`: titolo, campi liberi, tag e note.
+- [ ] `File libero`: titolo (precompilato con il nome del file), tag e
+      note.
+- [ ] Solo il titolo è obbligatorio. Si può creare anche un documento senza
+      file e aggiungerli dopo.
+- [ ] Altri file si aggiungono in seguito dal dettaglio.
 - [ ] Salvataggio solo se il backend accetta; gli errori di validazione
       si mostrano sul campo.
 
@@ -127,7 +142,7 @@ Accettazione:
 Stato: proposto
 
 Su ogni documento si possono aggiungere coppie etichetta/valore, oltre ai
-campi del tipo. Per `contract` e `other` sono gli unici campi.
+campi del tipo. Per i file con info sono gli unici campi.
 
 Accettazione:
 
@@ -238,6 +253,23 @@ Accettazione:
 - [ ] Si elimina un allegato o un intero documento, con conferma.
 - [ ] L'eliminazione è definitiva: via dal database i campi e i file.
 
+#### DOC-016 · Tipi personalizzati
+
+Stato: proposto
+
+Dalle impostazioni del modulo si configurano i tipi.
+
+Accettazione:
+
+- [ ] Creare un tipo: nome, icona (da un elenco), campi con etichetta,
+      tipo (`text`, `date`, `code`) e se è copiabile; riordinare i campi.
+- [ ] Modificare un tipo, anche tra quelli già pronti: aggiungere,
+      rinominare, riordinare e togliere campi. Un campo tolto non cancella
+      i valori: sui documenti esistenti diventano campi liberi.
+- [ ] Eliminare un tipo solo se nessun documento lo usa; altrimenti la UI
+      dice quanti lo usano.
+- [ ] Un campo nuovo non obbliga a compilare i documenti esistenti.
+
 ### Sicurezza
 
 #### DOC-015 · Cifratura a riposo
@@ -269,7 +301,9 @@ Accettazione:
   `api/openapi.yaml`.
 - **Database.** Tabelle nel database `ron1nos` già usato da Nutrizione,
   con una migrazione nuova in `server/migrations/`:
-  - `documents`: id, tipo, titolo, titolare, scadenza, preavvisi, tag,
+  - `document_types`: id, nome, icona, campi (JSON: chiave, etichetta,
+    tipo, copiabile, ordine); i tipi già pronti entrano con la migrazione;
+  - `documents`: id, tipo (facoltativo), titolo, titolare, scadenza, preavvisi, tag,
     fissato (con ordine), `key_version`, `envelope` (bytea: JSON cifrato
     di campi, campi liberi e note), date di creazione e modifica;
   - `document_files`: id, documento, nome, tipo MIME, dimensione,
@@ -292,6 +326,7 @@ Accettazione:
 | Metodo e rotta                                     | Uso                            | Requisiti     |
 | -------------------------------------------------- | ------------------------------ | ------------- |
 | `GET /types`                                       | tipi e campi                   | 003           |
+| `POST /types`, `PATCH`/`DELETE /types/{id}`        | tipi personalizzati            | 016           |
 | `GET /documents?q=&type=&holder=`                  | elenco, ricerca, filtri        | 001, 002, 007 |
 | `POST /documents`                                  | crea                           | 005           |
 | `GET`/`PATCH`/`DELETE /documents/{id}`             | dettaglio, modifica, elimina   | 004–008, 014  |
@@ -305,12 +340,12 @@ Tutte le rotte sono relative a `/api/v1/documents`.
 
 ### Rispetto alla bozza di pkm (ADR-0040)
 
-Si tengono: campi fissi per tipo definiti in codice, busta AES-GCM con
+Si tengono: campi definiti per tipo, busta AES-GCM con
 versione della chiave e AAD per record, metadati in chiaro solo dove
 servono, file in Postgres in una tabella a parte, testi dei preavvisi
 senza dati sensibili, PDF generato al volo e mai salvato.
 
-Cambiano: niente chiave sul telefono né passphrase di recupero (la chiave
+Cambiano: tipi nel database e configurabili dalla UI; niente chiave sul telefono né passphrase di recupero (la chiave
 sta sul server, decisione 4); lo sblocco è il login generale e non Face
 ID (decisione 5); allegati di qualsiasi tipo e non solo immagini; campi
 liberi su ogni tipo; titolare.
@@ -330,11 +365,12 @@ liberi su ogni tipo; titolare.
 
 Prese il 2026-10-22.
 
-1. **Tipi.** Preset in codice più campi liberi su ogni documento.
-2. **Contratti.** Allegati PDF più campi liberi facoltativi, senza campi
-   fissi; i documenti d'identità si caricano come immagini. (Lettura
-   della risposta "solo immagini, allegati PDF più campi opzionali
-   liberi": da correggere se intendevi altro.)
+1. **Tipi.** Tipi già pronti più tipi configurabili dalla UI, e campi
+   liberi su ogni documento (precisato il 2026-10-22).
+2. **Tre modi.** Si parte dal file e si sceglie: documento con tipo (form
+   del tipo), file con info (titolo e campi liberi, per esempio un PDF o
+   un contratto), file libero (solo titolo). Nessun tipo `contratto`
+   fisso: se serve, lo si crea come tipo personalizzato.
 3. **Allegati.** Qualsiasi file, con anteprima per immagini e PDF.
 4. **Cifratura.** A riposo sul server, chiave nel `.env`; il backend
    decifra per web e iOS.
