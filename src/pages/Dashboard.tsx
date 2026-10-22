@@ -6,17 +6,27 @@ import { ContainersWidget } from '@/modules/containers/Widget'
 import { DownloadsWidget } from '@/modules/downloads/Widget'
 import { HomeWidget } from '@/modules/home/Widget'
 import { NotesWidget } from '@/modules/notes/Widget'
-import { nextMeal, useNutrition } from '@/modules/nutrition/data'
+import type { SlotId } from '@/modules/nutrition/data'
+import { useDay } from '@/modules/nutrition/data'
+import { todayRome } from '@/modules/nutrition/dates'
 import { NutritionWidget } from '@/modules/nutrition/Widget'
 import { ServerWidget } from '@/modules/server/Widget'
 import { WeightWidget } from '@/modules/weight/Widget'
 import { isFinished, useWorkout } from '@/modules/workout/data'
 import { WorkoutWidget } from '@/modules/workout/Widget'
 
+const MEAL_ARTICLE: Record<SlotId, string> = {
+  breakfast: 'la colazione',
+  morning_snack: 'lo spuntino',
+  lunch: 'il pranzo',
+  afternoon_snack: 'la merenda',
+  dinner: 'la cena',
+}
+
 // Frase di stato sotto il saluto: cosa non funziona, cosa resta da fare.
-function useSummary() {
+function useSummary(now: Date) {
   const containers = useContainers().data
-  const nutrition = useNutrition().data
+  const nutrition = useDay(todayRome(now)).data
   const workout = useWorkout().data
 
   const parts: string[] = []
@@ -32,11 +42,7 @@ function useSummary() {
   }
 
   const todo: string[] = []
-  const meal = nutrition && nextMeal(nutrition)
-  if (meal)
-    todo.push(
-      `la ${meal.name.toLowerCase()}`.replace('la pranzo', 'il pranzo').replace('la spuntino', 'lo spuntino'),
-    )
+  if (nutrition?.nextSlot) todo.push(MEAL_ARTICLE[nutrition.nextSlot])
   if (workout && !isFinished(workout)) {
     const ratio = workout.current / workout.exercises.length
     todo.push(ratio === 0 ? "l'allenamento" : ratio < 0.75 ? 'metà allenamento' : "la fine dell'allenamento")
@@ -48,7 +54,7 @@ function useSummary() {
 
 export function Dashboard() {
   const now = useNow()
-  const summary = useSummary()
+  const summary = useSummary(now)
   const containers = useContainers().data
   const status = containers && summarize(containers)
 
