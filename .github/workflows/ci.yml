@@ -17,6 +17,21 @@ concurrency:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    # Postgres vero per i test del backend e per gli e2e (modulo Nutrizione).
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ron1nos
+          POSTGRES_PASSWORD: ron1nos
+          POSTGRES_DB: ron1nos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ron1nos"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

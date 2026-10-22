@@ -2,6 +2,7 @@ import { serve } from '@hono/node-server'
 
 import { createApp } from './app.ts'
 import { loadConfig } from './config.ts'
+import { createDb, startDatabase } from './db.ts'
 import { createDraftService } from './drafts.ts'
 import { createGlancesClient } from './glances.ts'
 import { createQbtClient } from './qbittorrent.ts'
@@ -11,6 +12,9 @@ if (!config.qbt.username || !config.qbt.password) {
   console.warn('QBT_USERNAME o QBT_PASSWORD mancanti: il modulo Download risponderà con errore di accesso')
 }
 
+if (!config.databaseUrl) console.warn('DATABASE_URL mancante: il modulo Nutrizione risponderà con errore')
+const database = startDatabase(config.databaseUrl ? createDb(config.databaseUrl) : undefined)
+
 const qbt = createQbtClient(config.qbt)
 const drafts = createDraftService({ qbt, metadataWaitMs: config.metadataWaitMs })
 const app = createApp({
@@ -18,6 +22,7 @@ const app = createApp({
   drafts,
   glances: createGlancesClient(config.glances),
   staticDir: config.staticDir,
+  database,
 })
 
 // Bozze orfane del wizard: all'avvio e ogni ora.
@@ -35,5 +40,9 @@ const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
 })
 
 for (const signal of ['SIGINT', 'SIGTERM']) {
-  process.on(signal, () => server.close(() => process.exit(0)))
+  process.on(signal, () =>
+    server.close(() => {
+      void (database.db?.end() ?? Promise.resolve()).finally(() => process.exit(0))
+    }),
+  )
 }

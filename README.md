@@ -23,6 +23,8 @@ TanStack Query, React Router.
 npm install
 cp .env.example .env
 node e2e/fake-qbittorrent.ts   # qBittorrent finto sulla 18080, se non ne hai uno vero
+docker run -d --name ron1nos-pg -p 5432:5432 \
+  -e POSTGRES_USER=ron1nos -e POSTGRES_PASSWORD=ron1nos postgres:16-alpine   # Postgres per test ed e2e
 npm run dev:server   # backend su http://localhost:8080
 npm run dev          # http://localhost:5173, /api inoltrato al backend
 npm run build        # dist/ (SPA) e dist-server/ (backend)
@@ -38,6 +40,17 @@ d'ambiente e non escono mai dal backend. Nel frontend i `data.ts` chiamano
 l'API con `api` di `src/lib/api.ts`, che trasforma gli errori in `ApiError`
 (`code` come `qbittorrent_unreachable`). Variabili in
 [`.env.example`](.env.example).
+
+Il modulo Nutrizione ha dati propri in Postgres (`DATABASE_URL`). Le
+migrazioni sono file SQL in [`server/migrations`](server/migrations),
+numerati (`0002_…sql`) e applicati in ordine all'avvio; quelle già fatte
+sono in `schema_migrations` e non si rifanno. Una migrazione già rilasciata
+non si modifica: se ne aggiunge una nuova. Se Postgres non risponde il
+backend parte lo stesso, riprova da solo e il modulo risponde
+`database_unavailable` (503). I test del backend e gli e2e usano un
+Postgres vero: in CI è il servizio del job, in locale quello del comando
+sopra (`TEST_DATABASE_URL` ed `E2E_DATABASE_URL` per cambiarlo); ogni file
+di test lavora in uno schema suo.
 
 ### Qualità del codice
 

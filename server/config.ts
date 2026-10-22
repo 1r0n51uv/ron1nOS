@@ -8,6 +8,8 @@ export type Config = {
   // Attesa dei metadati di un magnet prima di proporre Riprova (DL-005).
   metadataWaitMs: number
   glances: { url: string }
+  // Postgres del modulo Nutrizione; senza, il modulo risponde 503.
+  databaseUrl?: string
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -25,5 +27,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     glances: {
       url: (env.GLANCES_URL ?? 'http://host.docker.internal:61208').replace(/\/+$/, ''),
     },
+    databaseUrl: env.DATABASE_URL || undefined,
   }
 }

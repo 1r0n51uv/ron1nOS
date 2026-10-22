@@ -11,7 +11,14 @@ describe('API /api/v1', () => {
   it('health risponde ok', async () => {
     const res = await createApp({ qbt: fakeQbt() }).request('/api/v1/health')
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ ok: true })
+    expect(await res.json()).toEqual({ ok: true, database: 'disabled' })
+  })
+
+  it('health riporta lo stato del database', async () => {
+    const res = await createApp({ qbt: fakeQbt(), database: { status: () => 'unavailable' } }).request(
+      '/api/v1/health',
+    )
+    expect(await res.json()).toEqual({ ok: true, database: 'unavailable' })
   })
 
   it('GET /downloads restituisce velocità e torrent', async () => {
