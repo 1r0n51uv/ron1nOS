@@ -293,8 +293,11 @@ Tutti sotto `/api/v1/workout`.
 ### Piano di lavoro
 
 1. **Specifica** (questa PR), da confermare.
-2. **Mockup** del widget e della pagina, nello stesso canvas della
-   nutrizione.
+2. **Mockup** del widget e delle pagine:
+   [canvas Modulo Allenamento](https://claude.ai/artifact/PRfY9udWyoGFidTM26i81W)
+   (widget in tre stati, pagina `/allenamenti`, import con anteprima,
+   dettaglio sessione, grafici di un esercizio, elenco esercizi), da
+   approvare.
 3. **Base dati e import**: migrazione, parser e merge, rotte di import.
 4. **API di lettura**: storico, esercizi, record, gruppi, riepilogo.
 5. **Web**: widget, pagina, dialog di import, un pezzo per issue.
