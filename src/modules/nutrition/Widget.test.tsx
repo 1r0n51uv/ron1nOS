@@ -24,6 +24,7 @@ function day(over: Partial<Day> = {}): Day {
   return {
     date: '2026-10-21',
     goal: { kcal: 2021, protein: 126, carbs: 227, fat: 67, waterMl: null },
+    quota: { kcal: 2021, baseKcal: 2021, activityKcal: 0 },
     totals: { kcal: 1022, protein: 26, carbs: 83, fat: 6 },
     plannedKcal: 479,
     suggestedSlot: 'lunch',
@@ -80,6 +81,12 @@ describe('NutritionWidget (NUT-001)', () => {
     expect(screen.getByLabelText('Proteine 26 / 126 g')).toBeInTheDocument()
     expect(screen.getByLabelText('Grassi 6 / 67 g')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Dettagli/ })).toHaveAttribute('href', '/pasti')
+  })
+
+  it('l’anello usa la quota del giorno, con l’attività da YAZIO (NUT-016)', () => {
+    mockDay({ data: day({ quota: { kcal: 2098, baseKcal: 2021, activityKcal: 77 } }) })
+    renderWithProviders(<NutritionWidget />)
+    expect(screen.getByRole('img', { name: /^1\.?022 kcal su 2\.?098$/ })).toBeInTheDocument()
   })
 
   it('uno slot vuoto dice che non c’è niente pianificato', () => {

@@ -11,14 +11,15 @@ const MACROS = [
 
 const pct = (value: number, max: number) => (max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0)
 
-// Riepilogo del giorno scelto (NUT-002): kcal sull'obiettivo e macro.
+// Riepilogo del giorno scelto (NUT-002): kcal sulla quota del giorno
+// (NUT-016) e macro.
 export function DaySummary({ day, title }: { day: Day; title: string }) {
-  const target = day.goal?.kcal ?? 0
+  const target = day.quota?.kcal ?? 0
   const eaten = day.totals.kcal
   const left = Math.max(0, target - eaten)
 
   return (
-    <WidgetCard title={title} meta={day.goal ? `obiettivo ${num(target)} kcal` : 'senza obiettivo'}>
+    <WidgetCard title={title} meta={quotaMeta(day.quota)}>
       <div className="flex flex-col gap-[18px]">
         <div className="flex items-center gap-5">
           <ProgressRing
@@ -60,4 +61,10 @@ export function DaySummary({ day, title }: { day: Day; title: string }) {
       </div>
     </WidgetCard>
   )
+}
+
+function quotaMeta(quota: Day['quota']) {
+  if (!quota) return 'senza obiettivo'
+  if (!quota.activityKcal) return `obiettivo ${num(quota.kcal)} kcal`
+  return `obiettivo ${num(quota.baseKcal)} · attività +${num(quota.activityKcal)} kcal`
 }

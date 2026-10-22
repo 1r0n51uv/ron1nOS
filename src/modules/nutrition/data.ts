@@ -80,6 +80,9 @@ export type SlotDay = {
 export type Day = {
   date: string
   goal: (Pick<Goal, 'kcal' | 'protein' | 'carbs' | 'fat'> & { waterMl: number | null }) | null
+  // Le kcal del giorno (NUT-016): obiettivo di base più l'attività letta da
+  // YAZIO, con il tetto già applicato dal backend.
+  quota: { kcal: number; baseKcal: number; activityKcal: number } | null
   totals: Macros
   plannedKcal: number
   slots: SlotDay[]

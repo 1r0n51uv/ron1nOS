@@ -115,6 +115,33 @@ describe('obiettivo, attività e peso da YAZIO (NUT-024)', () => {
     ])
   })
 
+  it('la quota del giorno somma l’attività all’obiettivo, con il tetto (NUT-016)', async () => {
+    const { api, fake } = setup()
+    fake.state.activity = { '2026-10-21': 1500, '2026-10-22': 77 }
+    await api.post('/yazio/sync')
+    expect((await api.get('/day?date=2026-10-22')).body.quota).toEqual({
+      kcal: 2098,
+      baseKcal: 2021,
+      activityKcal: 77,
+    })
+    expect((await api.get('/day?date=2026-10-21')).body.quota).toBeNull()
+    fake.state.consumeActivity = false
+    await api.post('/yazio/sync')
+    expect((await api.get('/day?date=2026-10-22')).body.quota.kcal).toBe(2021)
+  })
+
+  it('il tetto vale anche sui giorni passati', async () => {
+    const { api, fake } = setup()
+    await api.post('/goals', { kcal: 2000, protein: 100, carbs: 200, fat: 60, effectiveFrom: '2026-10-01' })
+    fake.state.activity = { '2026-10-21': 1500 }
+    await api.post('/yazio/sync')
+    expect((await api.get('/day?date=2026-10-21')).body.quota).toEqual({
+      kcal: 3200,
+      baseKcal: 2000,
+      activityKcal: 1200,
+    })
+  })
+
   it('importa lo storico delle pesate al primo giro, poi solo le nuove', async () => {
     const { api, fake, urls } = setup()
     fake.state.weights = [

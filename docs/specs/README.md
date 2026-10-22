@@ -15,6 +15,8 @@ https://github.com/1r0n51uv/ron1n/blob/main/docs/flusso-sviluppo.md.
 | Download    | [downloads.md](downloads.md) | `DL`        | `mod:downloads` |
 | Server      | [server.md](server.md)       | `SRV`       | `mod:server`    |
 | Nutrizione  | [nutrition.md](nutrition.md) | `NUT`       | `mod:nutrition` |
+| Documenti   | [documents.md](documents.md) | `DOC`       | `mod:documents` |
+| Login       | [auth.md](auth.md)           | `AUTH`      | `mod:auth`      |
 | Allenamento | [workout.md](workout.md)     | `GYM`       | `mod:workout`   |
 
 Gli altri moduli (`src/modules/*`) hanno per ora solo il mock dell'MVP; la

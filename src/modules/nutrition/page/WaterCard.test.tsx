@@ -25,6 +25,7 @@ beforeEach(() => {
 const day = (waterMl: number, goal: number | null = 2000): Day => ({
   date: '2026-10-21',
   goal: { kcal: 2000, protein: 120, carbs: 220, fat: 65, waterMl: goal },
+  quota: { kcal: 2000, baseKcal: 2000, activityKcal: 0 },
   totals: { kcal: 0, protein: 0, carbs: 0, fat: 0 },
   plannedKcal: 0,
   slots: [],

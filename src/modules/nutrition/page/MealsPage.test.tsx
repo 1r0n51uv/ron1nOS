@@ -24,6 +24,7 @@ function day(date: string, over: Partial<Day> = {}): Day {
   return {
     date,
     goal: { kcal: 2021, protein: 126, carbs: 227, fat: 67, waterMl: 2500 },
+    quota: { kcal: 2021, baseKcal: 2021, activityKcal: 0 },
     totals: { kcal: 285, protein: 23.5, carbs: 36.6, fat: 3.5 },
     plannedKcal: 445,
     suggestedSlot: null,
@@ -116,6 +117,15 @@ describe('MealsPage', () => {
     expect(within(aside).getByRole('img', { name: '285 kcal su 2021' })).toBeInTheDocument()
     expect(within(aside).getByText('24 / 126 g')).toBeInTheDocument()
     expect(within(aside).getByText('1736')).toBeInTheDocument()
+  })
+
+  it('con attività da YAZIO la quota cresce e il riepilogo dice di quanto (NUT-016)', () => {
+    mockDay(day(todayRome(), { quota: { kcal: 2098, baseKcal: 2021, activityKcal: 77 } }))
+    renderWithProviders(<MealsPage />, { route: '/pasti' })
+    const aside = screen.getByRole('complementary', { name: 'Riepilogo del giorno' })
+    expect(within(aside).getByRole('img', { name: '285 kcal su 2098' })).toBeInTheDocument()
+    expect(within(aside).getByText('obiettivo 2021 · attività +77 kcal')).toBeInTheDocument()
+    expect(within(aside).getByText('1813')).toBeInTheDocument()
   })
 
   it('con ?giorno= mostra quel giorno, non oggi', () => {

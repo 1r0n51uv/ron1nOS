@@ -1,5 +1,6 @@
 // Ricerca alimenti su tutte le fonti (NUT-004): catalogo locale, poi
-// OpenFoodFacts, poi USDA (e YAZIO con NUT-021), senza doppioni per nome.
+// OpenFoodFacts, poi USDA, poi YAZIO se collegato (NUT-021), senza doppioni
+// per nome.
 import type { Queryable } from '../db.ts'
 import type { Food, FoodCandidate } from './foods.ts'
 import { FOOD_COLUMNS, normalizeName, searchLocal } from './foods.ts'
