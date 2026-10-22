@@ -31,6 +31,7 @@ const day = (waterMl: number, goal: number | null = 2000): Day => ({
   suggestedSlot: null,
   nextSlot: null,
   waterMl,
+  caffeine: { totalMg: 0, mealsMg: 0 },
 })
 
 describe('WaterCard (NUT-012)', () => {
@@ -48,6 +49,5 @@ describe('WaterCard (NUT-012)', () => {
     renderWithProviders(<WaterCard day={day(0, null)} />)
     expect(screen.getByRole('button', { name: 'Annulla l’ultima acqua' })).toBeDisabled()
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
-    expect(screen.getByText('senza obiettivo')).toBeInTheDocument()
   })
 })

@@ -2,7 +2,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { testDb } from '../testing/db.ts'
-import { nutritionApp, resetNutrition } from '../testing/nutrition.ts'
+import { nutritionApp, resetNutrition, seedFood } from '../testing/nutrition.ts'
 
 let db: Awaited<ReturnType<typeof testDb>>
 beforeAll(async () => {
@@ -51,5 +51,39 @@ describe('acqua (NUT-012)', () => {
       expect((await api.post('/water', body)).status).toBe(400)
     }
     expect((await api.delete('/water/last')).status).toBe(400)
+  })
+})
+
+describe('caffeina (NUT-013)', () => {
+  it('+ aggiunge un espresso da 80 mg, − annulla l’ultima voce', async () => {
+    const api = nutritionApp(db, { now })
+    expect((await api.get('/day?date=2026-10-21')).body.caffeine).toEqual({ totalMg: 0, mealsMg: 0 })
+    const first = await api.post('/caffeine', { date: '2026-10-21' })
+    expect(first.status).toBe(201)
+    expect(first.body.caffeine.totalMg).toBe(80)
+    await api.post('/caffeine', { date: '2026-10-21', mg: 40, source: 'Tè nero' })
+    const res = await api.delete('/caffeine/last?date=2026-10-21')
+    expect(res.body.caffeine.totalMg).toBe(80)
+    const { rows } = await db.query('select source_name from caffeine_logs')
+    expect(rows).toEqual([{ source_name: 'Espresso' }])
+  })
+
+  it('gli alimenti con caffeina si sommano al totale; − non li tocca', async () => {
+    const caffe = await seedFood(db, { name: 'Caffè espresso', kcal: 2, caffeine: 212 })
+    const api = nutritionApp(db, { now })
+    await api.post('/meals', { date: '2026-10-21', slot: 'breakfast', items: [{ foodId: caffe, grams: 30 }] })
+    await api.post('/caffeine', { date: '2026-10-21' })
+    expect((await api.get('/day?date=2026-10-21')).body.caffeine).toEqual({ totalMg: 144, mealsMg: 64 })
+    await api.delete('/caffeine/last?date=2026-10-21')
+    const after = await api.delete('/caffeine/last?date=2026-10-21')
+    expect(after.body.caffeine).toEqual({ totalMg: 64, mealsMg: 64 })
+  })
+
+  it('richieste non valide: 400', async () => {
+    const api = nutritionApp(db, { now })
+    for (const body of [{}, { date: '2026-10-21', mg: -1 }, { date: '2026-10-21', source: ' ' }]) {
+      expect((await api.post('/caffeine', body)).status).toBe(400)
+    }
+    expect((await api.delete('/caffeine/last?date=ieri')).status).toBe(400)
   })
 })
