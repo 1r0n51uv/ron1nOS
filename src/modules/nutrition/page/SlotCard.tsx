@@ -5,6 +5,7 @@ import { num } from '@/lib/format'
 import type { SlotDay } from '../data'
 import { SLOT_LABELS } from '../data'
 import { AddMealDialog } from '../log/AddMealDialog'
+import { ItemRow } from './ItemRow'
 
 const STATE_TAG: Record<SlotDay['state'], string | null> = {
   empty: null,
@@ -52,11 +53,7 @@ export function SlotCard({ date, slot }: { date: string; slot: SlotDay }) {
       {slot.meal ? (
         <ul className="m-0 flex list-none flex-col p-0">
           {slot.meal.items.map((item) => (
-            <li key={item.id} className="flex min-h-10 items-center gap-3 text-sm">
-              <span className="min-w-0 flex-1 truncate">{item.name}</span>
-              <span className="font-mono text-[13px] text-ink-muted">{num(item.grams)} g</span>
-              <span className="w-[72px] text-right font-mono text-[13px]">{num(item.kcal)} kcal</span>
-            </li>
+            <ItemRow key={item.id} item={item} />
           ))}
         </ul>
       ) : planned ? (

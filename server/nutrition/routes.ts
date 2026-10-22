@@ -11,7 +11,7 @@ import { getDay } from './day.ts'
 import type { ExternalSearch } from './foodsearch.ts'
 import { addGoal, goalFor, goalHistory } from './goals.ts'
 import { check, ConflictError, readJson } from './http.ts'
-import { logMeal, nextSlot, slotForHour } from './meals.ts'
+import { logMeal, nextSlot, removeItem, setGrams, slotForHour } from './meals.ts'
 import { Amount, Day, Grams, Slot } from './schemas.ts'
 import { searchFoods } from './search.ts'
 
@@ -83,7 +83,8 @@ const CustomFoodInput = z.object({
 })
 const CustomFoodPatch = z.object(CustomFields).partial().strict()
 
-const FoodId = z.uuid()
+// Id di alimenti e righe.
+const Id = z.uuid()
 
 const offline: ExternalSearch = { off: async () => [], usda: async () => [], offBarcode: async () => null }
 
@@ -136,6 +137,22 @@ export function nutritionRoutes({
     return c.json(await dayView(db, input.date), 201)
   })
 
+  // Correggere un pasto (NUT-007): togliere una riga o cambiarne i grammi,
+  // anche nei giorni passati. Rispondono con il giorno aggiornato.
+  app.delete('/meals/items/:id', async (c) => {
+    const db = c.get('db')
+    const day = await db.tx((tx) => removeItem(tx, check(Id, c.req.param('id'))))
+    return c.json(await dayView(db, day))
+  })
+
+  app.patch('/meals/items/:id', async (c) => {
+    const id = check(Id, c.req.param('id'))
+    const { grams } = await readJson(c, z.object({ grams: Grams }))
+    const db = c.get('db')
+    const day = await db.tx((tx) => setGrams(tx, id, grams))
+    return c.json(await dayView(db, day))
+  })
+
   // Ricerca su catalogo locale, OpenFoodFacts e USDA (NUT-004). `italy=0`
   // toglie il filtro Solo Italia, attivo di default.
   app.get('/foods/search', async (c) => {
@@ -153,13 +170,13 @@ export function nutritionRoutes({
   })
 
   app.patch('/foods/:id', async (c) => {
-    const id = check(FoodId, c.req.param('id'))
+    const id = check(Id, c.req.param('id'))
     const input = await readJson(c, CustomFoodPatch)
     return c.json(await updateCustom(c.get('db'), id, input))
   })
 
   app.delete('/foods/:id', async (c) => {
-    await deleteCustom(c.get('db'), check(FoodId, c.req.param('id')))
+    await deleteCustom(c.get('db'), check(Id, c.req.param('id')))
     return c.body(null, 204)
   })
 

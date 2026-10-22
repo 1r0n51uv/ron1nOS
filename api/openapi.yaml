@@ -314,6 +314,48 @@ paths:
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/meals/items/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      summary: Cambia i grammi di una riga di un pasto (NUT-007)
+      description: >
+        Kcal, macro e caffeina scalano dai valori copiati nella riga, non
+        dall'alimento. Vale anche per i giorni passati.
+      operationId: setMealItemGrams
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [grams]
+              properties:
+                grams: { $ref: "#/components/schemas/Grams" }
+      responses:
+        "200":
+          description: Il giorno della riga, aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NutritionDay" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    delete:
+      summary: Toglie una riga da un pasto (NUT-007)
+      description: >
+        Se era l'ultima il pasto sparisce, e il piano che aveva segnato torna
+        `skipped` (ADR-0037).
+      operationId: removeMealItem
+      responses:
+        "200":
+          description: Il giorno della riga, aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NutritionDay" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/foods:
     get:
       summary: Alimenti personali, per nome (NUT-006)
