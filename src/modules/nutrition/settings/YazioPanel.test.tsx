@@ -25,6 +25,7 @@ const link = (over: Partial<YazioLink> = {}): YazioLink => ({
   error: null,
   lastSyncAt: '2026-10-21T08:12:00Z',
   syncEnabled: true,
+  imported: { goal: null, activityKcal: null, weight: null },
   ...over,
 })
 
@@ -75,6 +76,37 @@ describe('YazioPanel (NUT-020)', () => {
     expect(screen.getByText('mai')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Sincronizza ora' })).not.toBeInTheDocument()
     expect(screen.getByText(/Apple o Google/)).toBeInTheDocument()
+  })
+
+  it('mostra obiettivo, acqua, attività e peso arrivati da YAZIO (NUT-024)', () => {
+    show(
+      link({
+        imported: {
+          goal: {
+            id: 'g1',
+            source: 'yazio',
+            kcal: 2021,
+            protein: 126,
+            carbs: 227,
+            fat: 67,
+            waterMl: 2500,
+            effectiveFrom: '2026-10-22',
+          },
+          activityKcal: 77,
+          weight: { day: '2026-10-20', kg: 80.1 },
+        },
+      }),
+    )
+    const group = screen.getByRole('group', { name: 'Da YAZIO' })
+    expect(group).toHaveTextContent('Obiettivo2021 kcal · P 126 · C 227 · G 67 g')
+    expect(group).toHaveTextContent(/Acqua2\.?500 ml/)
+    expect(group).toHaveTextContent('Attività di oggi+77 kcal')
+    expect(group).toHaveTextContent('Peso80,1 kg · 20 ott')
+  })
+
+  it('prima del primo giro da YAZIO non è arrivato niente', () => {
+    show(link({ lastSyncAt: null, state: 'disconnected' }))
+    expect(screen.getByRole('group', { name: 'Da YAZIO' })).toHaveTextContent('Niente ancora')
   })
 
   it('durante un giro il pulsante aspetta', () => {

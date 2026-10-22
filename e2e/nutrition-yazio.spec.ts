@@ -39,3 +39,32 @@ test('YAZIO si collega con Sincronizza ora, mostra l’errore e si spegne (NUT-0
     page.getByRole('region', { name: 'YAZIO' }).getByRole('button', { name: /Sincronizzazione/ }),
   ).toHaveAttribute('aria-pressed', 'false')
 })
+
+test('obiettivo, attività e peso arrivano da YAZIO e l’obiettivo non si modifica più a mano (NUT-024)', async ({
+  page,
+  request,
+}) => {
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Rome' })
+  await request.post(`${fake}/__fake/state`, {
+    data: {
+      goals: { kcal: 2021, protein: 126, carbs: 227, fat: 67, water: 2500 },
+      activity: { [today]: 77 },
+      weights: [{ date: '2026-10-20 08:00:00', value: 80.1 }],
+    },
+  })
+  await page.goto('/impostazioni')
+  const goals = page.getByRole('button', { name: 'Salva' })
+  await expect(goals).toBeVisible()
+
+  const panel = page.getByRole('region', { name: 'YAZIO' })
+  await expect(panel.getByText('Niente ancora: arriva con il primo giro.')).toBeVisible()
+  await panel.getByRole('button', { name: 'Sincronizza ora' }).click()
+  const imported = panel.getByRole('group', { name: 'Da YAZIO' })
+  await expect(imported).toContainText(/2\.?021 kcal · P 126 · C 227 · G 67 g/)
+  await expect(imported).toContainText('+77 kcal')
+  await expect(imported).toContainText('80,1 kg · 20 ott')
+
+  // Il pannello dell'obiettivo diventa in sola lettura.
+  await expect(page.getByText("Si modifica nell'app YAZIO.")).toBeVisible()
+  await expect(goals).toHaveCount(0)
+})

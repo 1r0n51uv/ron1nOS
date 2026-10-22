@@ -45,7 +45,7 @@ function setup() {
 describe('collegamento YAZIO (NUT-020)', () => {
   it('senza variabili nel .env risulta non configurato e Sincronizza ora è rifiutato', async () => {
     const api = nutritionApp(db, { now })
-    expect((await api.get('/yazio')).body).toEqual({
+    expect((await api.get('/yazio')).body).toMatchObject({
       configured: false,
       state: 'disconnected',
       error: null,
@@ -62,7 +62,7 @@ describe('collegamento YAZIO (NUT-020)', () => {
     expect((await api.get('/yazio')).body).toMatchObject({ configured: true, state: 'disconnected' })
     const res = await api.post('/yazio/sync')
     expect(res.status).toBe(200)
-    expect(res.body).toEqual({
+    expect(res.body).toMatchObject({
       configured: true,
       state: 'connected',
       error: null,
