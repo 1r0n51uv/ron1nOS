@@ -93,15 +93,20 @@ async function applyRemote(db: Queryable, client: YazioClient, p: ConsumedProduc
   )
 }
 
-// Acqua: vale il totale del giorno di YAZIO quando è cambiato lì.
+// Acqua: vale il totale del giorno di YAZIO quando è cambiato lì. La prima
+// volta uno zero di YAZIO non cancella l'acqua già segnata qui: la porta
+// l'invio (NUT-023).
 async function applyWater(db: Queryable, day: string, total: number) {
   const { rows } = await db.query<{ seen: number }>(
     'select total_ml as seen from yazio_water where day = $1',
     [day],
   )
-  if (rows[0]?.seen === total) return
-  await db.query('delete from water_logs where day = $1', [day])
-  if (total > 0) await db.query('insert into water_logs (day, amount_ml) values ($1, $2)', [day, total])
+  const seen = rows[0]?.seen
+  if (seen === total) return
+  if (seen !== undefined || total > 0) {
+    await db.query('delete from water_logs where day = $1', [day])
+    if (total > 0) await db.query('insert into water_logs (day, amount_ml) values ($1, $2)', [day, total])
+  }
   await db.query(
     `insert into yazio_water (day, total_ml) values ($1, $2)
      on conflict (day) do update set total_ml = excluded.total_ml`,
@@ -128,7 +133,10 @@ export const readDiary: SyncStep = async ({ db, client, day }) => {
     }
     // Una riga che YAZIO conosceva e non c'è più è stata cancellata lì.
     for (const row of await localRows(tx, days[0], days.at(-1)!)) {
-      if (row.amount !== null && !remote.has(row.id)) await removeItem(tx, row.id)
+      if (row.amount === null || remote.has(row.id)) continue
+      // Già cancellata in YAZIO: non va in coda per cancellarla di nuovo.
+      await tx.query('update meal_entry_items set yazio_amount = null where id = $1', [row.id])
+      await removeItem(tx, row.id)
     }
     for (const [d, total] of water) await applyWater(tx, d, total)
   })

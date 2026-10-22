@@ -47,6 +47,18 @@ export function YazioPanel() {
               {data.lastSyncAt ? whenLine(data.lastSyncAt) : 'mai'}
             </span>
           </div>
+          {data.configured ? (
+            <>
+              <div className="flex min-h-8 items-center justify-between gap-4 text-sm">
+                <span>In coda verso YAZIO</span>
+                <span className="font-mono text-[13px] text-ink-muted">{num(data.queue)}</span>
+              </div>
+              <div className="flex min-h-8 items-center justify-between gap-4 text-sm">
+                <span>Senza equivalente</span>
+                <span className="font-mono text-[13px] text-ink-muted">{num(data.unmatched)}</span>
+              </div>
+            </>
+          ) : null}
           {data.state === 'error' && data.error ? (
             <AlertRow title="Sincronizzazione non riuscita." body={data.error} />
           ) : null}

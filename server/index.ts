@@ -6,7 +6,8 @@ import { createDb, startDatabase } from './db.ts'
 import { createDraftService } from './drafts.ts'
 import { createGlancesClient } from './glances.ts'
 import { createExternalSearch } from './nutrition/foodsearch.ts'
-import { READ_FROM_YAZIO } from './nutrition/fromyazio.ts'
+import { hasPending } from './nutrition/diarywrite.ts'
+import { FLUSH_STEPS, SYNC_STEPS } from './nutrition/fromyazio.ts'
 import { createSyncRunner } from './nutrition/yazio.ts'
 import { createQbtClient } from './qbittorrent.ts'
 import { createYazioClient } from './yazio/client.ts'
@@ -25,7 +26,9 @@ if (!yazio) console.warn('variabili YAZIO_* mancanti: il diario resta solo in ro
 
 const sync = createSyncRunner({
   yazio: yazio && ((db) => createYazioClient({ ...yazio, tokens: dbTokenStore(db, yazio.tokenKey) })),
-  steps: READ_FROM_YAZIO,
+  steps: SYNC_STEPS,
+  flushSteps: FLUSH_STEPS,
+  hasPending,
 })
 
 const qbt = createQbtClient(config.qbt)
@@ -55,9 +58,15 @@ function syncYazio() {
   if (database.status() !== 'ok' || !database.db) return
   sync.tick(database.db).catch((err: Error) => console.warn(`giro YAZIO non riuscito: ${err.message}`))
 }
+// Le righe nuove o cambiate partono entro un minuto (NUT-023).
+function flushYazio() {
+  if (database.status() !== 'ok' || !database.db) return
+  sync.flush(database.db).catch((err: Error) => console.warn(`invio a YAZIO non riuscito: ${err.message}`))
+}
 if (yazio) {
   setTimeout(syncYazio, 30_000).unref()
   setInterval(syncYazio, 15 * 60_000).unref()
+  setInterval(flushYazio, 60_000).unref()
 }
 
 const server = serve({ fetch: app.fetch, port: config.port }, (info) => {

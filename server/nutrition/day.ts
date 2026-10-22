@@ -21,6 +21,16 @@ export type MealItem = Macros & {
   sync: 'local' | 'pending' | 'synced' | 'error' | 'unmatched'
 }
 
+// Stato verso YAZIO (NUT-023): inviata se YAZIO ne sa la stessa versione,
+// altrimenti in coda; errore e senza equivalente li decide l'invio. Senza
+// YAZIO in uso le righe in coda diventano local nella vista del giorno.
+const SYNC_STATE = `case
+    when f.yazio_matched_by = 'local' then 'local'
+    when i.yazio_sync in ('error', 'unmatched') then i.yazio_sync::text
+    when i.yazio_amount = i.quantity_g and i.yazio_daytime =
+      (case when e.slot in ('morning_snack', 'afternoon_snack') then 'snack' else e.slot::text end) then 'synced'
+    else 'pending' end`
+
 export type PlannedItem = Macros & { foodId: string | null; name: string; grams: number }
 
 export type SlotDay = {
@@ -105,9 +115,10 @@ export async function getDay(db: Queryable, date: string): Promise<Day> {
     activityOf(db, date),
     db.query<MealItem & { slot: Slot; mealId: string }>(
       `select i.id, i.food_id as "foodId", i.food_name as name, i.quantity_g as grams, i.calories as kcal,
-              i.protein_g as protein, i.carbs_g as carbs, i.fat_g as fat, i.origin, i.yazio_sync as sync,
+              i.protein_g as protein, i.carbs_g as carbs, i.fat_g as fat, i.origin, ${SYNC_STATE} as sync,
               e.slot, e.id as "mealId"
          from meal_entry_items i join meal_entries e on e.id = i.meal_entry_id
+         left join foods f on f.id = i.food_id
         where e.day = $1 order by i.order_index, i.created_at`,
       [date],
     ),

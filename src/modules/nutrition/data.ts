@@ -449,6 +449,10 @@ export type YazioLink = {
   error: string | null
   lastSyncAt: string | null
   syncEnabled: boolean
+  // Righe e cancellazioni in coda verso YAZIO, alimenti senza equivalente
+  // (NUT-023).
+  queue: number
+  unmatched: number
   // Quello che arriva da YAZIO (NUT-024): obiettivo e attività di oggi,
   // peso di riferimento.
   imported: {
@@ -481,3 +485,38 @@ function useYazioMutation<A>(fn: (args: A) => Promise<YazioLink>) {
 
 export const useSetYazioSync = () => useYazioMutation((enabled: boolean) => yazioSource.setSync(enabled))
 export const useSyncYazio = () => useYazioMutation(() => yazioSource.syncNow())
+
+// Senza equivalente YAZIO (/api/v1/nutrition/yazio/unmatched, NUT-023).
+export type Unmatched = {
+  food: { id: string; name: string; brand: string | null; source: FoodSource; kcal: number }
+  rows: number
+  last: { day: string; slot: SlotId; grams: number }
+}
+
+export const unmatchedSource = {
+  list: () => api.get<{ foods: Unmatched[] }>('/nutrition/yazio/unmatched'),
+  products: (q: string) =>
+    api.get<{ products: Food[] }>(`/nutrition/yazio/products?q=${encodeURIComponent(q)}`),
+  // productId null: l'alimento resta solo in ron1nOS.
+  match: (foodId: string, productId: string | null) =>
+    api.put<{ foods: Unmatched[] }>(`/nutrition/foods/${foodId}/yazio`, { productId }),
+}
+
+export function useUnmatched() {
+  return useQuery({ queryKey: ['nutrition', 'yazio', 'unmatched'], queryFn: () => unmatchedSource.list() })
+}
+
+export function useYazioProducts(q: string) {
+  const query = q.trim()
+  return useQuery({
+    queryKey: ['nutrition', 'yazio', 'products', query],
+    queryFn: () => unmatchedSource.products(query),
+    enabled: query.length >= 2,
+    staleTime: 60_000,
+  })
+}
+
+export const useSetEquivalent = () =>
+  useFoodMutation(({ foodId, productId }: { foodId: string; productId: string | null }) =>
+    unmatchedSource.match(foodId, productId),
+  )

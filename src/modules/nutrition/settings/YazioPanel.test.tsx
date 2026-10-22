@@ -25,6 +25,8 @@ const link = (over: Partial<YazioLink> = {}): YazioLink => ({
   error: null,
   lastSyncAt: '2026-10-21T08:12:00Z',
   syncEnabled: true,
+  queue: 0,
+  unmatched: 0,
   imported: { goal: null, activityKcal: null, weight: null },
   ...over,
 })
@@ -50,6 +52,12 @@ describe('YazioPanel (NUT-020)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sincronizza ora' }))
     expect(sync).toHaveBeenCalled()
     expect(screen.getByText('Credenziali nel file .env del server.')).toBeInTheDocument()
+  })
+
+  it('dice quante righe sono in coda e quanti alimenti senza equivalente', () => {
+    show(link({ queue: 3, unmatched: 1 }))
+    expect(screen.getByText('In coda verso YAZIO').parentElement).toHaveTextContent('3')
+    expect(screen.getByText('Senza equivalente').parentElement).toHaveTextContent('1')
   })
 
   it('errore: il motivo arriva dal server così com’è', () => {

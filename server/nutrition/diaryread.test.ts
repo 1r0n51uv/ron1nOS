@@ -5,7 +5,7 @@ import { testDb } from '../testing/db.ts'
 import { nutritionApp, resetNutrition } from '../testing/nutrition.ts'
 import { fakeYazioDeps } from '../testing/yazio.ts'
 import { daytimeFor, slotFor } from './diaryread.ts'
-import { READ_FROM_YAZIO } from './fromyazio.ts'
+import { SYNC_STEPS } from './fromyazio.ts'
 import { createSyncRunner } from './yazio.ts'
 
 let db: Awaited<ReturnType<typeof testDb>>
@@ -202,8 +202,8 @@ describe('giro periodico', () => {
     const { fake, yazio } = fakeYazioDeps()
     fake.state.consumed = [consumed(1)]
     const api = nutritionApp(db, { now, yazio })
-    const runner = createSyncRunner({ yazio, steps: READ_FROM_YAZIO, now })
-    expect(await createSyncRunner({ steps: READ_FROM_YAZIO }).tick(db)).toBeNull()
+    const runner = createSyncRunner({ yazio, steps: SYNC_STEPS, now })
+    expect(await createSyncRunner({ steps: SYNC_STEPS }).tick(db)).toBeNull()
     await api.put('/yazio/sync', { enabled: false })
     expect(await runner.tick(db)).toBeNull()
     await api.put('/yazio/sync', { enabled: true })

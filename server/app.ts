@@ -22,7 +22,7 @@ import type { GlancesClient } from './glances.ts'
 import { GlancesUnreachableError } from './glances.ts'
 import type { QbtClient } from './qbittorrent.ts'
 import { QbtAuthError, QbtUnreachableError } from './qbittorrent.ts'
-import { ConflictError, InvalidRequestError, NotFoundError } from './nutrition/http.ts'
+import { ConflictError, InvalidRequestError, NotFoundError, YazioUnavailableError } from './nutrition/http.ts'
 import type { NutritionDeps } from './nutrition/routes.ts'
 import { nutritionRoutes } from './nutrition/routes.ts'
 import { InvalidTorrentError, MAX_TORRENT_BYTES, parseTorrent } from './torrentfile.ts'
@@ -156,6 +156,9 @@ export function createApp({
     }
     if (err instanceof ConflictError) {
       return c.json<ApiError>({ error: err.code, message: err.message }, 409)
+    }
+    if (err instanceof YazioUnavailableError) {
+      return c.json<ApiError>({ error: 'yazio_unreachable', message: 'YAZIO non raggiungibile' }, 503)
     }
     if (err instanceof GlancesUnreachableError) {
       return c.json<ApiError>({ error: 'glances_unreachable', message: 'Glances non raggiungibile' }, 503)

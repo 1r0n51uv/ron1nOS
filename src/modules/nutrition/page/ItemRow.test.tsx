@@ -48,6 +48,21 @@ const row = () =>
   )
 
 describe('ItemRow (NUT-007)', () => {
+  it('ogni riga dice il suo stato verso YAZIO (NUT-023)', () => {
+    for (const [sync, label] of [
+      ['pending', 'in coda'],
+      ['synced', 'inviata'],
+      ['error', 'errore'],
+      ['unmatched', 'senza equivalente'],
+    ] as const) {
+      const { unmount } = renderWithProviders(<ItemRow item={{ ...item, sync }} />)
+      expect(screen.getByText(label)).toBeInTheDocument()
+      unmount()
+    }
+    renderWithProviders(<ItemRow item={item} />)
+    expect(screen.queryByText('in coda')).not.toBeInTheDocument()
+  })
+
   it('una voce letta da YAZIO lo dice (NUT-022)', () => {
     renderWithProviders(<ItemRow item={{ ...item, origin: 'yazio', sync: 'synced' }} />)
     expect(screen.getByRole('listitem')).toHaveTextContent('Mela · da YAZIO')

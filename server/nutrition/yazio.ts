@@ -84,9 +84,9 @@ export async function runSync(
     return false
   }
   await db.query(
-    `insert into yazio_status (id, last_sync_at) values (1, $1)
+    `insert into yazio_status (id, last_sync_at, first_sync_at) values (1, $1, $1)
      on conflict (id) do update set last_sync_at = excluded.last_sync_at, last_error = null,
-       last_error_at = null`,
+       last_error_at = null, first_sync_at = coalesce(yazio_status.first_sync_at, excluded.first_sync_at)`,
     [now],
   )
   return true
@@ -115,10 +115,15 @@ export type SyncRunner = ReturnType<typeof createSyncRunner>
 export function createSyncRunner({
   yazio,
   steps,
+  flushSteps = [],
+  hasPending = async () => false,
   now = () => new Date(),
 }: {
   yazio?: (db: Queryable) => YazioClient
   steps: SyncStep[]
+  // L'invio di ogni minuto (NUT-023), solo se c'è qualcosa in coda.
+  flushSteps?: SyncStep[]
+  hasPending?: (db: Queryable, day: string) => Promise<boolean>
   now?: () => Date
 }) {
   let current: { db: Db; client: YazioClient } | null = null
@@ -130,8 +135,8 @@ export function createSyncRunner({
     return current.client
   }
 
-  const run = (db: Db, yc: YazioClient) => {
-    running ??= runSync(db, yc, { steps, now: now() }).finally(() => {
+  const run = (db: Db, yc: YazioClient, list = steps) => {
+    running ??= runSync(db, yc, { steps: list, now: now() }).finally(() => {
       running = null
     })
     return running
@@ -147,6 +152,14 @@ export function createSyncRunner({
       const yc = client(db)
       if (!yc || !(await syncEnabled(db))) return null
       return run(db, yc)
+    },
+    // L'invio entro un minuto: con YAZIO già collegato e qualcosa in coda.
+    async flush(db: Db) {
+      const yc = client(db)
+      if (!yc || running) return null
+      const link = await yazioLink(db, true)
+      if (!link.syncEnabled || !link.lastSyncAt || !(await hasPending(db, today(now())))) return null
+      return run(db, yc, flushSteps)
     },
   }
 }

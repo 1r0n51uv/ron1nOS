@@ -8,6 +8,14 @@ import type { MealItem } from '../data'
 import { useRemoveItem, useSetGrams } from '../data'
 import { parseGrams } from '../log/meal'
 
+// Stato della riga verso YAZIO (NUT-023).
+const SYNC_LABELS: Record<Exclude<MealItem['sync'], 'local'>, string> = {
+  pending: 'in coda',
+  synced: 'inviata',
+  error: 'errore',
+  unmatched: 'senza equivalente',
+}
+
 // Una riga di un pasto mangiato (NUT-007): i grammi si cambiano sul posto,
 // la riga si toglie con ×.
 export function ItemRow({ item }: { item: MealItem }) {
@@ -32,6 +40,15 @@ export function ItemRow({ item }: { item: MealItem }) {
           {item.name}
           {item.origin === 'yazio' ? <span className="text-ink-muted"> · da YAZIO</span> : null}
         </span>
+        {item.sync === 'local' ? null : (
+          <span
+            className={
+              item.sync === 'error' ? 'font-mono text-xs text-brand-text' : 'font-mono text-xs text-ink-muted'
+            }
+          >
+            {SYNC_LABELS[item.sync]}
+          </span>
+        )}
         {editing ? (
           <span className="relative w-24">
             <Input
