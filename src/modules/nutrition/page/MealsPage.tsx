@@ -1,0 +1,60 @@
+import { useSearchParams } from 'react-router'
+
+import { AlertRow } from '@/components/ron1n'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useNow } from '@/hooks/useNow'
+import { ApiError } from '@/lib/api'
+import { useDay } from '../data'
+import { eyebrowDay, isDay, todayRome } from '../dates'
+import { DayStrip } from './DayStrip'
+import { DaySummary } from './DaySummary'
+import { SlotCard } from './SlotCard'
+
+// Pagina /pasti (NUT-002): il giorno scelto con i 5 pasti e il riepilogo.
+export function MealsPage() {
+  const now = useNow()
+  const today = todayRome(now)
+  const [params] = useSearchParams()
+  const requested = params.get('giorno')
+  const date = isDay(requested) ? requested : today
+  const { data, error } = useDay(date)
+  const shown = data?.date === date ? data : undefined
+
+  return (
+    <>
+      <div className="flex flex-col gap-1.5">
+        <div className="eyebrow">{eyebrowDay(date)}</div>
+        <h1 className="m-0 font-display text-[44px] leading-[48px] font-bold">Pasti</h1>
+      </div>
+
+      <DayStrip today={today} selected={date} />
+
+      {error && !shown ? (
+        <AlertRow
+          title="Diario non disponibile."
+          body={error instanceof ApiError ? error.message : 'Backend non raggiungibile'}
+        />
+      ) : (
+        <div className="flex flex-wrap items-start gap-5">
+          <section aria-label="Pasti del giorno" className="flex min-w-0 flex-[999_1_560px] flex-col gap-3.5">
+            {shown
+              ? shown.slots.map((s) => <SlotCard key={s.slot} slot={s} />)
+              : Array.from({ length: 5 }, (_, i) => (
+                  <Skeleton key={i} aria-busy="true" className="h-20 rounded-panel" />
+                ))}
+          </section>
+          <aside
+            aria-label="Riepilogo del giorno"
+            className="flex max-w-[440px] flex-[1_1_360px] flex-col gap-3.5"
+          >
+            {shown ? (
+              <DaySummary day={shown} title={date === today ? 'Oggi' : 'Giorno'} />
+            ) : (
+              <Skeleton aria-busy="true" className="h-72 rounded-panel" />
+            )}
+          </aside>
+        </div>
+      )}
+    </>
+  )
+}

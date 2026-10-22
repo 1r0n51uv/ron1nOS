@@ -6,6 +6,7 @@ import { z } from 'zod'
 import type { Database, Db } from '../db.ts'
 import { DatabaseUnavailableError } from '../db.ts'
 import { today } from './dates.ts'
+import { getDay } from './day.ts'
 import { addGoal, goalFor, goalHistory } from './goals.ts'
 import { check, ConflictError, readJson } from './http.ts'
 import { Amount, Day } from './schemas.ts'
@@ -39,6 +40,12 @@ export function nutritionRoutes({
     if (database.status() !== 'ok' || !database.db) throw new DatabaseUnavailableError('database non pronto')
     c.set('db', database.db)
     await next()
+  })
+
+  // Il giorno completo: slot, totali, obiettivo (NUT-001, NUT-002).
+  app.get('/day', async (c) => {
+    const day = c.req.query('date') ? check(Day, c.req.query('date')) : today(now())
+    return c.json(await getDay(c.get('db'), day))
   })
 
   app.get('/goals', async (c) => {

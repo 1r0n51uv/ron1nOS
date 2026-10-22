@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router'
 
 import { AppShell } from '@/layout/AppShell'
 import { ComingSoon } from '@/pages/ComingSoon'
+import { MealsPage } from '@/modules/nutrition/page/MealsPage'
 import { Dashboard } from '@/pages/Dashboard'
 import { Settings } from '@/pages/Settings'
 
@@ -10,7 +11,7 @@ export default function App() {
     <Routes>
       <Route element={<AppShell />}>
         <Route index element={<Dashboard />} />
-        <Route path="pasti" element={<ComingSoon title="Pasti" />} />
+        <Route path="pasti" element={<MealsPage />} />
         <Route path="allenamenti" element={<ComingSoon title="Allenamenti" />} />
         <Route path="note" element={<ComingSoon title="Note" />} />
         <Route path="casa" element={<ComingSoon title="Casa" />} />
