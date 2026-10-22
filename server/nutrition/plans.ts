@@ -14,7 +14,7 @@ export type PlanStatus = 'planned' | 'eaten' | 'skipped'
 
 type Plan = { id: string; day: string; slot: Slot; status: PlanStatus; mealId: string | null }
 
-async function planBy(db: Queryable, where: string, params: unknown[]): Promise<Plan | undefined> {
+export async function planBy(db: Queryable, where: string, params: unknown[]): Promise<Plan | undefined> {
   const { rows } = await db.query<Plan>(
     `select id, day, slot, status, meal_entry_id as "mealId" from planned_meals ${where} for update`,
     params,
@@ -48,6 +48,7 @@ async function expand(db: Queryable, items: LogItem[]) {
 export async function setPlan(
   db: Queryable,
   { day, slot, items }: { day: string; slot: Slot; items: LogItem[] },
+  { templateId = null }: { templateId?: string | null } = {},
 ) {
   const { foods, recipeId } = await expand(db, items)
   const existing = await planBy(db, 'where day = $1 and slot = $2', [day, slot])
@@ -55,14 +56,14 @@ export async function setPlan(
   let id = existing?.id
   if (id) {
     await db.query(
-      `update planned_meals set recipe_id = $2, status = 'planned', template_id = null, updated_at = now() where id = $1`,
-      [id, recipeId],
+      `update planned_meals set recipe_id = $2, status = 'planned', template_id = $3, updated_at = now() where id = $1`,
+      [id, recipeId, templateId],
     )
     await db.query('delete from planned_meal_items where planned_meal_id = $1', [id])
   } else {
     const { rows } = await db.query<{ id: string }>(
-      `insert into planned_meals (day, slot, recipe_id) values ($1, $2, $3) returning id`,
-      [day, slot, recipeId],
+      `insert into planned_meals (day, slot, recipe_id, template_id) values ($1, $2, $3, $4) returning id`,
+      [day, slot, recipeId, templateId],
     )
     id = rows[0].id
   }

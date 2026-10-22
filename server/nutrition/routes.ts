@@ -16,6 +16,14 @@ import { Amount, Day, Grams, Slot } from './schemas.ts'
 import { deletePlan, setPlan, setPlanStatus } from './plans.ts'
 import { createRecipe, deleteRecipe, getRecipe, listRecipes, updateRecipe } from './recipes.ts'
 import { findBarcode, searchFoods } from './search.ts'
+import {
+  applyTemplate,
+  createTemplate,
+  deleteTemplate,
+  getTemplate,
+  listTemplates,
+  updateTemplate,
+} from './templates.ts'
 
 export type NutritionDeps = {
   database: Database
@@ -64,6 +72,17 @@ const MealInput = z.object({
 const PlanInput = MealInput
 
 const PlanStatusInput = z.object({ status: z.enum(['planned', 'eaten', 'skipped']) })
+
+const TemplateCell = z.union([
+  z.object({ weekday: z.number().int().min(1).max(7), slot: Slot, recipeId: z.uuid() }).strict(),
+  z.object({ weekday: z.number().int().min(1).max(7), slot: Slot, foodId: z.uuid(), grams: Grams }).strict(),
+  z.object({ weekday: z.number().int().min(1).max(7), slot: Slot, food: Candidate, grams: Grams }).strict(),
+])
+
+const TemplateInput = z.object({
+  name: z.string().trim().min(1).max(100),
+  cells: z.array(TemplateCell).max(35).default([]),
+})
 
 const RecipeInput = z.object({
   name: z.string().trim().min(1).max(200),
@@ -213,6 +232,36 @@ export function nutritionRoutes({
     const db = c.get('db')
     const day = await db.tx((tx) => setPlanStatus(tx, id, status))
     return c.json(await dayView(db, day))
+  })
+
+  // Template settimanali (NUT-010).
+  app.get('/templates', async (c) => c.json({ templates: await listTemplates(c.get('db')) }))
+
+  app.post('/templates', async (c) => {
+    const input = await readJson(c, TemplateInput)
+    const db = c.get('db')
+    const id = await db.tx((tx) => createTemplate(tx, input))
+    return c.json(await getTemplate(db, id), 201)
+  })
+
+  app.put('/templates/:id', async (c) => {
+    const id = check(Id, c.req.param('id'))
+    const input = await readJson(c, TemplateInput)
+    const db = c.get('db')
+    await db.tx((tx) => updateTemplate(tx, id, input))
+    return c.json(await getTemplate(db, id))
+  })
+
+  app.delete('/templates/:id', async (c) => {
+    await deleteTemplate(c.get('db'), check(Id, c.req.param('id')))
+    return c.body(null, 204)
+  })
+
+  app.post('/templates/:id/apply', async (c) => {
+    const id = check(Id, c.req.param('id'))
+    const { monday } = await readJson(c, z.object({ monday: Day }))
+    const db = c.get('db')
+    return c.json(await db.tx((tx) => applyTemplate(tx, id, monday)))
   })
 
   // Ricette (NUT-008).

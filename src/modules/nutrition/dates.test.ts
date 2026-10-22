@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import { addDays, dayOfMonth, eyebrowDay, isDay, stripDays, todayRome, weekdayShort } from './dates'
+import {
+  addDays,
+  dayOfMonth,
+  eyebrowDay,
+  isDay,
+  mondayOf,
+  stripDays,
+  todayRome,
+  weekdayShort,
+  weekRange,
+} from './dates'
 
 describe('giorni del diario', () => {
   it('oggi è il giorno di Roma', () => {
@@ -26,5 +36,15 @@ describe('giorni del diario', () => {
     expect(isDay('2026-10-21')).toBe(true)
     expect(isDay('ieri')).toBe(false)
     expect(isDay(null)).toBe(false)
+  })
+})
+
+describe('settimane', () => {
+  it('lunedì della settimana e intervallo', () => {
+    expect(mondayOf('2026-10-21')).toBe('2026-10-19')
+    expect(mondayOf('2026-10-25')).toBe('2026-10-19')
+    expect(mondayOf('2026-10-19')).toBe('2026-10-19')
+    expect(weekRange('2026-10-19')).toBe('19–25 ott')
+    expect(weekRange('2026-10-26')).toBe('26 ott–1 nov')
   })
 })

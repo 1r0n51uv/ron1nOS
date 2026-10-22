@@ -454,6 +454,102 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/templates:
+    get:
+      summary: Template settimanali (NUT-010)
+      operationId: listTemplates
+      responses:
+        "200":
+          description: I template con la griglia e le kcal di ogni giorno.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [templates]
+                properties:
+                  templates:
+                    type: array
+                    items: { $ref: "#/components/schemas/Template" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    post:
+      summary: Crea un template (NUT-010)
+      operationId: createTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TemplateInput" }
+      responses:
+        "201":
+          description: Template creato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Template" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/templates/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      summary: Sostituisce nome e griglia di un template (NUT-010)
+      operationId: updateTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TemplateInput" }
+      responses:
+        "200":
+          description: Template aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Template" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    delete:
+      summary: Elimina un template (NUT-010)
+      description: I pasti già pianificati restano, senza il collegamento al template.
+      operationId: deleteTemplate
+      responses:
+        "204": { description: Eliminato. }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/templates/{id}/apply:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      summary: Applica un template a una settimana (NUT-010)
+      description: >
+        Crea i pasti pianificati della settimana che inizia `monday`.
+        Sostituisce solo quelli ancora pianificati; mangiati e saltati restano.
+      operationId: applyTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [monday]
+              properties:
+                monday: { type: string, format: date, description: Deve essere un lunedì. }
+      responses:
+        "200":
+          description: Quanti pasti creati, sostituiti e lasciati com'erano.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [created, replaced, kept]
+                properties:
+                  created: { type: integer }
+                  replaced: { type: integer }
+                  kept: { type: integer }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/recipes:
     get:
       summary: Ricette, per nome (NUT-008)
@@ -815,6 +911,49 @@ components:
         carbs: { type: number, minimum: 0, maximum: 100 }
         fat: { type: number, minimum: 0, maximum: 100 }
         caffeineMg: { type: [number, "null"], minimum: 0 }
+    Template:
+      type: object
+      required: [id, name, cells, dayKcal]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        cells:
+          type: array
+          items:
+            type: object
+            required: [weekday, slot, recipeId, foodId, grams, name, kcal]
+            properties:
+              weekday: { type: integer, minimum: 1, maximum: 7, description: 1 è lunedì }
+              slot: { $ref: "#/components/schemas/MealSlot" }
+              recipeId: { type: [string, "null"], format: uuid }
+              foodId: { type: [string, "null"], format: uuid }
+              grams: { type: [number, "null"] }
+              name: { type: string }
+              kcal: { type: number }
+        dayKcal:
+          type: array
+          minItems: 7
+          maxItems: 7
+          items: { type: number }
+    TemplateInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        cells:
+          type: array
+          maxItems: 35
+          description: Una voce per giorno e slot, con una ricetta o un alimento (mai entrambi).
+          items:
+            type: object
+            required: [weekday, slot]
+            properties:
+              weekday: { type: integer, minimum: 1, maximum: 7 }
+              slot: { $ref: "#/components/schemas/MealSlot" }
+              recipeId: { type: string, format: uuid }
+              foodId: { type: string, format: uuid }
+              food: { type: object, description: Un risultato esterno della ricerca, entra nel catalogo. }
+              grams: { $ref: "#/components/schemas/Grams" }
     Recipe:
       allOf:
         - { $ref: "#/components/schemas/Macros" }

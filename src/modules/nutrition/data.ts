@@ -276,3 +276,46 @@ export const useSaveRecipe = () =>
     id ? recipesSource.update(id, input) : recipesSource.create(input),
   )
 export const useDeleteRecipe = () => useFoodMutation((id: string) => recipesSource.remove(id))
+
+// Template settimanali (/api/v1/nutrition/templates, NUT-010). `weekday` da
+// 1 (lunedì) a 7; `dayKcal` le kcal di ogni giorno.
+export type TemplateCell = {
+  weekday: number
+  slot: SlotId
+  recipeId: string | null
+  foodId: string | null
+  grams: number | null
+  name: string
+  kcal: number
+}
+
+export type Template = { id: string; name: string; cells: TemplateCell[]; dayKcal: number[] }
+
+export type TemplateCellInput = { weekday: number; slot: SlotId } & (
+  { recipeId: string } | { foodId: string; grams: number } | { food: Omit<Food, 'id'>; grams: number }
+)
+
+export type TemplateInput = { name: string; cells: TemplateCellInput[] }
+
+export type ApplyResult = { created: number; replaced: number; kept: number }
+
+export const templatesSource = {
+  list: () => api.get<{ templates: Template[] }>('/nutrition/templates'),
+  create: (input: TemplateInput) => api.post<Template>('/nutrition/templates', input),
+  update: (id: string, input: TemplateInput) => api.put<Template>(`/nutrition/templates/${id}`, input),
+  remove: (id: string) => api.delete<void>(`/nutrition/templates/${id}`),
+  apply: (id: string, monday: string) =>
+    api.post<ApplyResult>(`/nutrition/templates/${id}/apply`, { monday }),
+}
+
+export function useTemplates() {
+  return useQuery({ queryKey: ['nutrition', 'templates'], queryFn: () => templatesSource.list() })
+}
+
+export const useSaveTemplate = () =>
+  useFoodMutation(({ id, input }: { id?: string; input: TemplateInput }) =>
+    id ? templatesSource.update(id, input) : templatesSource.create(input),
+  )
+export const useDeleteTemplate = () => useFoodMutation((id: string) => templatesSource.remove(id))
+export const useApplyTemplate = () =>
+  useFoodMutation(({ id, monday }: { id: string; monday: string }) => templatesSource.apply(id, monday))

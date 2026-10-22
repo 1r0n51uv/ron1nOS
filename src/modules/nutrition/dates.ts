@@ -37,3 +37,18 @@ export function eyebrowDay(day: string) {
 export function stripDays(today: string) {
   return Array.from({ length: 24 }, (_, i) => addDays(today, i - 10))
 }
+
+export function mondayOf(day: string) {
+  const w = at(day).getUTCDay()
+  return addDays(day, w === 0 ? -6 : 1 - w)
+}
+
+// "19–25 ott", o "26 ott–1 nov" a cavallo di due mesi.
+export function weekRange(monday: string) {
+  const sunday = addDays(monday, 6)
+  const month = (d: string) =>
+    at(d).toLocaleDateString('it-IT', { month: 'short', timeZone: 'UTC' }).replace('.', '')
+  return month(monday) === month(sunday)
+    ? `${dayOfMonth(monday)}–${dayOfMonth(sunday)} ${month(sunday)}`
+    : `${dayOfMonth(monday)} ${month(monday)}–${dayOfMonth(sunday)} ${month(sunday)}`
+}
