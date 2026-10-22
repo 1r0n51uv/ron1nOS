@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from '@testing-library/react'
+import { act, fireEvent, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Button } from '@/components/ui/button'
@@ -6,13 +6,14 @@ import { ApiError } from '@/lib/api'
 import { renderWithProviders } from '@/test/render'
 import type * as data from '../data'
 import type { Food } from '../data'
-import { useFoodSearch, useLogMeal } from '../data'
+import { useCreateFood, useFoodSearch, useLogMeal } from '../data'
 import { AddMealDialog } from './AddMealDialog'
 
 vi.mock('../data', async (importOriginal) => ({
   ...(await importOriginal<typeof data>()),
   useFoodSearch: vi.fn(),
   useLogMeal: vi.fn(),
+  useCreateFood: vi.fn(),
 }))
 
 const food = (over: Partial<Food>): Food => ({
@@ -49,10 +50,13 @@ const fage = food({
 })
 
 const mutate = vi.fn()
+const createFood = vi.fn()
 let logError: unknown = null
 beforeEach(() => {
   mutate.mockReset()
+  createFood.mockReset()
   logError = null
+  vi.mocked(useCreateFood).mockReturnValue({ mutate: createFood, isPending: false, error: null } as never)
   vi.mocked(useLogMeal).mockImplementation(
     () => ({ mutate, isPending: false, error: logError }) as unknown as ReturnType<typeof useLogMeal>,
   )
@@ -140,5 +144,30 @@ describe('AddMealDialog (NUT-003)', () => {
     const dialog = open()
     expect(within(dialog).getByText('Pasto non registrato.')).toBeInTheDocument()
     expect(within(dialog).getByText('Database non disponibile')).toBeInTheDocument()
+  })
+
+  it('Nuovo alimento: lo crea e lo sceglie, col nome della ricerca', async () => {
+    const dialog = open()
+    fireEvent.change(within(dialog).getByLabelText('Cerca un alimento'), { target: { value: 'granola' } })
+    fireEvent.mouseDown(within(dialog).getByRole('tab', { name: 'Nuovo alimento' }))
+    const form = within(dialog).getByRole('form', { name: 'Alimento personale' })
+    expect(within(form).getByLabelText('Nome')).toHaveValue('granola')
+    for (const [label, v] of [
+      ['Calorie', '450'],
+      ['Proteine', '10'],
+      ['Carboidrati', '60'],
+      ['Grassi', '18'],
+      [/Porzione/, '40'],
+    ] as const) {
+      fireEvent.change(within(form).getByLabelText(label), { target: { value: v } })
+    }
+    fireEvent.click(within(form).getByRole('button', { name: 'Crea e scegli' }))
+    expect(createFood.mock.calls[0][0]).toMatchObject({ name: 'granola', kcal: 450, servingSizeG: 40 })
+
+    const created = food({ id: 'f9', source: 'custom', name: 'granola', kcal: 450, servingSizeG: 40 })
+    act(() => createFood.mock.calls[0][1].onSuccess(created))
+    expect(within(dialog).getByRole('tab', { name: 'Cerca' })).toHaveAttribute('aria-selected', 'true')
+    expect(within(dialog).getByRole('group', { name: 'Alimento scelto' })).toHaveTextContent('granola')
+    expect(within(dialog).getByLabelText('Quantità in grammi')).toHaveValue(40)
   })
 })

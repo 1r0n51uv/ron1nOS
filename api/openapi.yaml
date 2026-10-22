@@ -314,6 +314,85 @@ paths:
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/foods:
+    get:
+      summary: Alimenti personali, per nome (NUT-006)
+      operationId: listCustomFoods
+      responses:
+        "200":
+          description: Gli alimenti con `source` custom.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [foods]
+                properties:
+                  foods:
+                    type: array
+                    items: { $ref: "#/components/schemas/Food" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    post:
+      summary: Crea un alimento personale (NUT-006)
+      description: Valori per 100 g. Marca, codice a barre, porzione e caffeina facoltativi; una stringa vuota vale null.
+      operationId: createCustomFood
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CustomFoodInput" }
+      responses:
+        "201":
+          description: Alimento creato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Food" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "409":
+          description: "`barcode_exists`: il codice a barre è già di un altro alimento."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/foods/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      summary: Modifica un alimento personale (NUT-006)
+      description: Cambiano solo i campi mandati. I pasti già registrati tengono i valori copiati.
+      operationId: updateCustomFood
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CustomFoodPatch" }
+      responses:
+        "200":
+          description: Alimento aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Food" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: "`food_not_custom` (alimento di un'altra fonte) o `barcode_exists`."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    delete:
+      summary: Elimina un alimento personale (NUT-006)
+      description: I pasti già registrati restano, senza collegamento all'alimento.
+      operationId: deleteCustomFood
+      responses:
+        "204": { description: Eliminato. }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: "`food_not_custom`: si eliminano solo gli alimenti personali."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/foods/search:
     get:
       summary: Ricerca alimenti su catalogo locale, OpenFoodFacts e USDA (NUT-004)
@@ -463,6 +542,35 @@ components:
         fat: { type: number }
         caffeineMg: { type: [number, "null"] }
         yazioProductId: { type: [string, "null"] }
+    CustomFoodInput:
+      type: object
+      description: Alimento personale, valori per 100 g.
+      required: [name, kcal, protein, carbs, fat]
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        brand: { type: [string, "null"], maxLength: 200 }
+        barcode: { type: [string, "null"], pattern: "^\\d{6,14}$" }
+        servingSizeG: { type: [number, "null"], minimum: 0, maximum: 10000 }
+        kcal: { type: number, minimum: 0, maximum: 900 }
+        protein: { type: number, minimum: 0, maximum: 100 }
+        carbs: { type: number, minimum: 0, maximum: 100 }
+        fat: { type: number, minimum: 0, maximum: 100 }
+        caffeineMg: { type: [number, "null"], minimum: 0 }
+    CustomFoodPatch:
+      type: object
+      description: I campi di CustomFoodInput da cambiare, tutti facoltativi.
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        brand: { type: [string, "null"], maxLength: 200 }
+        barcode: { type: [string, "null"], pattern: "^\\d{6,14}$" }
+        servingSizeG: { type: [number, "null"], minimum: 0, maximum: 10000 }
+        kcal: { type: number, minimum: 0, maximum: 900 }
+        protein: { type: number, minimum: 0, maximum: 100 }
+        carbs: { type: number, minimum: 0, maximum: 100 }
+        fat: { type: number, minimum: 0, maximum: 100 }
+        caffeineMg: { type: [number, "null"], minimum: 0 }
     Grams:
       type: number
       exclusiveMinimum: 0
@@ -675,6 +783,8 @@ components:
             - database_unavailable
             - invalid_request
             - goals_from_yazio
+            - barcode_exists
+            - food_not_custom
             - not_found
             - internal
         message: { type: string, description: Messaggio in italiano da mostrare. }

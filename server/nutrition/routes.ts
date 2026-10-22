@@ -5,6 +5,7 @@ import { z } from 'zod'
 
 import type { Database, Db } from '../db.ts'
 import { DatabaseUnavailableError } from '../db.ts'
+import { createCustom, deleteCustom, listCustom, updateCustom } from './custom.ts'
 import { localHour, today } from './dates.ts'
 import { getDay } from './day.ts'
 import type { ExternalSearch } from './foodsearch.ts'
@@ -53,6 +54,36 @@ const MealInput = z.object({
     .min(1)
     .max(30),
 })
+
+// Alimento personale: i campi facoltativi accettano null o stringa vuota.
+const blank = (v: unknown) => (typeof v === 'string' && v.trim() === '' ? null : v)
+const CustomFields = {
+  name: z.string().trim().min(1).max(200),
+  brand: z.preprocess(blank, z.string().trim().max(200).nullable()),
+  barcode: z.preprocess(
+    blank,
+    z
+      .string()
+      .regex(/^\d{6,14}$/)
+      .nullable(),
+  ),
+  servingSizeG: Amount.max(10_000).nullable(),
+  kcal: Amount.max(900),
+  protein: Amount.max(100),
+  carbs: Amount.max(100),
+  fat: Amount.max(100),
+  caffeineMg: Amount.max(100_000).nullable(),
+}
+const CustomFoodInput = z.object({
+  ...CustomFields,
+  brand: CustomFields.brand.optional().transform((v) => v ?? null),
+  barcode: CustomFields.barcode.optional().transform((v) => v ?? null),
+  servingSizeG: CustomFields.servingSizeG.optional().transform((v) => v ?? null),
+  caffeineMg: CustomFields.caffeineMg.optional().transform((v) => v ?? null),
+})
+const CustomFoodPatch = z.object(CustomFields).partial().strict()
+
+const FoodId = z.uuid()
 
 const offline: ExternalSearch = { off: async () => [], usda: async () => [], offBarcode: async () => null }
 
@@ -108,6 +139,25 @@ export function nutritionRoutes({
     const q = c.req.query('q') ?? ''
     const italy = c.req.query('italy') !== '0'
     return c.json(await searchFoods({ db: c.get('db'), external }, q, { italy }))
+  })
+
+  // Alimenti personali (NUT-006).
+  app.get('/foods', async (c) => c.json({ foods: await listCustom(c.get('db')) }))
+
+  app.post('/foods', async (c) => {
+    const input = await readJson(c, CustomFoodInput)
+    return c.json(await createCustom(c.get('db'), input), 201)
+  })
+
+  app.patch('/foods/:id', async (c) => {
+    const id = check(FoodId, c.req.param('id'))
+    const input = await readJson(c, CustomFoodPatch)
+    return c.json(await updateCustom(c.get('db'), id, input))
+  })
+
+  app.delete('/foods/:id', async (c) => {
+    await deleteCustom(c.get('db'), check(FoodId, c.req.param('id')))
+    return c.body(null, 204)
   })
 
   app.get('/goals', async (c) => {

@@ -189,3 +189,36 @@ export function useLogMeal() {
     },
   })
 }
+
+// Alimenti personali (/api/v1/nutrition/foods, NUT-006). Valori per 100 g.
+export type CustomFoodInput = Pick<
+  Food,
+  'name' | 'brand' | 'barcode' | 'servingSizeG' | 'kcal' | 'protein' | 'carbs' | 'fat' | 'caffeineMg'
+>
+
+export const customFoodsSource = {
+  list: () => api.get<{ foods: Food[] }>('/nutrition/foods'),
+  create: (input: CustomFoodInput) => api.post<Food>('/nutrition/foods', input),
+  update: (id: string, input: Partial<CustomFoodInput>) => api.patch<Food>(`/nutrition/foods/${id}`, input),
+  remove: (id: string) => api.delete<void>(`/nutrition/foods/${id}`),
+}
+
+export function useCustomFoods() {
+  return useQuery({ queryKey: ['nutrition', 'custom-foods'], queryFn: () => customFoodsSource.list() })
+}
+
+function useFoodMutation<A, R>(fn: (args: A) => Promise<R>) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => client.invalidateQueries({ queryKey: ['nutrition'] }),
+  })
+}
+
+export const useCreateFood = () =>
+  useFoodMutation((input: CustomFoodInput) => customFoodsSource.create(input))
+export const useUpdateFood = () =>
+  useFoodMutation(({ id, input }: { id: string; input: Partial<CustomFoodInput> }) =>
+    customFoodsSource.update(id, input),
+  )
+export const useDeleteFood = () => useFoodMutation((id: string) => customFoodsSource.remove(id))
