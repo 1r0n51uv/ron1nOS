@@ -1,5 +1,7 @@
 import { Route, Routes } from 'react-router'
 
+import { LoginPage } from '@/auth/LoginPage'
+import { RequireAuth } from '@/auth/RequireAuth'
 import { AppShell } from '@/layout/AppShell'
 import { ComingSoon } from '@/pages/ComingSoon'
 import { MealsPage } from '@/modules/nutrition/page/MealsPage'
@@ -12,18 +14,21 @@ import { Settings } from '@/pages/Settings'
 export default function App() {
   return (
     <Routes>
-      <Route element={<AppShell />}>
-        <Route index element={<Dashboard />} />
-        <Route path="pasti" element={<MealsPage />} />
-        <Route path="pasti/ricette" element={<RecipesPage />} />
-        <Route path="pasti/template" element={<TemplatesPage />} />
-        <Route path="pasti/andamento" element={<ReportPage />} />
-        <Route path="allenamenti" element={<ComingSoon title="Allenamenti" />} />
-        <Route path="note" element={<ComingSoon title="Note" />} />
-        <Route path="casa" element={<ComingSoon title="Casa" />} />
-        <Route path="server" element={<ComingSoon title="Server e container" />} />
-        <Route path="impostazioni" element={<Settings />} />
-        <Route path="*" element={<ComingSoon title="Pagina non trovata" />} />
+      <Route path="login" element={<LoginPage />} />
+      <Route element={<RequireAuth />}>
+        <Route element={<AppShell />}>
+          <Route index element={<Dashboard />} />
+          <Route path="pasti" element={<MealsPage />} />
+          <Route path="pasti/ricette" element={<RecipesPage />} />
+          <Route path="pasti/template" element={<TemplatesPage />} />
+          <Route path="pasti/andamento" element={<ReportPage />} />
+          <Route path="allenamenti" element={<ComingSoon title="Allenamenti" />} />
+          <Route path="note" element={<ComingSoon title="Note" />} />
+          <Route path="casa" element={<ComingSoon title="Casa" />} />
+          <Route path="server" element={<ComingSoon title="Server e container" />} />
+          <Route path="impostazioni" element={<Settings />} />
+          <Route path="*" element={<ComingSoon title="Pagina non trovata" />} />
+        </Route>
       </Route>
     </Routes>
   )

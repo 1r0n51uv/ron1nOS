@@ -1,6 +1,7 @@
 import { serve } from '@hono/node-server'
 
 import { createApp } from './app.ts'
+import { isPasswordHash } from './auth/password.ts'
 import { loadConfig } from './config.ts'
 import { createDb, startDatabase } from './db.ts'
 import { createDraftService } from './drafts.ts'
@@ -16,6 +17,12 @@ import { dbTokenStore } from './yazio/tokens.ts'
 const config = loadConfig()
 if (!config.qbt.username || !config.qbt.password) {
   console.warn('QBT_USERNAME o QBT_PASSWORD mancanti: il modulo Download risponderà con errore di accesso')
+}
+
+if (!config.auth.passwordHash) {
+  console.warn('AUTH_PASSWORD_HASH mancante: login spento, la dashboard è aperta a chi è nella tailnet')
+} else if (!isPasswordHash(config.auth.passwordHash)) {
+  console.warn('AUTH_PASSWORD_HASH non valido: rigeneralo con npm run auth:hash')
 }
 
 if (!config.databaseUrl) console.warn('DATABASE_URL mancante: il modulo Nutrizione risponderà con errore')
@@ -40,6 +47,7 @@ const app = createApp({
   staticDir: config.staticDir,
   database,
   nutrition: { external: createExternalSearch(config.foods), sync },
+  auth: config.auth,
 })
 
 // Bozze orfane del wizard: all'avvio e ogni ora.

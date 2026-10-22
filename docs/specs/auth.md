@@ -20,7 +20,7 @@ di login nel
 
 #### AUTH-001 · Pagina di login
 
-Stato: pianificato (#97)
+Stato: fatto (#97)
 
 Accettazione:
 
@@ -32,7 +32,7 @@ Accettazione:
 
 #### AUTH-002 · Sessione web
 
-Stato: pianificato (#98)
+Stato: fatto (#98)
 
 Accettazione:
 
@@ -46,7 +46,7 @@ Accettazione:
 
 #### AUTH-003 · API protette
 
-Stato: pianificato (#99)
+Stato: fatto (#99)
 
 Accettazione:
 
@@ -58,7 +58,7 @@ Accettazione:
 
 #### AUTH-004 · Limite ai tentativi
 
-Stato: pianificato (#100)
+Stato: fatto (#100)
 
 Accettazione:
 
