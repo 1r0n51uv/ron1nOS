@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
 import { E2E_DATABASE_URL } from './e2e/db.ts'
+import { FAKE_CLIENT, FAKE_USER } from './server/testing/fake-yazio.ts'
 
 // E2E sulla build di produzione servita dal backend. In CI il browser
 // arriva da `npx playwright install`; in locale si può indicare un Chromium
@@ -50,6 +51,11 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
+      command: 'node e2e/fake-yazio.ts',
+      url: 'http://localhost:18084/__fake/health',
+      reuseExistingServer: !process.env.CI,
+    },
+    {
       command: 'node dist-server/index.js',
       url: 'http://localhost:4173/api/v1/health',
       reuseExistingServer: !process.env.CI,
@@ -67,6 +73,12 @@ export default defineConfig({
         OFF_URL: 'http://localhost:18083/off',
         OFF_ITALY_URL: 'http://localhost:18083/off-it',
         USDA_URL: 'http://localhost:18083/usda',
+        YAZIO_URL: 'http://localhost:18084/v20',
+        YAZIO_CLIENT_ID: FAKE_CLIENT.id,
+        YAZIO_CLIENT_SECRET: FAKE_CLIENT.secret,
+        YAZIO_USERNAME: FAKE_USER.username,
+        YAZIO_PASSWORD: FAKE_USER.password,
+        YAZIO_TOKEN_KEY: 'chiave-e2e',
       },
     },
   ],

@@ -56,7 +56,8 @@ YAZIO passa solo da [`server/yazio`](server/yazio): login con password
 grant, token cifrati in Postgres con `YAZIO_TOKEN_KEY`, risposte validate con
 zod (un formato cambiato diventa `yazio_format_changed`), nuovi tentativi
 su 429, 5xx e rete. I test usano il YAZIO finto di
-`server/testing/fake-yazio.ts`, mai quello vero; le prove con l'account vero
+`server/testing/fake-yazio.ts` (negli e2e su `e2e/fake-yazio.ts`), mai quello
+vero; le prove con l'account vero
 si fanno a mano con [`scripts/yazio-probe`](scripts/yazio-probe/README.md).
 
 ### Qualità del codice

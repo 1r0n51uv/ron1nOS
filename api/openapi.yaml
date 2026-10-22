@@ -716,6 +716,60 @@ paths:
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/yazio:
+    get:
+      summary: Stato del collegamento a YAZIO (NUT-020)
+      description: >
+        Le credenziali stanno solo nel .env del server: qui arrivano lo
+        stato, il motivo di un errore e l'ora dell'ultimo giro riuscito.
+      operationId: getYazioLink
+      responses:
+        "200":
+          description: Lo stato del collegamento.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/YazioLink" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/yazio/sync:
+    put:
+      summary: Accende o spegne la sincronizzazione con YAZIO (NUT-020)
+      description: Spegnerla non cancella né i dati né i token.
+      operationId: setYazioSync
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enabled]
+              properties:
+                enabled: { type: boolean }
+      responses:
+        "200":
+          description: Lo stato aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/YazioLink" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    post:
+      summary: Sincronizza ora (NUT-020)
+      description: >
+        Un giro di sincronizzazione subito. Un errore di YAZIO non dà un
+        errore HTTP: finisce in `state` ed `error` della risposta.
+      operationId: syncYazio
+      responses:
+        "200":
+          description: Lo stato dopo il giro.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/YazioLink" }
+        "409":
+          description: "`yazio_not_configured`: mancano le variabili YAZIO_*; `yazio_sync_off`: sincronizzazione spenta."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/shopping:
     get:
       summary: Lista della spesa (NUT-011)
@@ -1179,6 +1233,16 @@ components:
         carbs: { type: number, minimum: 0, maximum: 100 }
         fat: { type: number, minimum: 0, maximum: 100 }
         caffeineMg: { type: [number, "null"], minimum: 0 }
+    YazioLink:
+      type: object
+      required: [configured, state, error, lastSyncAt, syncEnabled]
+      properties:
+        configured:
+          { type: boolean, description: "false se mancano le variabili YAZIO_* nel .env del server" }
+        state: { type: string, enum: [connected, disconnected, error] }
+        error: { type: [string, "null"], description: Il motivo dell'errore, in italiano }
+        lastSyncAt: { type: [string, "null"], format: date-time, description: Ultimo giro riuscito }
+        syncEnabled: { type: boolean }
     Supplement:
       type: object
       required: [id, name, dose, schedule, active]
