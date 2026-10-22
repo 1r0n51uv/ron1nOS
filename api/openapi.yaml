@@ -629,6 +629,93 @@ paths:
               schema: { $ref: "#/components/schemas/NutritionDay" }
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/supplements:
+    get:
+      summary: Elenco degli integratori (NUT-014)
+      operationId: listSupplements
+      responses:
+        "200":
+          description: Prima gli attivi, poi i disattivati, in ordine di creazione.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [supplements]
+                properties:
+                  supplements:
+                    type: array
+                    items: { $ref: "#/components/schemas/Supplement" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    post:
+      summary: Aggiunge un integratore (NUT-014)
+      operationId: createSupplement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SupplementInput" }
+      responses:
+        "201":
+          description: L'integratore creato, attivo.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Supplement" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/supplements/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      summary: Modifica, disattiva o riattiva un integratore (NUT-014)
+      operationId: updateSupplement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SupplementPatch" }
+      responses:
+        "200":
+          description: L'integratore aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Supplement" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    delete:
+      summary: Elimina un integratore (NUT-014)
+      description: Si cancellano anche le spunte dei giorni passati.
+      operationId: deleteSupplement
+      responses:
+        "204": { description: Eliminato. }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/supplements/{id}/taken:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      summary: Spunta un integratore in un giorno (NUT-014)
+      operationId: setSupplementTaken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, taken]
+              properties:
+                date: { type: string, format: date }
+                taken: { type: boolean }
+      responses:
+        "200":
+          description: Il giorno aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NutritionDay" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/shopping:
     get:
       summary: Lista della spesa (NUT-011)
@@ -1092,6 +1179,30 @@ components:
         carbs: { type: number, minimum: 0, maximum: 100 }
         fat: { type: number, minimum: 0, maximum: 100 }
         caffeineMg: { type: [number, "null"], minimum: 0 }
+    Supplement:
+      type: object
+      required: [id, name, dose, schedule, active]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        dose: { type: [string, "null"], description: Testo libero, per esempio 5 g. }
+        schedule: { type: [string, "null"], description: Quando, per esempio mattina. }
+        active: { type: boolean }
+    SupplementInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        dose: { type: [string, "null"], maxLength: 80, description: Vuota diventa null. }
+        schedule: { type: [string, "null"], maxLength: 80, description: Vuoto diventa null. }
+    SupplementPatch:
+      type: object
+      description: I campi assenti restano com'erano.
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        dose: { type: [string, "null"], maxLength: 80 }
+        schedule: { type: [string, "null"], maxLength: 80 }
+        active: { type: boolean }
     CustomFoodPatch:
       type: object
       description: I campi di CustomFoodInput da cambiare, tutti facoltativi.
@@ -1227,7 +1338,8 @@ components:
       enum: [breakfast, morning_snack, lunch, afternoon_snack, dinner]
     NutritionDay:
       type: object
-      required: [date, goal, totals, plannedKcal, slots, suggestedSlot, nextSlot, waterMl, caffeine]
+      required:
+        [date, goal, totals, plannedKcal, slots, suggestedSlot, nextSlot, waterMl, caffeine, supplements]
       properties:
         date: { type: string, format: date }
         goal:
@@ -1269,6 +1381,20 @@ components:
           properties:
             totalMg: { type: integer, minimum: 0 }
             mealsMg: { type: integer, minimum: 0, description: La parte dai pasti. }
+        supplements:
+          description: >
+            La checklist degli integratori (NUT-014): gli attivi più quelli
+            presi quel giorno.
+          type: array
+          items:
+            type: object
+            required: [id, name, dose, schedule, taken]
+            properties:
+              id: { type: string, format: uuid }
+              name: { type: string }
+              dose: { type: [string, "null"] }
+              schedule: { type: [string, "null"] }
+              taken: { type: boolean }
     NutritionSlot:
       type: object
       required: [slot, state, meal, planned]

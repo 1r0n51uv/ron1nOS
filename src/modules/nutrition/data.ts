@@ -91,7 +91,22 @@ export type Day = {
   waterMl: number
   // Caffeina del giorno (NUT-013): il totale e la parte dai pasti.
   caffeine: { totalMg: number; mealsMg: number }
+  // La checklist degli integratori del giorno (NUT-014).
+  supplements: DaySupplement[]
 }
+
+// Integratori (/api/v1/nutrition/supplements, NUT-014).
+export type Supplement = {
+  id: string
+  name: string
+  dose: string | null
+  schedule: string | null
+  active: boolean
+}
+
+export type SupplementInput = Pick<Supplement, 'name' | 'dose' | 'schedule'>
+
+export type DaySupplement = Omit<Supplement, 'active'> & { taken: boolean }
 
 export const daySource = {
   get: (date: string) => api.get<Day>(`/nutrition/day?date=${date}`),
@@ -396,3 +411,29 @@ export const useToggleShopping = () =>
   )
 export const useDeleteShopping = () => useShoppingMutation((id: string) => shoppingSource.remove(id))
 export const useClearChecked = () => useShoppingMutation(() => shoppingSource.clearChecked())
+
+export const supplementsSource = {
+  list: () => api.get<{ supplements: Supplement[] }>('/nutrition/supplements'),
+  create: (input: SupplementInput) => api.post<Supplement>('/nutrition/supplements', input),
+  update: (id: string, patch: Partial<SupplementInput & { active: boolean }>) =>
+    api.patch<Supplement>(`/nutrition/supplements/${id}`, patch),
+  remove: (id: string) => api.delete<void>(`/nutrition/supplements/${id}`),
+  taken: (id: string, date: string, taken: boolean) =>
+    api.put<Day>(`/nutrition/supplements/${id}/taken`, { date, taken }),
+}
+
+export function useSupplements() {
+  return useQuery({ queryKey: ['nutrition', 'supplements'], queryFn: () => supplementsSource.list() })
+}
+
+export const useCreateSupplement = () =>
+  useFoodMutation((input: SupplementInput) => supplementsSource.create(input))
+export const useUpdateSupplement = () =>
+  useFoodMutation(({ id, patch }: { id: string; patch: Partial<SupplementInput & { active: boolean }> }) =>
+    supplementsSource.update(id, patch),
+  )
+export const useDeleteSupplement = () => useFoodMutation((id: string) => supplementsSource.remove(id))
+export const useSetTaken = () =>
+  useDayMutation(({ id, date, taken }: { id: string; date: string; taken: boolean }) =>
+    supplementsSource.taken(id, date, taken),
+  )
