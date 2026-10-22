@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router'
 import { AppShell } from '@/layout/AppShell'
 import { ComingSoon } from '@/pages/ComingSoon'
 import { Dashboard } from '@/pages/Dashboard'
+import { Settings } from '@/pages/Settings'
 
 export default function App() {
   return (
@@ -14,7 +15,7 @@ export default function App() {
         <Route path="note" element={<ComingSoon title="Note" />} />
         <Route path="casa" element={<ComingSoon title="Casa" />} />
         <Route path="server" element={<ComingSoon title="Server e container" />} />
-        <Route path="impostazioni" element={<ComingSoon title="Impostazioni" />} />
+        <Route path="impostazioni" element={<Settings />} />
         <Route path="*" element={<ComingSoon title="Pagina non trovata" />} />
       </Route>
     </Routes>

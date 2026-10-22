@@ -22,6 +22,9 @@ import type { GlancesClient } from './glances.ts'
 import { GlancesUnreachableError } from './glances.ts'
 import type { QbtClient } from './qbittorrent.ts'
 import { QbtAuthError, QbtUnreachableError } from './qbittorrent.ts'
+import { ConflictError, InvalidRequestError, NotFoundError } from './nutrition/http.ts'
+import type { NutritionDeps } from './nutrition/routes.ts'
+import { nutritionRoutes } from './nutrition/routes.ts'
 import { InvalidTorrentError, MAX_TORRENT_BYTES, parseTorrent } from './torrentfile.ts'
 
 export type ApiError = {
@@ -39,6 +42,7 @@ type Deps = {
   glances?: GlancesClient
   fetchTorrent?: (url: string) => Promise<Buffer>
   database?: Database
+  nutrition?: Omit<NutritionDeps, 'database'>
 }
 
 class InvalidLinkError extends Error {}
@@ -50,6 +54,7 @@ export function createApp({
   glances,
   fetchTorrent = defaultFetchTorrent,
   database = { status: () => 'disabled' },
+  nutrition = {},
 }: Deps) {
   const app = new Hono()
 
@@ -127,6 +132,9 @@ export function createApp({
     return c.json(await glances.stats())
   })
 
+  // Modulo Nutrizione (docs/specs/nutrition.md): dati propri in Postgres.
+  app.route('/api/v1/nutrition', nutritionRoutes({ ...nutrition, database }))
+
   app.all('/api/*', (c) => c.json<ApiError>({ error: 'not_found', message: 'Rotta non trovata' }, 404))
 
   app.onError((err, c) => {
@@ -139,6 +147,15 @@ export function createApp({
     if (err instanceof DatabaseUnavailableError) {
       console.warn(`database non raggiungibile: ${err.message}`)
       return c.json<ApiError>({ error: 'database_unavailable', message: 'Database non raggiungibile' }, 503)
+    }
+    if (err instanceof InvalidRequestError) {
+      return c.json<ApiError>({ error: 'invalid_request', message: err.message }, 400)
+    }
+    if (err instanceof NotFoundError) {
+      return c.json<ApiError>({ error: 'not_found', message: err.message }, 404)
+    }
+    if (err instanceof ConflictError) {
+      return c.json<ApiError>({ error: err.code, message: err.message }, 409)
     }
     if (err instanceof GlancesUnreachableError) {
       return c.json<ApiError>({ error: 'glances_unreachable', message: 'Glances non raggiungibile' }, 503)
