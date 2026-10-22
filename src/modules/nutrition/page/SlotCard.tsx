@@ -1,7 +1,10 @@
+import { Icon } from '@/components/ron1n'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { num } from '@/lib/format'
 import type { SlotDay } from '../data'
 import { SLOT_LABELS } from '../data'
+import { AddMealDialog } from '../log/AddMealDialog'
 
 const STATE_TAG: Record<SlotDay['state'], string | null> = {
   empty: null,
@@ -12,7 +15,7 @@ const STATE_TAG: Record<SlotDay['state'], string | null> = {
 
 // Uno slot del giorno nei suoi stati (NUT-002): vuoto, pianificato,
 // mangiato o saltato.
-export function SlotCard({ slot }: { slot: SlotDay }) {
+export function SlotCard({ date, slot }: { date: string; slot: SlotDay }) {
   const label = SLOT_LABELS[slot.slot]
   const tag = STATE_TAG[slot.state]
   const planned = slot.state === 'planned' ? slot.planned : null
@@ -39,6 +42,11 @@ export function SlotCard({ slot }: { slot: SlotDay }) {
         ) : planned ? (
           <span className="font-mono text-[15px] text-ink-muted">{num(planned.kcal)} kcal</span>
         ) : null}
+        <AddMealDialog date={date} slot={slot.slot}>
+          <Button variant="glass" size="icon" className="size-9" aria-label={`Registra in ${label}`}>
+            <Icon name="plus" size={16} />
+          </Button>
+        </AddMealDialog>
       </div>
 
       {slot.meal ? (

@@ -26,6 +26,7 @@ function day(date: string, over: Partial<Day> = {}): Day {
     goal: { kcal: 2021, protein: 126, carbs: 227, fat: 67, waterMl: 2500 },
     totals: { kcal: 285, protein: 23.5, carbs: 36.6, fat: 3.5 },
     plannedKcal: 445,
+    suggestedSlot: null,
     slots: [
       {
         slot: 'breakfast',

@@ -1,11 +1,13 @@
 import { useSearchParams } from 'react-router'
 
-import { AlertRow } from '@/components/ron1n'
+import { AlertRow, Icon } from '@/components/ron1n'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useNow } from '@/hooks/useNow'
 import { ApiError } from '@/lib/api'
 import { useDay } from '../data'
 import { eyebrowDay, isDay, todayRome } from '../dates'
+import { AddMealDialog } from '../log/AddMealDialog'
 import { DayStrip } from './DayStrip'
 import { DaySummary } from './DaySummary'
 import { SlotCard } from './SlotCard'
@@ -22,9 +24,17 @@ export function MealsPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1.5">
-        <div className="eyebrow">{eyebrowDay(date)}</div>
-        <h1 className="m-0 font-display text-[44px] leading-[48px] font-bold">Pasti</h1>
+      <div className="flex items-end justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
+          <div className="eyebrow">{eyebrowDay(date)}</div>
+          <h1 className="m-0 font-display text-[44px] leading-[48px] font-bold">Pasti</h1>
+        </div>
+        <AddMealDialog date={date} slot={shown?.suggestedSlot ?? 'breakfast'}>
+          <Button disabled={!shown}>
+            <Icon name="plus" size={18} />
+            Registra
+          </Button>
+        </AddMealDialog>
       </div>
 
       <DayStrip today={today} selected={date} />
@@ -38,7 +48,7 @@ export function MealsPage() {
         <div className="flex flex-wrap items-start gap-5">
           <section aria-label="Pasti del giorno" className="flex min-w-0 flex-[999_1_560px] flex-col gap-3.5">
             {shown
-              ? shown.slots.map((s) => <SlotCard key={s.slot} slot={s} />)
+              ? shown.slots.map((s) => <SlotCard key={s.slot} date={date} slot={s} />)
               : Array.from({ length: 5 }, (_, i) => (
                   <Skeleton key={i} aria-busy="true" className="h-20 rounded-panel" />
                 ))}

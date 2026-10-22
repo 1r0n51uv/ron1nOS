@@ -5,12 +5,13 @@ import { z } from 'zod'
 
 import type { Database, Db } from '../db.ts'
 import { DatabaseUnavailableError } from '../db.ts'
-import { today } from './dates.ts'
+import { localHour, today } from './dates.ts'
 import { getDay } from './day.ts'
 import type { ExternalSearch } from './foodsearch.ts'
 import { addGoal, goalFor, goalHistory } from './goals.ts'
 import { check, ConflictError, readJson } from './http.ts'
-import { Amount, Day } from './schemas.ts'
+import { logMeal, slotForHour } from './meals.ts'
+import { Amount, Day, Grams, Slot } from './schemas.ts'
 import { searchFoods } from './search.ts'
 
 export type NutritionDeps = {
@@ -22,6 +23,36 @@ export type NutritionDeps = {
   // OpenFoodFacts e USDA; senza, la ricerca usa solo il catalogo locale.
   external?: ExternalSearch
 }
+
+const Candidate = z.object({
+  source: z.enum(['openfoodfacts', 'usda', 'yazio']),
+  externalId: z.string().min(1).max(100),
+  name: z.string().trim().min(1).max(200),
+  brand: z.string().max(200).nullable().default(null),
+  barcode: z
+    .string()
+    .regex(/^\d{6,14}$/)
+    .nullable()
+    .default(null),
+  servingSizeG: Amount.nullable().default(null),
+  kcal: Amount.max(900),
+  protein: Amount.max(100),
+  carbs: Amount.max(100),
+  fat: Amount.max(100),
+  caffeineMg: Amount.max(100_000).nullable().default(null),
+  yazioProductId: z.string().max(100).nullable().default(null),
+})
+
+const MealInput = z.object({
+  date: Day,
+  slot: Slot,
+  items: z
+    .array(
+      z.union([z.object({ foodId: z.uuid(), grams: Grams }), z.object({ food: Candidate, grams: Grams })]),
+    )
+    .min(1)
+    .max(30),
+})
 
 const offline: ExternalSearch = { off: async () => [], usda: async () => [], offBarcode: async () => null }
 
@@ -49,10 +80,26 @@ export function nutritionRoutes({
     await next()
   })
 
-  // Il giorno completo: slot, totali, obiettivo (NUT-001, NUT-002).
+  // Il giorno completo: slot, totali, obiettivo (NUT-001, NUT-002). Lo slot
+  // proposto è quello dell'ora corrente, solo per oggi (NUT-003).
+  async function dayView(db: Db, day: string) {
+    const suggestedSlot = day === today(now()) ? slotForHour(localHour(now())) : null
+    return { ...(await getDay(db, day)), suggestedSlot }
+  }
+
   app.get('/day', async (c) => {
     const day = c.req.query('date') ? check(Day, c.req.query('date')) : today(now())
-    return c.json(await getDay(c.get('db'), day))
+    return c.json(await dayView(c.get('db'), day))
+  })
+
+  // Registra uno o più alimenti in uno slot di un giorno qualsiasi (NUT-003):
+  // un alimento del catalogo (foodId) o un risultato esterno (food), che
+  // entra nel catalogo adesso. Risponde con il giorno aggiornato.
+  app.post('/meals', async (c) => {
+    const input = await readJson(c, MealInput)
+    const db = c.get('db')
+    await db.tx((tx) => logMeal(tx, { day: input.date, slot: input.slot, items: input.items }))
+    return c.json(await dayView(db, input.date), 201)
   })
 
   // Ricerca su catalogo locale, OpenFoodFacts e USDA (NUT-004). `italy=0`

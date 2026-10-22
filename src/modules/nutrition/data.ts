@@ -114,6 +114,8 @@ export type Day = {
   totals: Macros
   plannedKcal: number
   slots: SlotDay[]
+  // Lo slot dell'ora corrente, solo per oggi (NUT-003).
+  suggestedSlot: SlotId | null
 }
 
 export const daySource = {
@@ -124,5 +126,66 @@ export function useDay(date: string) {
   return useQuery({
     queryKey: ['nutrition', 'day', date],
     queryFn: () => daySource.get(date),
+  })
+}
+
+// Ricerca alimenti (GET /api/v1/nutrition/foods/search, NUT-004). Valori
+// per 100 g; `id` c'è solo per gli alimenti già nel catalogo.
+export type FoodSource = 'custom' | 'openfoodfacts' | 'usda' | 'yazio'
+
+export type Food = {
+  id: string | null
+  source: FoodSource
+  externalId: string | null
+  name: string
+  brand: string | null
+  barcode: string | null
+  servingSizeG: number | null
+  kcal: number
+  protein: number
+  carbs: number
+  fat: number
+  caffeineMg: number | null
+  yazioProductId: string | null
+}
+
+export type FoodSearch = { results: Food[]; unavailable: Exclude<FoodSource, 'custom'>[] }
+
+export const foodsSource = {
+  search: (q: string, italy: boolean) =>
+    api.get<FoodSearch>(`/nutrition/foods/search?q=${encodeURIComponent(q)}${italy ? '' : '&italy=0'}`),
+}
+
+// Sotto i 2 caratteri non si cerca.
+export function useFoodSearch(q: string, italy: boolean) {
+  const query = q.trim()
+  return useQuery({
+    queryKey: ['nutrition', 'foods', query, italy],
+    queryFn: () => foodsSource.search(query, italy),
+    enabled: query.length >= 2,
+    staleTime: 60_000,
+  })
+}
+
+// Registrare un pasto (POST /api/v1/nutrition/meals, NUT-003): un alimento
+// del catalogo per id, uno esterno con i suoi valori.
+export type MealInput = {
+  date: string
+  slot: SlotId
+  items: ({ foodId: string; grams: number } | { food: Omit<Food, 'id'>; grams: number })[]
+}
+
+export const mealsSource = {
+  log: (input: MealInput) => api.post<Day>('/nutrition/meals', input),
+}
+
+export function useLogMeal() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (input: MealInput) => mealsSource.log(input),
+    onSuccess: (day) => {
+      client.setQueryData(['nutrition', 'day', day.date], day)
+      return client.invalidateQueries({ queryKey: ['nutrition'] })
+    },
   })
 }
