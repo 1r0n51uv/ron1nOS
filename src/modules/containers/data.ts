@@ -11,7 +11,7 @@ export type Container = {
 const mock: Container[] = [
   { name: 'caddy', state: 'running' },
   { name: 'postgres', state: 'running' },
-  { name: '1r0-api', state: 'running' },
+  { name: 'glances', state: 'running' },
   { name: 'ron1nos', state: 'running' },
   { name: 'uptime-kuma', state: 'running' },
   { name: 'watchtower', state: 'running' },
@@ -20,7 +20,7 @@ const mock: Container[] = [
   { name: 'jellyfin', state: 'running' },
   { name: 'home-assistant', state: 'running' },
   { name: 'cloudflared', state: 'running' },
-  { name: 'restic', state: 'running' },
+  { name: 'webtop', state: 'running' },
   { name: 'node-exporter', state: 'running' },
   { name: 'adguard', state: 'running' },
 ]
