@@ -20,8 +20,8 @@ con esercizi e obiettivi, modifica delle serie importate, calcolatore dei
 dischi e riscaldamento, peso corporeo accanto ai grafici, allenamenti da
 Apple Salute, progressione suggerita, import dallo storico di pkm.
 
-**Stato del documento: proposto il 2026-10-22**, sulla base delle risposte
-in "Decisioni". Ogni requisito porta l'origine: **pkm** (già fatto in
+**Stato del documento: confermato il 2026-10-22**, con le scelte in
+"Decisioni". Ogni requisito ha la sua issue; la base comune è #118. Ogni requisito porta l'origine: **pkm** (già fatto in
 1r0-pkm), **pkm, cambia** (ripreso con modifiche) o **nuovo**.
 
 ## Requisiti
@@ -30,7 +30,7 @@ in "Decisioni". Ogni requisito porta l'origine: **pkm** (già fatto in
 
 #### GYM-001 · Widget Allenamento
 
-Stato: proposto · Origine: pkm, cambia
+Stato: pianificato (#122) · Origine: pkm, cambia
 
 Il widget in dashboard sostituisce il mock della sessione in corso con
 l'ultimo allenamento e la settimana.
@@ -51,7 +51,7 @@ Accettazione:
 
 #### GYM-002 · Pagina Allenamenti
 
-Stato: proposto · Origine: pkm, cambia
+Stato: pianificato (#123) · Origine: pkm, cambia
 
 Una pagina `/allenamenti` (oggi `ComingSoon`) fatta soprattutto di
 immagini e con pochi numeri. Dall'alto: titolo con una riga di costanza
@@ -75,7 +75,7 @@ Accettazione:
 
 #### GYM-003 · Import del CSV di Liftin'
 
-Stato: proposto · Origine: pkm, cambia
+Stato: pianificato (#119) · Origine: pkm, cambia
 
 Dalla pagina si carica il file esportato da Liftin' (`Date;Duration;
 Routine;Exercise;Set;Warmup;Weight;Reps/Time;Goal;Perception`, separatore
@@ -106,7 +106,7 @@ Accettazione:
 
 #### GYM-004 · Storico delle sessioni
 
-Stato: proposto · Origine: pkm
+Stato: pianificato (#124) · Origine: pkm
 
 Accettazione:
 
@@ -117,7 +117,7 @@ Accettazione:
 
 #### GYM-005 · Dettaglio di una sessione
 
-Stato: proposto · Origine: pkm
+Stato: pianificato (#125) · Origine: pkm
 
 Accettazione:
 
@@ -134,7 +134,7 @@ Accettazione:
 
 #### GYM-006 · Eliminare una sessione
 
-Stato: proposto · Origine: nuovo
+Stato: pianificato (#126) · Origine: nuovo
 
 Unica modifica possibile sui dati importati, per togliere una sessione
 sbagliata. Le correzioni si fanno in Liftin' e si re-importano.
@@ -150,7 +150,7 @@ Accettazione:
 
 #### GYM-007 · Dashboard esercizi
 
-Stato: proposto · Origine: pkm (ADR-0030)
+Stato: pianificato (#127) · Origine: pkm (ADR-0030)
 
 Accettazione:
 
@@ -163,7 +163,7 @@ Accettazione:
 
 #### GYM-008 · Pagina di un esercizio
 
-Stato: proposto · Origine: pkm, cambia
+Stato: pianificato (#128) · Origine: pkm, cambia
 
 Accettazione:
 
@@ -178,7 +178,7 @@ Accettazione:
 
 #### GYM-009 · Elenco degli esercizi
 
-Stato: proposto · Origine: nuovo
+Stato: pianificato (#130) · Origine: nuovo
 
 Accettazione:
 
@@ -191,7 +191,7 @@ Accettazione:
 
 #### GYM-010 · Record personali
 
-Stato: proposto · Origine: nuovo
+Stato: pianificato (#132) · Origine: nuovo
 
 Accettazione:
 
@@ -206,7 +206,7 @@ Accettazione:
 
 #### GYM-011 · Gruppo muscolare di un esercizio
 
-Stato: proposto · Origine: nuovo
+Stato: pianificato (#133) · Origine: nuovo
 
 Il CSV di Liftin' non porta il gruppo muscolare: lo si assegna una volta
 per esercizio e vale per tutto lo storico.
@@ -226,7 +226,7 @@ Accettazione:
 
 #### GYM-012 · Volume per gruppo muscolare
 
-Stato: proposto · Origine: nuovo
+Stato: pianificato (#134) · Origine: nuovo
 
 Accettazione:
 
@@ -239,7 +239,7 @@ Accettazione:
 
 #### GYM-014 · Immagine di un esercizio
 
-Stato: proposto · Origine: nuovo
+Stato: pianificato (#120) · Origine: nuovo
 
 Ogni esercizio ha una foto, presa da
 [free-exercise-db](https://github.com/yuhonas/free-exercise-db): 876
@@ -266,7 +266,7 @@ Accettazione:
 
 #### GYM-013 · Allenamenti della settimana e giorni di fila
 
-Stato: proposto · Origine: pkm
+Stato: pianificato (#121) · Origine: pkm
 
 Accettazione:
 
@@ -338,12 +338,12 @@ Tutti sotto `/api/v1/workout`.
 
 ### Piano di lavoro
 
-1. **Specifica** (questa PR), da confermare.
+1. **Specifica**, confermata il 2026-10-22.
 2. **Mockup** del widget e delle pagine:
    [canvas Modulo Allenamento](https://claude.ai/artifact/PRfY9udWyoGFidTM26i81W)
    (widget in tre stati, pagina `/allenamenti`, import con anteprima,
    dettaglio sessione, pagina di un esercizio, elenco esercizi, scelta
-   dell'immagine), da approvare.
+   dell'immagine), approvati il 2026-10-22.
 3. **Base dati e import**: migrazione, parser e merge, rotte di import.
 4. **API di lettura**: storico, esercizi, record, gruppi, riepilogo.
 5. **Web**: widget, pagina, dialog di import, un pezzo per issue.
