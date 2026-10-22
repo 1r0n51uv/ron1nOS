@@ -42,6 +42,8 @@ export type Day = {
   // Kcal pianificate e non ancora mangiate.
   plannedKcal: number
   slots: SlotDay[]
+  // Acqua bevuta nel giorno (NUT-012).
+  waterMl: number
 }
 
 const zero = (): Macros => ({ kcal: 0, protein: 0, carbs: 0, fat: 0 })
@@ -85,7 +87,7 @@ export function macrosFor(
 }
 
 export async function getDay(db: Queryable, date: string): Promise<Day> {
-  const [goal, items, planned] = await Promise.all([
+  const [goal, items, planned, water] = await Promise.all([
     goalFor(db, date),
     db.query<MealItem & { slot: Slot; mealId: string }>(
       `select i.id, i.food_id as "foodId", i.food_name as name, i.quantity_g as grams, i.calories as kcal,
@@ -122,6 +124,9 @@ export async function getDay(db: Queryable, date: string): Promise<Day> {
         where p.day = $1 order by p.created_at, pi.order_index`,
       [date],
     ),
+    db.query<{ ml: number }>('select coalesce(sum(amount_ml), 0) as ml from water_logs where day = $1', [
+      date,
+    ]),
   ])
 
   const slots: SlotDay[] = SLOTS.map((slot) => {
@@ -188,5 +193,6 @@ export async function getDay(db: Queryable, date: string): Promise<Day> {
     totals: sum(slots.flatMap((s) => (s.meal ? [s.meal] : []))),
     plannedKcal: slots.reduce((a, s) => a + (s.state === 'planned' ? (s.planned?.kcal ?? 0) : 0), 0),
     slots,
+    waterMl: Math.round(water.rows[0].ml),
   }
 }

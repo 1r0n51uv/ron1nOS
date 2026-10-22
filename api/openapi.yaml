@@ -550,6 +550,45 @@ paths:
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/water:
+    post:
+      summary: Aggiunge acqua al giorno (NUT-012)
+      operationId: addWater
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date]
+              properties:
+                date: { type: string, format: date }
+                ml: { type: number, exclusiveMinimum: 0, maximum: 5000, default: 250 }
+      responses:
+        "201":
+          description: Il giorno aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NutritionDay" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/water/last:
+    delete:
+      summary: Annulla l'ultima acqua del giorno (NUT-012)
+      description: >
+        Toglie l'ultima voce registrata nel giorno, non una quantità fissa
+        (ADR-0037). Senza voci il giorno resta com'è.
+      operationId: undoWater
+      parameters:
+        - { name: date, in: query, required: true, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Il giorno aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NutritionDay" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/shopping:
     get:
       summary: Lista della spesa (NUT-011)
@@ -1148,7 +1187,7 @@ components:
       enum: [breakfast, morning_snack, lunch, afternoon_snack, dinner]
     NutritionDay:
       type: object
-      required: [date, goal, totals, plannedKcal, slots, suggestedSlot, nextSlot]
+      required: [date, goal, totals, plannedKcal, slots, suggestedSlot, nextSlot, waterMl]
       properties:
         date: { type: string, format: date }
         goal:
@@ -1180,6 +1219,7 @@ components:
           oneOf:
             - { $ref: "#/components/schemas/MealSlot" }
             - { type: "null" }
+        waterMl: { type: integer, minimum: 0, description: Acqua bevuta nel giorno (NUT-012). }
     NutritionSlot:
       type: object
       required: [slot, state, meal, planned]

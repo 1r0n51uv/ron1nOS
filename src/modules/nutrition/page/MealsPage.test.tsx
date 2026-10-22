@@ -28,6 +28,7 @@ function day(date: string, over: Partial<Day> = {}): Day {
     plannedKcal: 445,
     suggestedSlot: null,
     nextSlot: null,
+    waterMl: 0,
     slots: [
       {
         slot: 'breakfast',
