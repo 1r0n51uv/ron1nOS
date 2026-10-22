@@ -4,6 +4,7 @@ import { AppShell } from '@/layout/AppShell'
 import { ComingSoon } from '@/pages/ComingSoon'
 import { MealsPage } from '@/modules/nutrition/page/MealsPage'
 import { RecipesPage } from '@/modules/nutrition/recipes/RecipesPage'
+import { ReportPage } from '@/modules/nutrition/report/ReportPage'
 import { TemplatesPage } from '@/modules/nutrition/templates/TemplatesPage'
 import { Dashboard } from '@/pages/Dashboard'
 import { Settings } from '@/pages/Settings'
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="pasti" element={<MealsPage />} />
         <Route path="pasti/ricette" element={<RecipesPage />} />
         <Route path="pasti/template" element={<TemplatesPage />} />
+        <Route path="pasti/andamento" element={<ReportPage />} />
         <Route path="allenamenti" element={<ComingSoon title="Allenamenti" />} />
         <Route path="note" element={<ComingSoon title="Note" />} />
         <Route path="casa" element={<ComingSoon title="Casa" />} />

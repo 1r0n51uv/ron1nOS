@@ -35,6 +35,9 @@ export function MealsPage() {
         <div className="flex items-center gap-2">
           <nav aria-label="Nutrizione" className="flex gap-2">
             <Button asChild variant="glass" size="sm">
+              <Link to="/pasti/andamento">Andamento</Link>
+            </Button>
+            <Button asChild variant="glass" size="sm">
               <Link to="/pasti/template">Template</Link>
             </Button>
             <Button asChild variant="glass" size="sm">

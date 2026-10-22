@@ -17,6 +17,7 @@ import { Amount, Day, Grams, Slot } from './schemas.ts'
 import { deletePlan, setPlan, setPlanStatus } from './plans.ts'
 import { createRecipe, deleteRecipe, getRecipe, listRecipes, updateRecipe } from './recipes.ts'
 import { countUnmatched, listUnmatched, setEquivalent } from './matching.ts'
+import { getReport } from './report.ts'
 import { findBarcode, searchFoods } from './search.ts'
 import { yazioSearch } from './yaziosearch.ts'
 import {
@@ -65,6 +66,8 @@ export type NutritionDeps = {
   // si costruisce da yazio e syncSteps.
   sync?: SyncRunner
 }
+
+const ReportDays = z.enum(['30', '90']).default('30').transform(Number)
 
 const SyncInput = z.object({ enabled: z.boolean() })
 
@@ -535,6 +538,12 @@ export function nutritionRoutes({
       effectiveFrom: input.effectiveFrom ?? today(now()),
     })
     return c.json(goal, 201)
+  })
+
+  // Andamento (NUT-017): ultimi 30 o 90 giorni, oggi compreso.
+  app.get('/report', async (c) => {
+    const days = check(ReportDays, c.req.query('days'))
+    return c.json(await getReport(c.get('db'), today(now()), days))
   })
 
   // Collegamento a YAZIO (NUT-020) e quello che ne arriva (NUT-024):
