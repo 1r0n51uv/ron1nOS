@@ -2,14 +2,17 @@
 // it_IT, in coda a OpenFoodFacts e USDA. Un alimento preso da qui tiene il
 // suo product_id, così l'invio a YAZIO (NUT-023) lo registra come prodotto.
 import type { YazioClient } from '../yazio/client.ts'
-import type { ProductSearchResult } from '../yazio/schemas.ts'
+import type { Product, ProductSearchResult } from '../yazio/schemas.ts'
 import type { FoodCandidate } from './foods.ts'
 
 const LIMIT = 20
 const round1 = (n: number) => Math.round(n * 10) / 10
 
-// YAZIO dà i nutrienti per 1 g (o 1 ml): qui per 100.
-export function fromYazioProduct(p: ProductSearchResult): FoodCandidate | null {
+// YAZIO dà i nutrienti per 1 g (o 1 ml): qui per 100. Va bene sia un
+// risultato di ricerca sia la scheda di un prodotto (lettura, NUT-022).
+export function fromYazioProduct(
+  p: Pick<ProductSearchResult, 'name' | 'producer' | 'nutrients'> & { product_id: string },
+): FoodCandidate | null {
   const name = p.name.trim()
   if (!name) return null
   const per100 = (v: number) => round1(Math.max(0, v) * 100)
@@ -46,3 +49,5 @@ export function yazioSearch(client: YazioClient) {
     }
   }
 }
+
+export const fromYazioDetail = (p: Product) => fromYazioProduct({ ...p, product_id: p.id })

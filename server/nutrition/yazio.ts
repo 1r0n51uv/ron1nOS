@@ -1,7 +1,7 @@
 // Collegamento all'account YAZIO (NUT-020): stato, interruttore della
 // sincronizzazione e un giro di sincronizzazione. Le credenziali stanno nel
 // .env del server; qui arrivano solo lo stato e il motivo di un errore.
-import type { Queryable } from '../db.ts'
+import type { Db, Queryable } from '../db.ts'
 import type { YazioClient } from '../yazio/client.ts'
 import {
   YazioAuthError,
@@ -27,7 +27,7 @@ export type YazioLink = {
 
 // Un passo del giro: obiettivo, attività e peso (NUT-024), poi diario
 // (NUT-022) e invio (NUT-023).
-export type SyncStep = (ctx: { db: Queryable; client: YazioClient; day: string }) => Promise<void>
+export type SyncStep = (ctx: { db: Db; client: YazioClient; day: string }) => Promise<void>
 
 type Row = {
   sync_enabled: boolean
@@ -67,7 +67,7 @@ export async function syncEnabled(db: Queryable) {
 // Un giro: i passi in ordine, il primo errore ferma il giro e diventa il
 // motivo mostrato in Impostazioni.
 export async function runSync(
-  db: Queryable,
+  db: Db,
   client: YazioClient,
   { steps, now = new Date() }: { steps: SyncStep[]; now?: Date },
 ) {
@@ -105,4 +105,48 @@ export function reason(err: Error) {
     return "Le risposte di YAZIO sono cambiate: va aggiornato l'adattatore."
   if (err instanceof YazioRequestError) return `YAZIO ha rifiutato una richiesta (errore ${err.status}).`
   return 'Errore inatteso durante la sincronizzazione.'
+}
+
+export type SyncRunner = ReturnType<typeof createSyncRunner>
+
+// Chi fa i giri: Sincronizza ora e il giro ogni 15 minuti del backend
+// (NUT-022). Un client per database, così il rinnovo del token resta uno
+// solo, e un giro alla volta: chi arriva durante un giro aspetta quello.
+export function createSyncRunner({
+  yazio,
+  steps,
+  now = () => new Date(),
+}: {
+  yazio?: (db: Queryable) => YazioClient
+  steps: SyncStep[]
+  now?: () => Date
+}) {
+  let current: { db: Db; client: YazioClient } | null = null
+  let running: Promise<boolean> | null = null
+
+  const client = (db: Db) => {
+    if (!yazio) return null
+    if (current?.db !== db) current = { db, client: yazio(db) }
+    return current.client
+  }
+
+  const run = (db: Db, yc: YazioClient) => {
+    running ??= runSync(db, yc, { steps, now: now() }).finally(() => {
+      running = null
+    })
+    return running
+  }
+
+  return {
+    configured: !!yazio,
+    client,
+    run,
+    // Il giro periodico: solo con YAZIO configurato e la sincronizzazione
+    // accesa. null se non è partito.
+    async tick(db: Db) {
+      const yc = client(db)
+      if (!yc || !(await syncEnabled(db))) return null
+      return run(db, yc)
+    },
+  }
 }

@@ -4,6 +4,7 @@
 import type { Queryable } from '../db.ts'
 import type { Goals } from '../yazio/schemas.ts'
 import { addDays } from './dates.ts'
+import { readDiary } from './diaryread.ts'
 import type { Goal } from './goals.ts'
 import { addGoal, goalFor } from './goals.ts'
 import type { SyncStep } from './yazio.ts'
@@ -69,7 +70,8 @@ export const readWeights: SyncStep = async ({ db, client, day }) => {
   }
 }
 
-export const READ_FROM_YAZIO: SyncStep[] = [readGoal, readActivity, readWeights]
+// Il diario (NUT-022) dopo obiettivo, attività e peso.
+export const READ_FROM_YAZIO: SyncStep[] = [readGoal, readActivity, readWeights, readDiary]
 
 // Il peso di riferimento: Salute quando ci sarà (NUT-018), finora YAZIO.
 export async function latestWeight(db: Queryable): Promise<{ day: string; kg: number } | null> {

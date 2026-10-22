@@ -755,9 +755,14 @@ paths:
     post:
       summary: Sincronizza ora (NUT-020)
       description: >
-        Un giro di sincronizzazione subito: obiettivo, energia attiva di
-        oggi e di ieri, pesate nuove (al primo giro lo storico). Un errore
-        di YAZIO non dà un errore HTTP: finisce in `state` ed `error`.
+        Un giro di sincronizzazione subito, lo stesso che il backend fa da
+        solo ogni 15 minuti: obiettivo, energia attiva di oggi e di ieri,
+        pesate nuove (al primo giro lo storico) e il diario degli ultimi 3
+        giorni (NUT-022). Le voci nuove di YAZIO entrano con `origin`
+        `yazio`, quelle cancellate in YAZIO spariscono, una voce cambiata in
+        YAZIO vince sulla riga di ron1nOS, l'acqua prende il totale di
+        YAZIO. Un errore di YAZIO non dà un errore HTTP: finisce in `state`
+        ed `error`.
       operationId: syncYazio
       responses:
         "200":

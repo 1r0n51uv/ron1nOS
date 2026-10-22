@@ -48,6 +48,11 @@ const row = () =>
   )
 
 describe('ItemRow (NUT-007)', () => {
+  it('una voce letta da YAZIO lo dice (NUT-022)', () => {
+    renderWithProviders(<ItemRow item={{ ...item, origin: 'yazio', sync: 'synced' }} />)
+    expect(screen.getByRole('listitem')).toHaveTextContent('Mela · da YAZIO')
+  })
+
   it('toglie la riga', () => {
     row()
     fireEvent.click(screen.getByRole('button', { name: 'Togli Mela' }))
