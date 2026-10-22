@@ -3,8 +3,9 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 
-import type { Database, Db } from '../db.ts'
+import type { Database, Db, Queryable } from '../db.ts'
 import { DatabaseUnavailableError } from '../db.ts'
+import type { YazioClient } from '../yazio/client.ts'
 import { createCustom, deleteCustom, listCustom, updateCustom } from './custom.ts'
 import { addDays, localHour, today } from './dates.ts'
 import { getDay } from './day.ts'
@@ -40,6 +41,8 @@ import {
   listTemplates,
   updateTemplate,
 } from './templates.ts'
+import type { SyncStep } from './yazio.ts'
+import { runSync, setSyncEnabled, syncEnabled, yazioLink } from './yazio.ts'
 
 export type NutritionDeps = {
   database: Database
@@ -49,7 +52,13 @@ export type NutritionDeps = {
   now?: () => Date
   // OpenFoodFacts e USDA; senza, la ricerca usa solo il catalogo locale.
   external?: ExternalSearch
+  // Account YAZIO dal .env (NUT-020); senza, il collegamento risulta non
+  // configurato e il diario resta solo in ron1nOS.
+  yazio?: (db: Queryable) => YazioClient
+  syncSteps?: SyncStep[]
 }
+
+const SyncInput = z.object({ enabled: z.boolean() })
 
 const Candidate = z.object({
   source: z.enum(['openfoodfacts', 'usda', 'yazio']),
@@ -194,8 +203,20 @@ export function nutritionRoutes({
   goalsFromYazio = async () => false,
   now = () => new Date(),
   external = offline,
+  yazio,
+  syncSteps,
 }: NutritionDeps) {
   const app = new Hono<{ Variables: { db: Db } }>()
+
+  // Un client per database, così il rinnovo del token resta uno solo.
+  let client: { db: Db; client: YazioClient } | null = null
+  const yazioClient = (db: Db) => {
+    if (!yazio) return null
+    if (client?.db !== db) client = { db, client: yazio(db) }
+    return client.client
+  }
+  // Un solo giro alla volta: Sincronizza ora durante un giro aspetta quello.
+  let running: Promise<boolean> | null = null
 
   // Senza Postgres il modulo risponde 503; il resto della dashboard no.
   app.use('*', async (c, next) => {
@@ -482,6 +503,36 @@ export function nutritionRoutes({
       effectiveFrom: input.effectiveFrom ?? today(now()),
     })
     return c.json(goal, 201)
+  })
+
+  // Collegamento a YAZIO (NUT-020).
+  app.get('/yazio', async (c) => c.json(await yazioLink(c.get('db'), !!yazio)))
+
+  app.put('/yazio/sync', async (c) => {
+    const input = await readJson(c, SyncInput)
+    const db = c.get('db')
+    await setSyncEnabled(db, input.enabled)
+    return c.json(await yazioLink(db, !!yazio))
+  })
+
+  // Sincronizza ora: un giro subito, risponde con lo stato aggiornato.
+  app.post('/yazio/sync', async (c) => {
+    const db = c.get('db')
+    const yc = yazioClient(db)
+    if (!yc) {
+      throw new ConflictError(
+        'yazio_not_configured',
+        'YAZIO non è configurato: servono le variabili nel .env del server',
+      )
+    }
+    if (!(await syncEnabled(db))) {
+      throw new ConflictError('yazio_sync_off', 'La sincronizzazione con YAZIO è spenta')
+    }
+    running ??= runSync(db, yc, { steps: syncSteps, now: now() }).finally(() => {
+      running = null
+    })
+    await running
+    return c.json(await yazioLink(db, true))
   })
 
   return app

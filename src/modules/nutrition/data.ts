@@ -437,3 +437,37 @@ export const useSetTaken = () =>
   useDayMutation(({ id, date, taken }: { id: string; date: string; taken: boolean }) =>
     supplementsSource.taken(id, date, taken),
   )
+
+// Collegamento a YAZIO (/api/v1/nutrition/yazio, NUT-020). Le credenziali
+// restano nel .env del server: qui arrivano solo stato e motivo.
+export type YazioLink = {
+  configured: boolean
+  state: 'connected' | 'disconnected' | 'error'
+  error: string | null
+  lastSyncAt: string | null
+  syncEnabled: boolean
+}
+
+export const yazioSource = {
+  get: () => api.get<YazioLink>('/nutrition/yazio'),
+  setSync: (enabled: boolean) => api.put<YazioLink>('/nutrition/yazio/sync', { enabled }),
+  syncNow: () => api.post<YazioLink>('/nutrition/yazio/sync', {}),
+}
+
+export function useYazio() {
+  return useQuery({ queryKey: ['nutrition', 'yazio'], queryFn: () => yazioSource.get() })
+}
+
+function useYazioMutation<A>(fn: (args: A) => Promise<YazioLink>) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: (link) => {
+      client.setQueryData(['nutrition', 'yazio'], link)
+      return client.invalidateQueries({ queryKey: ['nutrition'] })
+    },
+  })
+}
+
+export const useSetYazioSync = () => useYazioMutation((enabled: boolean) => yazioSource.setSync(enabled))
+export const useSyncYazio = () => useYazioMutation(() => yazioSource.syncNow())

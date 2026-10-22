@@ -7,6 +7,8 @@ import { createDraftService } from './drafts.ts'
 import { createGlancesClient } from './glances.ts'
 import { createExternalSearch } from './nutrition/foodsearch.ts'
 import { createQbtClient } from './qbittorrent.ts'
+import { createYazioClient } from './yazio/client.ts'
+import { dbTokenStore } from './yazio/tokens.ts'
 
 const config = loadConfig()
 if (!config.qbt.username || !config.qbt.password) {
@@ -16,6 +18,9 @@ if (!config.qbt.username || !config.qbt.password) {
 if (!config.databaseUrl) console.warn('DATABASE_URL mancante: il modulo Nutrizione risponderà con errore')
 const database = startDatabase(config.databaseUrl ? createDb(config.databaseUrl) : undefined)
 
+const { yazio } = config
+if (!yazio) console.warn('variabili YAZIO_* mancanti: il diario resta solo in ron1nOS')
+
 const qbt = createQbtClient(config.qbt)
 const drafts = createDraftService({ qbt, metadataWaitMs: config.metadataWaitMs })
 const app = createApp({
@@ -24,7 +29,10 @@ const app = createApp({
   glances: createGlancesClient(config.glances),
   staticDir: config.staticDir,
   database,
-  nutrition: { external: createExternalSearch(config.foods) },
+  nutrition: {
+    external: createExternalSearch(config.foods),
+    yazio: yazio && ((db) => createYazioClient({ ...yazio, tokens: dbTokenStore(db, yazio.tokenKey) })),
+  },
 })
 
 // Bozze orfane del wizard: all'avvio e ogni ora.

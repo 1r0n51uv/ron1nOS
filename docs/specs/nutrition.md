@@ -396,8 +396,7 @@ modulo con dati propri, quindi porta due cose nuove:
 
 - **Postgres.** Un database `ron1nos`, con il suo utente, nel Postgres
   condiviso del server che serve tutte le app ron1n (stack in `infra/` di
-  ron1n, immagine con tag esplicito, dump notturno con il backup del
-  server). Lo schema riparte dalle migrazioni di
+  ron1n, immagine con tag esplicito, senza dump automatici). Lo schema riparte dalle migrazioni di
   pkm (`0004`, `0006`…`0008`, `0010`) unite in una sola, senza `snack` e
   `phase_linked`, più le tabelle dei template e le colonne YAZIO.
   Migrazioni SQL semplici in `api/migrations/`, applicate all'avvio.
