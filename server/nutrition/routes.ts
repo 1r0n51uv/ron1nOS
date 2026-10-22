@@ -16,6 +16,7 @@ import { Amount, Day, Grams, Slot } from './schemas.ts'
 import { deletePlan, setPlan, setPlanStatus } from './plans.ts'
 import { createRecipe, deleteRecipe, getRecipe, listRecipes, updateRecipe } from './recipes.ts'
 import { findBarcode, searchFoods } from './search.ts'
+import { addWater, undoWater } from './trackers.ts'
 import {
   addShopping,
   clearChecked,
@@ -285,6 +286,24 @@ export function nutritionRoutes({
     const { monday } = await readJson(c, z.object({ monday: Day }))
     const db = c.get('db')
     return c.json(await db.tx((tx) => applyTemplate(tx, id, monday)))
+  })
+
+  // Acqua (NUT-012): + aggiunge, - annulla l'ultima voce del giorno.
+  app.post('/water', async (c) => {
+    const { date, ml } = await readJson(
+      c,
+      z.object({ date: Day, ml: z.number().finite().positive().max(5000).default(250) }),
+    )
+    const db = c.get('db')
+    await addWater(db, date, ml)
+    return c.json(await dayView(db, date), 201)
+  })
+
+  app.delete('/water/last', async (c) => {
+    const date = check(Day, c.req.query('date'))
+    const db = c.get('db')
+    await undoWater(db, date)
+    return c.json(await dayView(db, date))
   })
 
   // Lista della spesa (NUT-011).

@@ -11,6 +11,7 @@ import { AddMealDialog } from '../log/AddMealDialog'
 import { DayStrip } from './DayStrip'
 import { DaySummary } from './DaySummary'
 import { SlotCard } from './SlotCard'
+import { WaterCard } from './WaterCard'
 
 // Pagina /pasti (NUT-002): il giorno scelto con i 5 pasti e il riepilogo.
 export function MealsPage() {
@@ -68,7 +69,10 @@ export function MealsPage() {
             className="flex max-w-[440px] flex-[1_1_360px] flex-col gap-3.5"
           >
             {shown ? (
-              <DaySummary day={shown} title={date === today ? 'Oggi' : 'Giorno'} />
+              <>
+                <DaySummary day={shown} title={date === today ? 'Oggi' : 'Giorno'} />
+                <WaterCard day={shown} />
+              </>
             ) : (
               <Skeleton aria-busy="true" className="h-72 rounded-panel" />
             )}

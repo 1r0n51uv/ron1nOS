@@ -14,6 +14,7 @@ const ICONS = {
   bell: 'M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 21a2 2 0 0 0 4 0',
   search: 'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-3.5-3.5',
   plus: 'M12 5v14M5 12h14',
+  minus: 'M5 12h14',
   play: 'M7 4l13 8-13 8z',
   check: 'M20 6L9 17l-5-5',
   restart: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5',

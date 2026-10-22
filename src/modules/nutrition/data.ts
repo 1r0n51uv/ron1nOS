@@ -87,6 +87,8 @@ export type Day = {
   suggestedSlot: SlotId | null
   // Il prossimo pasto da segnare, solo per oggi (NUT-001).
   nextSlot: SlotId | null
+  // Acqua bevuta nel giorno (NUT-012).
+  waterMl: number
 }
 
 export const daySource = {
@@ -182,6 +184,18 @@ export const useSetPlan = () => useDayMutation((input: MealInput) => plansSource
 export const useDeletePlan = () => useDayMutation((id: string) => plansSource.remove(id))
 export const useSetPlanStatus = () =>
   useDayMutation(({ id, status }: { id: string; status: PlanStatus }) => plansSource.status(id, status))
+
+// Acqua (/api/v1/nutrition/water, NUT-012): + aggiunge 250 ml, - annulla
+// l'ultima voce del giorno.
+export const WATER_STEP_ML = 250
+
+export const waterSource = {
+  add: (date: string) => api.post<Day>('/nutrition/water', { date, ml: WATER_STEP_ML }),
+  undo: (date: string) => api.delete<Day>(`/nutrition/water/last?date=${date}`),
+}
+
+export const useAddWater = () => useDayMutation((date: string) => waterSource.add(date))
+export const useUndoWater = () => useDayMutation((date: string) => waterSource.undo(date))
 
 export const useLogMeal = () => useDayMutation((input: MealInput) => mealsSource.log(input))
 export const useRemoveItem = () => useDayMutation((id: string) => mealsSource.removeItem(id))
