@@ -30,7 +30,10 @@ test('una ricetta si crea, si registra oggi e si modifica (NUT-008)', async ({ p
       .getByRole('button', { name: new RegExp(name) })
       .click()
     await page.getByLabel('Quantità in grammi').fill(grams)
-    await page.getByRole('button', { name: 'Aggiungi' }).click()
+    await page
+      .getByRole('group', { name: 'Alimento scelto' })
+      .getByRole('button', { name: 'Aggiungi' })
+      .click()
   }
   await expect(page.getByText('445 kcal · P 40 · C 62 · G 2')).toBeVisible()
   await page.getByRole('button', { name: 'Salva' }).click()

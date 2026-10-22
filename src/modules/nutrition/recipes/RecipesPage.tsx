@@ -8,9 +8,10 @@ import { cn } from '@/lib/utils'
 import { useRecipes } from '../data'
 import { RecipeDetail } from './RecipeDetail'
 import { RecipeEditor } from './RecipeEditor'
+import { ShoppingPanel } from './ShoppingPanel'
 
-// Pagina /pasti/ricette (NUT-008): elenco delle ricette e la ricetta scelta.
-// La lista della spesa arriva con NUT-011.
+// Pagina /pasti/ricette: elenco delle ricette e la ricetta scelta (NUT-008),
+// lista della spesa (NUT-011).
 export function RecipesPage() {
   const [params, setParams] = useSearchParams()
   const { data, error } = useRecipes()
@@ -87,6 +88,10 @@ export function RecipesPage() {
           </div>
         </div>
       )}
+
+      <div className="max-w-[720px]">
+        <ShoppingPanel />
+      </div>
     </>
   )
 }
