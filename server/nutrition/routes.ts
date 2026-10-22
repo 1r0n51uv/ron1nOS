@@ -6,16 +6,24 @@ import { z } from 'zod'
 import type { Database, Db } from '../db.ts'
 import { DatabaseUnavailableError } from '../db.ts'
 import { createCustom, deleteCustom, listCustom, updateCustom } from './custom.ts'
-import { localHour, today } from './dates.ts'
+import { addDays, localHour, today } from './dates.ts'
 import { getDay } from './day.ts'
 import type { ExternalSearch } from './foodsearch.ts'
 import { addGoal, goalFor, goalHistory } from './goals.ts'
-import { check, ConflictError, readJson } from './http.ts'
+import { check, ConflictError, InvalidRequestError, readJson } from './http.ts'
 import { logMeal, nextSlot, removeItem, setGrams, slotForHour } from './meals.ts'
 import { Amount, Day, Grams, Slot } from './schemas.ts'
 import { deletePlan, setPlan, setPlanStatus } from './plans.ts'
 import { createRecipe, deleteRecipe, getRecipe, listRecipes, updateRecipe } from './recipes.ts'
 import { findBarcode, searchFoods } from './search.ts'
+import {
+  addShopping,
+  clearChecked,
+  deleteShopping,
+  generateShopping,
+  listShopping,
+  updateShopping,
+} from './shopping.ts'
 import {
   applyTemplate,
   createTemplate,
@@ -83,6 +91,21 @@ const TemplateInput = z.object({
   name: z.string().trim().min(1).max(100),
   cells: z.array(TemplateCell).max(35).default([]),
 })
+
+const ShoppingText = z.preprocess(
+  (v) => (typeof v === 'string' && v.trim() === '' ? null : v),
+  z.string().trim().max(50).nullable(),
+)
+
+const ShoppingInput = z.object({
+  name: z.string().trim().min(1).max(200),
+  text: ShoppingText.optional().transform((v) => v ?? null),
+})
+
+const ShoppingPatch = z
+  .object({ checked: z.boolean(), name: z.string().trim().min(1).max(200), text: ShoppingText })
+  .partial()
+  .strict()
 
 const RecipeInput = z.object({
   name: z.string().trim().min(1).max(200),
@@ -262,6 +285,40 @@ export function nutritionRoutes({
     const { monday } = await readJson(c, z.object({ monday: Day }))
     const db = c.get('db')
     return c.json(await db.tx((tx) => applyTemplate(tx, id, monday)))
+  })
+
+  // Lista della spesa (NUT-011).
+  const shopping = async (db: Db) => ({ items: await listShopping(db) })
+
+  app.get('/shopping', async (c) => c.json(await shopping(c.get('db'))))
+
+  app.post('/shopping/generate', async (c) => {
+    const { from, to } = await readJson(c, z.object({ from: Day, to: Day }))
+    if (to < from || addDays(from, 31) < to) throw new InvalidRequestError('Intervallo di giorni non valido')
+    const db = c.get('db')
+    const added = await db.tx((tx) => generateShopping(tx, from, to))
+    return c.json({ added, ...(await shopping(db)) })
+  })
+
+  app.post('/shopping', async (c) => {
+    const input = await readJson(c, ShoppingInput)
+    return c.json(await addShopping(c.get('db'), input), 201)
+  })
+
+  app.patch('/shopping/:id', async (c) => {
+    const id = check(Id, c.req.param('id'))
+    return c.json(await updateShopping(c.get('db'), id, await readJson(c, ShoppingPatch)))
+  })
+
+  app.delete('/shopping/checked', async (c) => {
+    const db = c.get('db')
+    const removed = await clearChecked(db)
+    return c.json({ removed, ...(await shopping(db)) })
+  })
+
+  app.delete('/shopping/:id', async (c) => {
+    await deleteShopping(c.get('db'), check(Id, c.req.param('id')))
+    return c.body(null, 204)
   })
 
   // Ricette (NUT-008).

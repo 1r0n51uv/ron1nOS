@@ -319,3 +319,52 @@ export const useSaveTemplate = () =>
 export const useDeleteTemplate = () => useFoodMutation((id: string) => templatesSource.remove(id))
 export const useApplyTemplate = () =>
   useFoodMutation(({ id, monday }: { id: string; monday: string }) => templatesSource.apply(id, monday))
+
+// Lista della spesa (/api/v1/nutrition/shopping, NUT-011).
+export type ShoppingItem = {
+  id: string
+  foodId: string | null
+  name: string
+  grams: number | null
+  text: string | null
+  checked: boolean
+  source: 'generated' | 'manual'
+}
+
+type ShoppingList = { items: ShoppingItem[] }
+
+export const shoppingSource = {
+  list: () => api.get<ShoppingList>('/nutrition/shopping'),
+  generate: (from: string, to: string) =>
+    api.post<ShoppingList & { added: number }>('/nutrition/shopping/generate', { from, to }),
+  add: (name: string, text: string | null) => api.post<ShoppingItem>('/nutrition/shopping', { name, text }),
+  update: (id: string, patch: Partial<Pick<ShoppingItem, 'checked' | 'name' | 'text'>>) =>
+    api.patch<ShoppingItem>(`/nutrition/shopping/${id}`, patch),
+  remove: (id: string) => api.delete<void>(`/nutrition/shopping/${id}`),
+  clearChecked: () => api.delete<ShoppingList & { removed: number }>('/nutrition/shopping/checked'),
+}
+
+export function useShopping() {
+  return useQuery({ queryKey: ['nutrition', 'shopping'], queryFn: () => shoppingSource.list() })
+}
+
+function useShoppingMutation<A, R>(fn: (args: A) => Promise<R>) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => client.invalidateQueries({ queryKey: ['nutrition', 'shopping'] }),
+  })
+}
+
+export const useGenerateShopping = () =>
+  useShoppingMutation(({ from, to }: { from: string; to: string }) => shoppingSource.generate(from, to))
+export const useAddShopping = () =>
+  useShoppingMutation(({ name, text }: { name: string; text: string | null }) =>
+    shoppingSource.add(name, text),
+  )
+export const useToggleShopping = () =>
+  useShoppingMutation(({ id, checked }: { id: string; checked: boolean }) =>
+    shoppingSource.update(id, { checked }),
+  )
+export const useDeleteShopping = () => useShoppingMutation((id: string) => shoppingSource.remove(id))
+export const useClearChecked = () => useShoppingMutation(() => shoppingSource.clearChecked())

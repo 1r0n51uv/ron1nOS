@@ -550,6 +550,122 @@ paths:
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/shopping:
+    get:
+      summary: Lista della spesa (NUT-011)
+      operationId: listShopping
+      responses:
+        "200":
+          description: Prima le voci dal piano, poi quelle a mano.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ShoppingList" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    post:
+      summary: Aggiunge una voce a mano (NUT-011)
+      operationId: addShopping
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 200 }
+                text:
+                  { type: [string, "null"], maxLength: 50, description: "Quantità libera, es. `1 pacco`." }
+      responses:
+        "201":
+          description: Voce aggiunta.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ShoppingItem" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/shopping/generate:
+    post:
+      summary: Genera la lista dai pasti pianificati (NUT-011)
+      description: >
+        Somma i grammi dello stesso alimento nei pasti non saltati fra `from`
+        e `to` (al massimo 31 giorni). Aggiunge solo ciò che manca: un
+        alimento già in lista, per id o per nome, resta com'è.
+      operationId: generateShopping
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, to]
+              properties:
+                from: { type: string, format: date }
+                to: { type: string, format: date }
+      responses:
+        "200":
+          description: Quante voci aggiunte e la lista.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: "#/components/schemas/ShoppingList" }
+                  - type: object
+                    required: [added]
+                    properties:
+                      added: { type: integer }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/shopping/checked:
+    delete:
+      summary: Togli le spuntate (NUT-011)
+      operationId: clearCheckedShopping
+      responses:
+        "200":
+          description: Quante voci tolte e la lista.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: "#/components/schemas/ShoppingList" }
+                  - type: object
+                    required: [removed]
+                    properties:
+                      removed: { type: integer }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/shopping/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      summary: Spunta o modifica una voce (NUT-011)
+      operationId: updateShopping
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                checked: { type: boolean }
+                name: { type: string, minLength: 1, maxLength: 200 }
+                text: { type: [string, "null"], maxLength: 50 }
+      responses:
+        "200":
+          description: Voce aggiornata.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ShoppingItem" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    delete:
+      summary: Elimina una voce (NUT-011)
+      operationId: deleteShopping
+      responses:
+        "204": { description: Eliminata. }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/recipes:
     get:
       summary: Ricette, per nome (NUT-008)
@@ -911,6 +1027,24 @@ components:
         carbs: { type: number, minimum: 0, maximum: 100 }
         fat: { type: number, minimum: 0, maximum: 100 }
         caffeineMg: { type: [number, "null"], minimum: 0 }
+    ShoppingItem:
+      type: object
+      required: [id, foodId, name, grams, text, checked, source]
+      properties:
+        id: { type: string, format: uuid }
+        foodId: { type: [string, "null"], format: uuid }
+        name: { type: string }
+        grams: { type: [number, "null"], description: Solo per le voci dal piano. }
+        text: { type: [string, "null"], description: Quantità libera delle voci a mano. }
+        checked: { type: boolean }
+        source: { type: string, enum: [generated, manual] }
+    ShoppingList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/ShoppingItem" }
     Template:
       type: object
       required: [id, name, cells, dayKcal]
