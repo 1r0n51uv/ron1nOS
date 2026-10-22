@@ -103,3 +103,48 @@ export function nextSlot(slots: { slot: Slot; state: string }[], from: Slot): Sl
   const next = slots.slice(Math.max(0, start)).find((s) => s.state === 'empty' || s.state === 'planned')
   return next?.slot ?? null
 }
+
+// Correggere un pasto (NUT-007). Restituiscono il giorno della riga.
+async function itemDay(db: Queryable, id: string) {
+  const { rows } = await db.query<{ mealId: string; day: string; slot: Slot; grams: number }>(
+    `select e.id as "mealId", e.day::text as day, e.slot, i.quantity_g as grams
+       from meal_entry_items i join meal_entries e on e.id = i.meal_entry_id where i.id = $1 for update of i`,
+    [id],
+  )
+  if (!rows[0]) throw new NotFoundError('Riga del pasto non trovata')
+  return rows[0]
+}
+
+// Toglie una riga; se era l'ultima il pasto sparisce e il piano che aveva
+// segnato torna saltato (ADR-0037).
+export async function removeItem(db: Queryable, id: string) {
+  const item = await itemDay(db, id)
+  await db.query('delete from meal_entry_items where id = $1', [id])
+  const { rows } = await db.query<{ n: number }>(
+    'select count(*)::int as n from meal_entry_items where meal_entry_id = $1',
+    [item.mealId],
+  )
+  if (rows[0].n === 0) {
+    await db.query(
+      `update planned_meals set status = 'skipped', meal_entry_id = null, updated_at = now()
+        where meal_entry_id = $1`,
+      [item.mealId],
+    )
+    await db.query('delete from meal_entries where id = $1', [item.mealId])
+  }
+  return item.day
+}
+
+// Cambia la quantità: kcal, macro e caffeina scalano dai valori copiati,
+// non dall'alimento, che nel frattempo può essere cambiato.
+export async function setGrams(db: Queryable, id: string, grams: number) {
+  const item = await itemDay(db, id)
+  const f = grams / item.grams
+  await db.query(
+    `update meal_entry_items set quantity_g = $2, calories = calories * $3, protein_g = protein_g * $3,
+       carbs_g = carbs_g * $3, fat_g = fat_g * $3, caffeine_mg = caffeine_mg * $3, updated_at = now()
+      where id = $1`,
+    [id, grams, f],
+  )
+  return item.day
+}

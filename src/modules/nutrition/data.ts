@@ -148,18 +148,27 @@ export type MealInput = {
 
 export const mealsSource = {
   log: (input: MealInput) => api.post<Day>('/nutrition/meals', input),
+  // Correggere un pasto (NUT-007).
+  removeItem: (id: string) => api.delete<Day>(`/nutrition/meals/items/${id}`),
+  setGrams: (id: string, grams: number) => api.patch<Day>(`/nutrition/meals/items/${id}`, { grams }),
 }
 
-export function useLogMeal() {
+// Le scritture sul diario rispondono con il giorno aggiornato.
+function useDayMutation<A>(fn: (args: A) => Promise<Day>) {
   const client = useQueryClient()
   return useMutation({
-    mutationFn: (input: MealInput) => mealsSource.log(input),
+    mutationFn: fn,
     onSuccess: (day) => {
       client.setQueryData(['nutrition', 'day', day.date], day)
       return client.invalidateQueries({ queryKey: ['nutrition'] })
     },
   })
 }
+
+export const useLogMeal = () => useDayMutation((input: MealInput) => mealsSource.log(input))
+export const useRemoveItem = () => useDayMutation((id: string) => mealsSource.removeItem(id))
+export const useSetGrams = () =>
+  useDayMutation(({ id, grams }: { id: string; grams: number }) => mealsSource.setGrams(id, grams))
 
 // Alimenti personali (/api/v1/nutrition/foods, NUT-006). Valori per 100 g.
 export type CustomFoodInput = Pick<
