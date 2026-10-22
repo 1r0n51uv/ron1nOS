@@ -1,5 +1,6 @@
 import { FoodsPanel } from '@/modules/nutrition/settings/FoodsPanel'
 import { GoalsPanel } from '@/modules/nutrition/settings/GoalsPanel'
+import { SupplementsPanel } from '@/modules/nutrition/settings/SupplementsPanel'
 
 // Impostazioni: per ora quelle del modulo Nutrizione.
 export function Settings() {
@@ -12,6 +13,7 @@ export function Settings() {
       <div className="flex max-w-[960px] flex-col gap-5">
         <GoalsPanel />
         <FoodsPanel />
+        <SupplementsPanel />
       </div>
     </>
   )

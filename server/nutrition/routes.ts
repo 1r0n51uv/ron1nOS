@@ -16,6 +16,13 @@ import { Amount, Day, Grams, Slot } from './schemas.ts'
 import { deletePlan, setPlan, setPlanStatus } from './plans.ts'
 import { createRecipe, deleteRecipe, getRecipe, listRecipes, updateRecipe } from './recipes.ts'
 import { findBarcode, searchFoods } from './search.ts'
+import {
+  createSupplement,
+  deleteSupplement,
+  listSupplements,
+  setTaken,
+  updateSupplement,
+} from './supplements.ts'
 import { addCaffeine, addWater, undoCaffeine, undoWater } from './trackers.ts'
 import {
   addShopping,
@@ -154,6 +161,22 @@ const Barcode = z.string().regex(/^\d{6,14}$/)
 
 // Id di alimenti e righe.
 const Id = z.uuid()
+
+// Integratori (NUT-014): dose e quando sono testo libero, vuoti diventano null.
+const text = () => z.string().trim().max(80).nullable().optional()
+const SupplementInput = z.object({
+  name: z.string().trim().min(1).max(80),
+  dose: text().transform((v) => v || null),
+  schedule: text().transform((v) => v || null),
+})
+// Nella modifica un campo assente resta com'è.
+const patchText = () => text().transform((v) => (v === undefined ? undefined : v || null))
+const SupplementPatch = z.object({
+  name: z.string().trim().min(1).max(80).optional(),
+  dose: patchText(),
+  schedule: patchText(),
+  active: z.boolean().optional(),
+})
 
 const offline: ExternalSearch = { off: async () => [], usda: async () => [], offBarcode: async () => null }
 
@@ -325,6 +348,33 @@ export function nutritionRoutes({
     const date = check(Day, c.req.query('date'))
     const db = c.get('db')
     await undoCaffeine(db, date)
+    return c.json(await dayView(db, date))
+  })
+
+  // Integratori (NUT-014).
+  app.get('/supplements', async (c) => c.json({ supplements: await listSupplements(c.get('db')) }))
+
+  app.post('/supplements', async (c) => {
+    const input = await readJson(c, SupplementInput)
+    return c.json(await createSupplement(c.get('db'), input), 201)
+  })
+
+  app.patch('/supplements/:id', async (c) => {
+    const id = check(Id, c.req.param('id'))
+    const input = await readJson(c, SupplementPatch)
+    return c.json(await updateSupplement(c.get('db'), id, input))
+  })
+
+  app.delete('/supplements/:id', async (c) => {
+    await deleteSupplement(c.get('db'), check(Id, c.req.param('id')))
+    return c.body(null, 204)
+  })
+
+  app.put('/supplements/:id/taken', async (c) => {
+    const id = check(Id, c.req.param('id'))
+    const { date, taken } = await readJson(c, z.object({ date: Day, taken: z.boolean() }))
+    const db = c.get('db')
+    await setTaken(db, id, date, taken)
     return c.json(await dayView(db, date))
   })
 

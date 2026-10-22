@@ -12,6 +12,7 @@ import { CaffeineCard } from './CaffeineCard'
 import { DayStrip } from './DayStrip'
 import { DaySummary } from './DaySummary'
 import { SlotCard } from './SlotCard'
+import { SupplementsCard } from './SupplementsCard'
 import { WaterCard } from './WaterCard'
 
 // Pagina /pasti (NUT-002): il giorno scelto con i 5 pasti e il riepilogo.
@@ -74,6 +75,7 @@ export function MealsPage() {
                 <DaySummary day={shown} title={date === today ? 'Oggi' : 'Giorno'} />
                 <WaterCard day={shown} />
                 <CaffeineCard day={shown} />
+                <SupplementsCard day={shown} />
               </>
             ) : (
               <Skeleton aria-busy="true" className="h-72 rounded-panel" />

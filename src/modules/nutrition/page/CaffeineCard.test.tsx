@@ -32,6 +32,7 @@ const day = (totalMg: number, mealsMg: number): Day => ({
   nextSlot: null,
   waterMl: 0,
   caffeine: { totalMg, mealsMg },
+  supplements: [],
 })
 
 describe('CaffeineCard (NUT-013)', () => {

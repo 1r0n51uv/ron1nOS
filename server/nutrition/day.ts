@@ -4,6 +4,8 @@ import type { Queryable } from '../db.ts'
 import { goalFor } from './goals.ts'
 import type { Slot } from './schemas.ts'
 import { SLOTS } from './schemas.ts'
+import type { DaySupplement } from './supplements.ts'
+import { daySupplements } from './supplements.ts'
 
 export type Macros = { kcal: number; protein: number; carbs: number; fat: number }
 
@@ -47,6 +49,8 @@ export type Day = {
   // Caffeina del giorno (NUT-013): voci del contatore più gli alimenti
   // registrati che ne hanno.
   caffeine: { totalMg: number; mealsMg: number }
+  // La checklist degli integratori del giorno (NUT-014).
+  supplements: DaySupplement[]
 }
 
 const zero = (): Macros => ({ kcal: 0, protein: 0, carbs: 0, fat: 0 })
@@ -90,7 +94,7 @@ export function macrosFor(
 }
 
 export async function getDay(db: Queryable, date: string): Promise<Day> {
-  const [goal, items, planned, water, caffeine] = await Promise.all([
+  const [goal, items, planned, water, caffeine, supplements] = await Promise.all([
     goalFor(db, date),
     db.query<MealItem & { slot: Slot; mealId: string }>(
       `select i.id, i.food_id as "foodId", i.food_name as name, i.quantity_g as grams, i.calories as kcal,
@@ -136,6 +140,7 @@ export async function getDay(db: Queryable, date: string): Promise<Day> {
                  join meal_entries e on e.id = i.meal_entry_id where e.day = $1) as meals`,
       [date],
     ),
+    daySupplements(db, date),
   ])
 
   const slots: SlotDay[] = SLOTS.map((slot) => {
@@ -207,5 +212,6 @@ export async function getDay(db: Queryable, date: string): Promise<Day> {
       totalMg: Math.round(caffeine.rows[0].logged + caffeine.rows[0].meals),
       mealsMg: Math.round(caffeine.rows[0].meals),
     },
+    supplements,
   }
 }

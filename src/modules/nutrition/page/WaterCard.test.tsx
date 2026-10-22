@@ -32,6 +32,7 @@ const day = (waterMl: number, goal: number | null = 2000): Day => ({
   nextSlot: null,
   waterMl,
   caffeine: { totalMg: 0, mealsMg: 0 },
+  supplements: [],
 })
 
 describe('WaterCard (NUT-012)', () => {
