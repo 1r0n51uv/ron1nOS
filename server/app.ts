@@ -7,6 +7,8 @@ import { bodyLimit } from 'hono/body-limit'
 import type { AuthDeps } from './auth/routes.ts'
 import { createAuth } from './auth/routes.ts'
 import type { Database } from './db.ts'
+import type { Vault } from './documents/crypto.ts'
+import { documentsRoutes, DocumentsDisabledError } from './documents/routes.ts'
 import { DatabaseUnavailableError } from './db.ts'
 import type { DraftService } from './drafts.ts'
 import {
@@ -47,6 +49,8 @@ type Deps = {
   nutrition?: Omit<NutritionDeps, 'database'>
   // Login della dashboard (docs/specs/auth.md); senza, l'API resta aperta.
   auth?: Omit<AuthDeps, 'database'>
+  // Modulo Documenti: la chiave di DOCUMENTS_KEY; senza, il modulo è spento.
+  documents?: { vault?: Vault }
 }
 
 class InvalidLinkError extends Error {}
@@ -60,6 +64,7 @@ export function createApp({
   database = { status: () => 'disabled' },
   nutrition = {},
   auth: authDeps = {},
+  documents = {},
 }: Deps) {
   const app = new Hono()
   const auth = createAuth({ ...authDeps, database })
@@ -145,6 +150,9 @@ export function createApp({
   // Modulo Nutrizione (docs/specs/nutrition.md): dati propri in Postgres.
   app.route('/api/v1/nutrition', nutritionRoutes({ ...nutrition, database }))
 
+  // Modulo Documenti (docs/specs/documents.md): dati cifrati in Postgres.
+  app.route('/api/v1/documents', documentsRoutes({ ...documents, database, authEnabled: auth.enabled }))
+
   app.all('/api/*', (c) => c.json<ApiError>({ error: 'not_found', message: 'Rotta non trovata' }, 404))
 
   app.onError((err, c) => {
@@ -157,6 +165,9 @@ export function createApp({
     if (err instanceof DatabaseUnavailableError) {
       console.warn(`database non raggiungibile: ${err.message}`)
       return c.json<ApiError>({ error: 'database_unavailable', message: 'Database non raggiungibile' }, 503)
+    }
+    if (err instanceof DocumentsDisabledError) {
+      return c.json<ApiError>({ error: 'documents_disabled', message: err.message }, 503)
     }
     if (err instanceof InvalidRequestError) {
       return c.json<ApiError>({ error: 'invalid_request', message: err.message }, 400)

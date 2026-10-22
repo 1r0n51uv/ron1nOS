@@ -75,7 +75,7 @@ Accettazione:
 
 #### DOC-003 · Tipi di documento
 
-Stato: pianificato (#104)
+Stato: in corso (#104)
 
 Ogni tipo ha un nome, un'icona e un elenco di campi. I tipi stanno nel
 database e si gestiscono dalla UI (DOC-016); questi sono già pronti alla
@@ -275,7 +275,7 @@ Accettazione:
 
 #### DOC-015 · Cifratura a riposo
 
-Stato: pianificato (#101)
+Stato: fatto (#101)
 
 Accettazione:
 
