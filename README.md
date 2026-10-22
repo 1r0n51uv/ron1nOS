@@ -8,9 +8,11 @@ schermata. Stile liquid glass su nero, un solo accento rosso.
 
 ## Stato
 
-MVP desktop con dati mock. Ogni modulo verrà collegato alla sua sorgente
-vera uno alla volta (vedi [`src/modules`](src/modules/README.md)). La
-versione mobile arriva dopo.
+Desktop. Download, Server e Nutrizione (con la sincronizzazione YAZIO)
+leggono dal backend; gli altri moduli hanno ancora i dati mock dell'MVP e
+si collegano alla loro sorgente vera uno alla volta (vedi
+[`src/modules`](src/modules/README.md) e le
+[specifiche](docs/specs/README.md)). La versione mobile arriva dopo.
 
 ## Stack
 
