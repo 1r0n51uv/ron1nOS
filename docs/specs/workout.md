@@ -41,7 +41,9 @@ Accettazione:
       esercizio, con sopra il nome della routine, il giorno (`oggi`, `ieri`
       o data estesa) e la durata.
 - [ ] Sotto, solo due numeri: allenamenti questa settimana e giorni di
-      fila (GYM-013), in `font-mono`.
+      fila (GYM-013), in `font-mono`, e un piccolo grafico a barre degli
+      allenamenti per settimana sulle ultime 12 settimane, con la settimana
+      corrente in rosso.
 - [ ] Senza dati mostra `Nessun allenamento · importa il CSV di Liftin'`
       con il link alla pagina.
 - [ ] Il link `Dettagli` apre la pagina Allenamenti (GYM-002).
@@ -62,6 +64,8 @@ Accettazione:
 
 - [ ] La voce Allenamenti della barra di navigazione apre la pagina.
 - [ ] Senza dati la pagina mostra solo un invito a importare il CSV.
+- [ ] Card compatte: le immagini sono piccole e le card stanno in griglie
+      da 4 a 6 colonne.
 - [ ] Ogni esercizio mostrato ha la sua immagine (GYM-014); le foto sono in
       bianco e nero e scurite, così l'unico colore resta l'accento rosso.
 - [ ] Ogni sezione ha il suo skeleton e il suo messaggio di errore, senza
@@ -118,6 +122,8 @@ Stato: proposto · Origine: pkm
 Accettazione:
 
 - [ ] In testata routine, giorno e ora, durata e volume della sessione.
+- [ ] Sotto, un grafico a barre orizzontali del volume per esercizio, con
+      l'esercizio più pesante in rosso.
 - [ ] Una card per esercizio, nell'ordine del CSV, con l'immagine
       (GYM-014) e le serie come `peso × reps` (o durata); niente colonne di
       1RM o percezione.
@@ -148,9 +154,9 @@ Stato: proposto · Origine: pkm (ADR-0030)
 
 Accettazione:
 
-- [ ] Griglia dei 6 esercizi più allenati per numero di serie, card grandi
-      con l'immagine (GYM-014), nome, gruppo e un solo numero: il miglior
-      1RM stimato.
+- [ ] Una riga di 6 card compatte, i 6 esercizi più allenati per numero di
+      serie: immagine (GYM-014), nome, miglior 1RM stimato e sparkline
+      dell'andamento.
 - [ ] Per un esercizio a tempo la card mostra la durata migliore al posto
       dell'1RM.
 - [ ] Un clic apre i grafici dell'esercizio (GYM-008).
@@ -176,7 +182,7 @@ Stato: proposto · Origine: nuovo
 
 Accettazione:
 
-- [ ] Griglia di card con immagine (GYM-014), nome, gruppo e ultima volta,
+- [ ] Griglia di card compatte, 6 per riga, con immagine (GYM-014), nome, gruppo e ultima volta,
       dalla più recente; ricerca per nome.
 - [ ] Un filtro `Da completare` mostra gli esercizi senza gruppo o senza
       immagine, con un'etichetta sulla card che dice cosa manca.
@@ -270,6 +276,8 @@ Accettazione:
       sessione, che finiscono oggi o ieri (`GymMath.currentStreakDays` di
       pkm).
 - [ ] Usati da widget (GYM-001) e pagina (GYM-002).
+- [ ] Nella pagina, un grafico a barre degli allenamenti per settimana
+      sulle ultime 26 settimane, con la media.
 
 ## Note
 
@@ -371,6 +379,9 @@ Prese il 2026-10-22.
 9. **Nomi degli esercizi.** Testo libero dal CSV, senza alias.
 10. **Immagini e densità** (2026-10-22, dopo i primi mockup). Un'immagine
     per ogni esercizio (GYM-014) e schermate con meno numeri: widget,
-    pagina, dettaglio, esercizio ed elenco rifatti di conseguenza.
+    pagina, dettaglio, esercizio ed elenco rifatti di conseguenza. Poi
+    card più piccole e qualche grafico in più: barre settimanali nel
+    widget e nella pagina, sparkline sulle card, volume per esercizio nel
+    dettaglio.
 11. **Rimandati.** Calcolatore dischi e riscaldamento, peso corporeo
     accanto ai grafici, Apple Salute, progressione suggerita.
