@@ -65,3 +65,64 @@ export function useSaveGoal() {
     onSuccess: () => client.invalidateQueries({ queryKey: ['nutrition'] }),
   })
 }
+
+// Giorno del diario (GET /api/v1/nutrition/day, NUT-002).
+export type SlotId = 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner'
+
+export const SLOT_LABELS: Record<SlotId, string> = {
+  breakfast: 'Colazione',
+  morning_snack: 'Spuntino',
+  lunch: 'Pranzo',
+  afternoon_snack: 'Merenda',
+  dinner: 'Cena',
+}
+
+export type Macros = { kcal: number; protein: number; carbs: number; fat: number }
+
+export type SyncState = 'local' | 'pending' | 'synced' | 'error' | 'unmatched'
+
+export type MealItem = Macros & {
+  id: string
+  foodId: string | null
+  name: string
+  grams: number
+  origin: 'ron1nos' | 'yazio'
+  sync: SyncState
+}
+
+export type PlannedItem = Macros & { foodId: string | null; name: string; grams: number }
+
+export type SlotDay = {
+  slot: SlotId
+  state: 'empty' | 'planned' | 'eaten' | 'skipped'
+  meal: (Macros & { id: string; items: MealItem[] }) | null
+  planned:
+    | (Macros & {
+        id: string
+        status: 'planned' | 'eaten' | 'skipped'
+        recipeId: string | null
+        recipeName: string | null
+        templateName: string | null
+        items: PlannedItem[]
+      })
+    | null
+}
+
+export type Day = {
+  date: string
+  goal: (Pick<Goal, 'kcal' | 'protein' | 'carbs' | 'fat'> & { waterMl: number | null }) | null
+  totals: Macros
+  plannedKcal: number
+  slots: SlotDay[]
+}
+
+export const daySource = {
+  get: (date: string) => api.get<Day>(`/nutrition/day?date=${date}`),
+}
+
+export function useDay(date: string) {
+  return useQuery({
+    queryKey: ['nutrition', 'day', date],
+    queryFn: () => daySource.get(date),
+  })
+}

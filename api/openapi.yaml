@@ -239,6 +239,20 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+  /nutrition/day:
+    get:
+      summary: Il giorno del diario, con i 5 pasti e i totali (NUT-001, NUT-002)
+      operationId: getNutritionDay
+      parameters:
+        - { $ref: "#/components/parameters/NutritionDate" }
+      responses:
+        "200":
+          description: Slot in ordine (colazione, spuntino, pranzo, merenda, cena), totali mangiati e obiettivo del giorno.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NutritionDay" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/goals:
     get:
       summary: Obiettivo nutrizionale valido in un giorno e storico (NUT-015)
@@ -324,6 +338,93 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
   schemas:
+    Macros:
+      type: object
+      required: [kcal, protein, carbs, fat]
+      properties:
+        kcal: { type: number, description: kcal intere }
+        protein: { type: number, description: grammi, un decimale }
+        carbs: { type: number }
+        fat: { type: number }
+    MealSlot:
+      type: string
+      enum: [breakfast, morning_snack, lunch, afternoon_snack, dinner]
+    NutritionDay:
+      type: object
+      required: [date, goal, totals, plannedKcal, slots]
+      properties:
+        date: { type: string, format: date }
+        goal:
+          oneOf:
+            - type: object
+              required: [kcal, protein, carbs, fat, waterMl]
+              properties:
+                kcal: { type: number }
+                protein: { type: number }
+                carbs: { type: number }
+                fat: { type: number }
+                waterMl: { type: [number, "null"] }
+            - { type: "null" }
+        totals: { $ref: "#/components/schemas/Macros" }
+        plannedKcal: { type: number, description: kcal pianificate e non ancora mangiate }
+        slots:
+          type: array
+          items: { $ref: "#/components/schemas/NutritionSlot" }
+    NutritionSlot:
+      type: object
+      required: [slot, state, meal, planned]
+      properties:
+        slot: { $ref: "#/components/schemas/MealSlot" }
+        state: { type: string, enum: [empty, planned, eaten, skipped] }
+        meal:
+          oneOf:
+            - allOf:
+                - { $ref: "#/components/schemas/Macros" }
+                - type: object
+                  required: [id, items]
+                  properties:
+                    id: { type: string, format: uuid }
+                    items:
+                      type: array
+                      items: { $ref: "#/components/schemas/MealItem" }
+            - { type: "null" }
+        planned:
+          oneOf:
+            - allOf:
+                - { $ref: "#/components/schemas/Macros" }
+                - type: object
+                  required: [id, status, recipeId, recipeName, templateName, items]
+                  properties:
+                    id: { type: string, format: uuid }
+                    status: { type: string, enum: [planned, eaten, skipped] }
+                    recipeId: { type: [string, "null"] }
+                    recipeName: { type: [string, "null"] }
+                    templateName: { type: [string, "null"] }
+                    items:
+                      type: array
+                      items:
+                        allOf:
+                          - { $ref: "#/components/schemas/Macros" }
+                          - type: object
+                            required: [foodId, name, grams]
+                            properties:
+                              foodId: { type: [string, "null"] }
+                              name: { type: string }
+                              grams: { type: number }
+            - { type: "null" }
+    MealItem:
+      description: Riga del diario, con kcal e macro copiati alla registrazione.
+      allOf:
+        - { $ref: "#/components/schemas/Macros" }
+        - type: object
+          required: [id, foodId, name, grams, origin, sync]
+          properties:
+            id: { type: string, format: uuid, description: anche l'id della voce in YAZIO }
+            foodId: { type: [string, "null"] }
+            name: { type: string }
+            grams: { type: number }
+            origin: { type: string, enum: [ron1nos, yazio] }
+            sync: { type: string, enum: [local, pending, synced, error, unmatched] }
     NutritionGoal:
       type: object
       required: [id, source, kcal, protein, carbs, fat, waterMl, effectiveFrom]
