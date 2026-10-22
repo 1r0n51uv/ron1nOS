@@ -8,6 +8,7 @@ import { ApiError } from '@/lib/api'
 import { useDay } from '../data'
 import { eyebrowDay, isDay, todayRome } from '../dates'
 import { AddMealDialog } from '../log/AddMealDialog'
+import { CaffeineCard } from './CaffeineCard'
 import { DayStrip } from './DayStrip'
 import { DaySummary } from './DaySummary'
 import { SlotCard } from './SlotCard'
@@ -72,6 +73,7 @@ export function MealsPage() {
               <>
                 <DaySummary day={shown} title={date === today ? 'Oggi' : 'Giorno'} />
                 <WaterCard day={shown} />
+                <CaffeineCard day={shown} />
               </>
             ) : (
               <Skeleton aria-busy="true" className="h-72 rounded-panel" />

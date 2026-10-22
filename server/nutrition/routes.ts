@@ -16,7 +16,7 @@ import { Amount, Day, Grams, Slot } from './schemas.ts'
 import { deletePlan, setPlan, setPlanStatus } from './plans.ts'
 import { createRecipe, deleteRecipe, getRecipe, listRecipes, updateRecipe } from './recipes.ts'
 import { findBarcode, searchFoods } from './search.ts'
-import { addWater, undoWater } from './trackers.ts'
+import { addCaffeine, addWater, undoCaffeine, undoWater } from './trackers.ts'
 import {
   addShopping,
   clearChecked,
@@ -303,6 +303,28 @@ export function nutritionRoutes({
     const date = check(Day, c.req.query('date'))
     const db = c.get('db')
     await undoWater(db, date)
+    return c.json(await dayView(db, date))
+  })
+
+  // Caffeina (NUT-013): + un espresso da 80 mg, - annulla l'ultima voce.
+  app.post('/caffeine', async (c) => {
+    const { date, mg, source } = await readJson(
+      c,
+      z.object({
+        date: Day,
+        mg: z.number().finite().positive().max(1000).default(80),
+        source: z.string().trim().min(1).max(80).default('Espresso'),
+      }),
+    )
+    const db = c.get('db')
+    await addCaffeine(db, date, mg, source)
+    return c.json(await dayView(db, date), 201)
+  })
+
+  app.delete('/caffeine/last', async (c) => {
+    const date = check(Day, c.req.query('date'))
+    const db = c.get('db')
+    await undoCaffeine(db, date)
     return c.json(await dayView(db, date))
   })
 

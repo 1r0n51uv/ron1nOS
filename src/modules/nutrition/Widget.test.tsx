@@ -29,6 +29,7 @@ function day(over: Partial<Day> = {}): Day {
     suggestedSlot: 'lunch',
     nextSlot: 'lunch',
     waterMl: 0,
+    caffeine: { totalMg: 0, mealsMg: 0 },
     slots: [
       slot('breakfast', 'eaten'),
       slot('morning_snack', 'eaten'),

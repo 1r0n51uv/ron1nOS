@@ -89,6 +89,8 @@ export type Day = {
   nextSlot: SlotId | null
   // Acqua bevuta nel giorno (NUT-012).
   waterMl: number
+  // Caffeina del giorno (NUT-013): il totale e la parte dai pasti.
+  caffeine: { totalMg: number; mealsMg: number }
 }
 
 export const daySource = {
@@ -196,6 +198,18 @@ export const waterSource = {
 
 export const useAddWater = () => useDayMutation((date: string) => waterSource.add(date))
 export const useUndoWater = () => useDayMutation((date: string) => waterSource.undo(date))
+
+// Caffeina (/api/v1/nutrition/caffeine, NUT-013): + un espresso da 80 mg.
+export const CAFFEINE_STEP_MG = 80
+
+export const caffeineSource = {
+  add: (date: string) =>
+    api.post<Day>('/nutrition/caffeine', { date, mg: CAFFEINE_STEP_MG, source: 'Espresso' }),
+  undo: (date: string) => api.delete<Day>(`/nutrition/caffeine/last?date=${date}`),
+}
+
+export const useAddCaffeine = () => useDayMutation((date: string) => caffeineSource.add(date))
+export const useUndoCaffeine = () => useDayMutation((date: string) => caffeineSource.undo(date))
 
 export const useLogMeal = () => useDayMutation((input: MealInput) => mealsSource.log(input))
 export const useRemoveItem = () => useDayMutation((id: string) => mealsSource.removeItem(id))
