@@ -253,6 +253,37 @@ paths:
               schema: { $ref: "#/components/schemas/NutritionDay" }
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/foods/search:
+    get:
+      summary: Ricerca alimenti su catalogo locale, OpenFoodFacts e USDA (NUT-004)
+      description: >
+        Almeno 2 caratteri. Prima il catalogo locale (alimenti già usati o
+        creati), poi OpenFoodFacts e USDA, senza doppioni per nome e marca.
+        I risultati esterni hanno `id` null: entrano nel catalogo solo quando
+        si usano. Una fonte che non risponde finisce in `unavailable`.
+      operationId: searchFoods
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+        - name: italy
+          in: query
+          description: "`0` toglie il filtro Solo Italia di OpenFoodFacts, attivo di default."
+          schema: { type: string, enum: ["0", "1"] }
+      responses:
+        "200":
+          description: Risultati, al massimo 30.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [results, unavailable]
+                properties:
+                  results:
+                    type: array
+                    items: { $ref: "#/components/schemas/Food" }
+                  unavailable:
+                    type: array
+                    items: { type: string, enum: [openfoodfacts, usda, yazio] }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/goals:
     get:
       summary: Obiettivo nutrizionale valido in un giorno e storico (NUT-015)
@@ -338,6 +369,39 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
   schemas:
+    Food:
+      type: object
+      description: Alimento, valori per 100 g. `id` null per un candidato esterno non ancora nel catalogo.
+      required:
+        [
+          id,
+          source,
+          externalId,
+          name,
+          brand,
+          barcode,
+          servingSizeG,
+          kcal,
+          protein,
+          carbs,
+          fat,
+          caffeineMg,
+          yazioProductId,
+        ]
+      properties:
+        id: { type: [string, "null"], format: uuid }
+        source: { type: string, enum: [custom, openfoodfacts, usda, yazio] }
+        externalId: { type: [string, "null"] }
+        name: { type: string }
+        brand: { type: [string, "null"] }
+        barcode: { type: [string, "null"] }
+        servingSizeG: { type: [number, "null"] }
+        kcal: { type: number }
+        protein: { type: number }
+        carbs: { type: number }
+        fat: { type: number }
+        caffeineMg: { type: [number, "null"] }
+        yazioProductId: { type: [string, "null"] }
     Macros:
       type: object
       required: [kcal, protein, carbs, fat]

@@ -7,9 +7,11 @@ import type { Database, Db } from '../db.ts'
 import { DatabaseUnavailableError } from '../db.ts'
 import { today } from './dates.ts'
 import { getDay } from './day.ts'
+import type { ExternalSearch } from './foodsearch.ts'
 import { addGoal, goalFor, goalHistory } from './goals.ts'
 import { check, ConflictError, readJson } from './http.ts'
 import { Amount, Day } from './schemas.ts'
+import { searchFoods } from './search.ts'
 
 export type NutritionDeps = {
   database: Database
@@ -17,7 +19,11 @@ export type NutritionDeps = {
   // lì e non si modifica a mano (NUT-015, NUT-024).
   goalsFromYazio?: () => Promise<boolean>
   now?: () => Date
+  // OpenFoodFacts e USDA; senza, la ricerca usa solo il catalogo locale.
+  external?: ExternalSearch
 }
+
+const offline: ExternalSearch = { off: async () => [], usda: async () => [], offBarcode: async () => null }
 
 const GoalInput = z.object({
   kcal: z.number().finite().min(800).max(8000),
@@ -32,6 +38,7 @@ export function nutritionRoutes({
   database,
   goalsFromYazio = async () => false,
   now = () => new Date(),
+  external = offline,
 }: NutritionDeps) {
   const app = new Hono<{ Variables: { db: Db } }>()
 
@@ -46,6 +53,14 @@ export function nutritionRoutes({
   app.get('/day', async (c) => {
     const day = c.req.query('date') ? check(Day, c.req.query('date')) : today(now())
     return c.json(await getDay(c.get('db'), day))
+  })
+
+  // Ricerca su catalogo locale, OpenFoodFacts e USDA (NUT-004). `italy=0`
+  // toglie il filtro Solo Italia, attivo di default.
+  app.get('/foods/search', async (c) => {
+    const q = c.req.query('q') ?? ''
+    const italy = c.req.query('italy') !== '0'
+    return c.json(await searchFoods({ db: c.get('db'), external }, q, { italy }))
   })
 
   app.get('/goals', async (c) => {
