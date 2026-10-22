@@ -99,15 +99,12 @@ describe('fromYazioProduct', () => {
         product_id: 'x',
         name: ' Pane ',
         producer: '',
-        is_verified: true,
-        base_unit: 'g',
         nutrients: {
           'energy.energy': 2.654,
           'nutrient.protein': 0.09,
           'nutrient.carb': 0.5,
           'nutrient.fat': 0.032,
         },
-        countries: ['IT'],
       }),
     ).toMatchObject({ name: 'Pane', brand: null, kcal: 265.4, protein: 9, carbs: 50, fat: 3.2 })
   })

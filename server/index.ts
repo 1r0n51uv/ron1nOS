@@ -6,6 +6,8 @@ import { createDb, startDatabase } from './db.ts'
 import { createDraftService } from './drafts.ts'
 import { createGlancesClient } from './glances.ts'
 import { createExternalSearch } from './nutrition/foodsearch.ts'
+import { READ_FROM_YAZIO } from './nutrition/fromyazio.ts'
+import { createSyncRunner } from './nutrition/yazio.ts'
 import { createQbtClient } from './qbittorrent.ts'
 import { createYazioClient } from './yazio/client.ts'
 import { dbTokenStore } from './yazio/tokens.ts'
@@ -21,6 +23,11 @@ const database = startDatabase(config.databaseUrl ? createDb(config.databaseUrl)
 const { yazio } = config
 if (!yazio) console.warn('variabili YAZIO_* mancanti: il diario resta solo in ron1nOS')
 
+const sync = createSyncRunner({
+  yazio: yazio && ((db) => createYazioClient({ ...yazio, tokens: dbTokenStore(db, yazio.tokenKey) })),
+  steps: READ_FROM_YAZIO,
+})
+
 const qbt = createQbtClient(config.qbt)
 const drafts = createDraftService({ qbt, metadataWaitMs: config.metadataWaitMs })
 const app = createApp({
@@ -29,10 +36,7 @@ const app = createApp({
   glances: createGlancesClient(config.glances),
   staticDir: config.staticDir,
   database,
-  nutrition: {
-    external: createExternalSearch(config.foods),
-    yazio: yazio && ((db) => createYazioClient({ ...yazio, tokens: dbTokenStore(db, yazio.tokenKey) })),
-  },
+  nutrition: { external: createExternalSearch(config.foods), sync },
 })
 
 // Bozze orfane del wizard: all'avvio e ogni ora.
@@ -44,6 +48,17 @@ function sweep() {
 }
 sweep()
 setInterval(sweep, 60 * 60_000).unref()
+
+// Sincronizzazione con YAZIO ogni 15 minuti (NUT-022); l'esito finisce in
+// Impostazioni, qui solo gli errori inattesi.
+function syncYazio() {
+  if (database.status() !== 'ok' || !database.db) return
+  sync.tick(database.db).catch((err: Error) => console.warn(`giro YAZIO non riuscito: ${err.message}`))
+}
+if (yazio) {
+  setTimeout(syncYazio, 30_000).unref()
+  setInterval(syncYazio, 15 * 60_000).unref()
+}
 
 const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
   console.log(`ron1nOS in ascolto sulla porta ${info.port}`)

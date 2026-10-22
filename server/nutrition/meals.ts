@@ -38,7 +38,14 @@ export async function addItems(
   {
     sync = 'local',
     plannedMealId = null,
-  }: { sync?: 'local' | 'pending'; plannedMealId?: string | null } = {},
+    yazio = null,
+  }: {
+    sync?: 'local' | 'pending' | 'synced'
+    plannedMealId?: string | null
+    // Una voce letta dal diario YAZIO (NUT-022): tiene il suo id e quello
+    // che YAZIO ne sa, per riconoscere i cambi alla lettura dopo.
+    yazio?: { id: string; daytime: string } | null
+  } = {},
 ) {
   const { rows: last } = await db.query<{ n: number }>(
     `select coalesce(max(order_index) + 1, 0)::int as n from meal_entry_items where meal_entry_id = $1`,
@@ -57,8 +64,9 @@ export async function addItems(
     )
     const { rows } = await db.query<{ id: string }>(
       `insert into meal_entry_items (meal_entry_id, food_id, food_name, quantity_g, calories, protein_g, carbs_g,
-         fat_g, caffeine_mg, order_index, yazio_sync, planned_meal_id)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) returning id`,
+         fat_g, caffeine_mg, order_index, yazio_sync, planned_meal_id, id, origin, yazio_amount, yazio_daytime)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, coalesce($13, gen_random_uuid()), $14, $15, $16)
+       returning id`,
       [
         mealId,
         food.id,
@@ -74,6 +82,10 @@ export async function addItems(
         last[0].n + i,
         sync,
         plannedMealId,
+        yazio?.id ?? null,
+        yazio ? 'yazio' : 'ron1nos',
+        yazio ? grams : null,
+        yazio?.daytime ?? null,
       ],
     )
     ids.push(rows[0].id)
@@ -132,19 +144,34 @@ async function itemDay(db: Queryable, id: string) {
 export async function removeItem(db: Queryable, id: string) {
   const item = await itemDay(db, id)
   await db.query('delete from meal_entry_items where id = $1', [id])
+  await dropIfEmpty(db, item.mealId)
+  return item.day
+}
+
+async function dropIfEmpty(db: Queryable, mealId: string) {
   const { rows } = await db.query<{ n: number }>(
     'select count(*)::int as n from meal_entry_items where meal_entry_id = $1',
-    [item.mealId],
+    [mealId],
   )
-  if (rows[0].n === 0) {
-    await db.query(
-      `update planned_meals set status = 'skipped', meal_entry_id = null, updated_at = now()
-        where meal_entry_id = $1`,
-      [item.mealId],
-    )
-    await db.query('delete from meal_entries where id = $1', [item.mealId])
-  }
-  return item.day
+  if (rows[0].n > 0) return
+  await db.query(
+    `update planned_meals set status = 'skipped', meal_entry_id = null, updated_at = now()
+      where meal_entry_id = $1`,
+    [mealId],
+  )
+  await db.query('delete from meal_entries where id = $1', [mealId])
+}
+
+// Sposta una riga in un altro giorno o slot (voce spostata in YAZIO, NUT-022).
+export async function moveItem(db: Queryable, id: string, day: string, slot: Slot) {
+  const item = await itemDay(db, id)
+  if (item.day === day && item.slot === slot) return
+  const mealId = await mealEntry(db, day, slot)
+  await db.query('update meal_entry_items set meal_entry_id = $2, updated_at = now() where id = $1', [
+    id,
+    mealId,
+  ])
+  await dropIfEmpty(db, item.mealId)
 }
 
 // Cambia la quantità: kcal, macro e caffeina scalano dai valori copiati,

@@ -43,8 +43,8 @@ import {
   updateTemplate,
 } from './templates.ts'
 import { activityOf, latestWeight, READ_FROM_YAZIO } from './fromyazio.ts'
-import type { SyncStep } from './yazio.ts'
-import { runSync, setSyncEnabled, syncEnabled, yazioLink } from './yazio.ts'
+import type { SyncRunner, SyncStep } from './yazio.ts'
+import { createSyncRunner, setSyncEnabled, syncEnabled, yazioLink } from './yazio.ts'
 
 export type NutritionDeps = {
   database: Database
@@ -59,6 +59,9 @@ export type NutritionDeps = {
   // configurato e il diario resta solo in ron1nOS.
   yazio?: (db: Queryable) => YazioClient
   syncSteps?: SyncStep[]
+  // Chi fa i giri, condiviso con il giro periodico di index.ts; senza, lo
+  // si costruisce da yazio e syncSteps.
+  sync?: SyncRunner
 }
 
 const SyncInput = z.object({ enabled: z.boolean() })
@@ -208,27 +211,18 @@ export function nutritionRoutes({
   external = offline,
   yazio,
   syncSteps = READ_FROM_YAZIO,
+  sync = createSyncRunner({ yazio, steps: syncSteps, now }),
 }: NutritionDeps) {
   const app = new Hono<{ Variables: { db: Db } }>()
-
-  // Un client per database, così il rinnovo del token resta uno solo.
-  let client: { db: Db; client: YazioClient } | null = null
-  const yazioClient = (db: Db) => {
-    if (!yazio) return null
-    if (client?.db !== db) client = { db, client: yazio(db) }
-    return client.client
-  }
   // YAZIO in uso: configurato, sincronizzazione accesa e almeno un giro
   // riuscito. Con le credenziali sbagliate dal primo giorno l'obiettivo
   // resta modificabile a mano.
   const yazioActive = async (db: Queryable) => {
-    if (!yazio) return false
+    if (!sync.configured) return false
     const link = await yazioLink(db, true)
     return link.syncEnabled && link.lastSyncAt !== null
   }
   const goalsLocked = goalsFromYazio ?? yazioActive
-  // Un solo giro alla volta: Sincronizza ora durante un giro aspetta quello.
-  let running: Promise<boolean> | null = null
 
   // Senza Postgres il modulo risponde 503; il resto della dashboard no.
   app.use('*', async (c, next) => {
@@ -284,7 +278,7 @@ export function nutritionRoutes({
     const q = c.req.query('q') ?? ''
     const italy = c.req.query('italy') !== '0'
     const db = c.get('db')
-    const yc = (await yazioActive(db)) ? yazioClient(db) : null
+    const yc = (await yazioActive(db)) ? sync.client(db) : null
     const extra = yc ? [{ source: 'yazio' as const, search: yazioSearch(yc) }] : []
     return c.json(await searchFoods({ db, external, extra }, q, { italy }))
   })
@@ -525,7 +519,7 @@ export function nutritionRoutes({
   async function yazioView(db: Db) {
     const day = today(now())
     const [link, goal, activity, weight] = await Promise.all([
-      yazioLink(db, !!yazio),
+      yazioLink(db, sync.configured),
       goalFor(db, day),
       activityOf(db, day),
       latestWeight(db),
@@ -553,7 +547,7 @@ export function nutritionRoutes({
   // Sincronizza ora: un giro subito, risponde con lo stato aggiornato.
   app.post('/yazio/sync', async (c) => {
     const db = c.get('db')
-    const yc = yazioClient(db)
+    const yc = sync.client(db)
     if (!yc) {
       throw new ConflictError(
         'yazio_not_configured',
@@ -563,10 +557,7 @@ export function nutritionRoutes({
     if (!(await syncEnabled(db))) {
       throw new ConflictError('yazio_sync_off', 'La sincronizzazione con YAZIO è spenta')
     }
-    running ??= runSync(db, yc, { steps: syncSteps, now: now() }).finally(() => {
-      running = null
-    })
-    await running
+    await sync.run(db, yc)
     return c.json(await yazioView(db))
   })
 

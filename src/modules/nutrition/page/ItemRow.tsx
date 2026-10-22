@@ -28,7 +28,10 @@ export function ItemRow({ item }: { item: MealItem }) {
   return (
     <li className="flex flex-col">
       <div className="flex min-h-10 items-center gap-3 text-sm">
-        <span className="min-w-0 flex-1 truncate">{item.name}</span>
+        <span className="min-w-0 flex-1 truncate">
+          {item.name}
+          {item.origin === 'yazio' ? <span className="text-ink-muted"> · da YAZIO</span> : null}
+        </span>
         {editing ? (
           <span className="relative w-24">
             <Input
