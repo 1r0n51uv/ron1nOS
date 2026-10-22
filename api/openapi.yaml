@@ -435,6 +435,34 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/foods/barcode/{code}:
+    get:
+      summary: Alimento da codice a barre (NUT-005)
+      description: >
+        Prima il catalogo locale, poi OpenFoodFacts. Un prodotto esterno ha
+        `id` null ed entra nel catalogo solo quando si usa. `food` null: codice
+        sconosciuto, o OpenFoodFacts giù se `unavailable` lo dice.
+      operationId: findFoodByBarcode
+      parameters:
+        - { name: code, in: path, required: true, schema: { type: string, pattern: "^\\d{6,14}$" } }
+      responses:
+        "200":
+          description: L'alimento trovato, o null.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [food, unavailable]
+                properties:
+                  food:
+                    oneOf:
+                      - { $ref: "#/components/schemas/Food" }
+                      - { type: "null" }
+                  unavailable:
+                    type: array
+                    items: { type: string, enum: [openfoodfacts] }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/foods/search:
     get:
       summary: Ricerca alimenti su catalogo locale, OpenFoodFacts e USDA (NUT-004)

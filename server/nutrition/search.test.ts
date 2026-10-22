@@ -123,3 +123,48 @@ describe('conversioni', () => {
     ).toMatchObject({ name: 'Apples, raw', kcal: 52, externalId: '1' })
   })
 })
+
+describe('codice a barre (NUT-005)', () => {
+  it('prima il catalogo locale, senza chiamare OpenFoodFacts', async () => {
+    const { api, fake } = setup()
+    await seedFood(db, { name: 'Barretta di casa', kcal: 380, barcode: '80012345' })
+    const res = await api.get('/foods/barcode/80012345')
+    expect(res.body).toMatchObject({
+      food: { name: 'Barretta di casa', id: expect.any(String) },
+      unavailable: [],
+    })
+    expect(fake.state.calls).toEqual([])
+  })
+
+  it('poi OpenFoodFacts, senza metterlo nel catalogo', async () => {
+    const { api } = setup()
+    const res = await api.get('/foods/barcode/5201054017111')
+    expect(res.body.food).toMatchObject({
+      id: null,
+      source: 'openfoodfacts',
+      name: 'Yogurt greco bianco 2%',
+      brand: 'Fage',
+      barcode: '5201054017111',
+      servingSizeG: 170,
+      kcal: 73,
+    })
+    const { rows } = await db.query('select count(*)::int as n from foods')
+    expect(rows[0]).toEqual({ n: 0 })
+  })
+
+  it('codice sconosciuto o senza valori: food null', async () => {
+    const { api } = setup()
+    expect((await api.get('/foods/barcode/99999999')).body).toEqual({ food: null, unavailable: [] })
+    expect((await api.get('/foods/barcode/0000000000001')).body).toEqual({ food: null, unavailable: [] })
+  })
+
+  it('OpenFoodFacts giù viene segnalato; codice non valido 400', async () => {
+    const { api, fake } = setup()
+    fake.state.off = false
+    expect((await api.get('/foods/barcode/5201054017111')).body).toEqual({
+      food: null,
+      unavailable: ['openfoodfacts'],
+    })
+    expect((await api.get('/foods/barcode/12ab')).status).toBe(400)
+  })
+})

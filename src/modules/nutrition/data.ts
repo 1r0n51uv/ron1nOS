@@ -202,3 +202,18 @@ export const useUpdateFood = () =>
     customFoodsSource.update(id, input),
   )
 export const useDeleteFood = () => useFoodMutation((id: string) => customFoodsSource.remove(id))
+
+// Codice a barre (GET /api/v1/nutrition/foods/barcode/{code}, NUT-005).
+export type BarcodeResult = { food: Food | null; unavailable: Exclude<FoodSource, 'custom'>[] }
+
+export const barcodeSource = {
+  find: (code: string) => api.get<BarcodeResult>(`/nutrition/foods/barcode/${encodeURIComponent(code)}`),
+}
+
+export function useBarcode(code: string | null) {
+  return useQuery({
+    queryKey: ['nutrition', 'barcode', code],
+    queryFn: () => barcodeSource.find(code!),
+    enabled: !!code,
+  })
+}
