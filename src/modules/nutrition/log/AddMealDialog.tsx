@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useEffect, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useState } from 'react'
 
 import { AlertRow, Icon } from '@/components/ron1n'
 import { Badge } from '@/components/ui/badge'
@@ -24,10 +24,13 @@ import type { Food, SlotId } from '../data'
 import { SLOT_LABELS, useCreateFood, useFoodSearch, useLogMeal } from '../data'
 import { eyebrowDay } from '../dates'
 import { FoodForm } from '../foods/FoodForm'
+import { BarcodeTab } from './BarcodeTab'
 import type { Draft } from './meal'
 import { defaultGrams, macrosOf, parseGrams, SOURCE_NAME, SOURCE_TAG, toItem, totalOf } from './meal'
 
 const SLOTS = Object.keys(SLOT_LABELS) as SlotId[]
+
+type Tab = 'search' | 'barcode' | 'new'
 
 function useDebounced<T>(value: T, ms = 300) {
   const [debounced, setDebounced] = useState(value)
@@ -46,7 +49,9 @@ function macroLine(m: { protein: number; carbs: number; fat: number }) {
 function LogMeal({ date, initialSlot, onDone }: { date: string; initialSlot: SlotId; onDone: () => void }) {
   const id = useId()
   const [slot, setSlot] = useState(initialSlot)
-  const [tab, setTab] = useState<'search' | 'new'>('search')
+  const [tab, setTab] = useState<Tab>('search')
+  // Il codice a barre sconosciuto passa al modulo Nuovo alimento.
+  const [newBarcode, setNewBarcode] = useState<string | null>(null)
   const create = useCreateFood()
   const [query, setQuery] = useState('')
   const [italy, setItaly] = useState(true)
@@ -61,10 +66,10 @@ function LogMeal({ date, initialSlot, onDone }: { date: string; initialSlot: Slo
   const error =
     log.error instanceof ApiError ? log.error.message : log.error ? 'Backend non raggiungibile' : null
 
-  function pick(food: Food) {
+  const pick = useCallback((food: Food) => {
     setSelected(food)
     setGrams(String(defaultGrams(food)))
-  }
+  }, [])
 
   function add() {
     if (!selected || !g) return
@@ -106,9 +111,10 @@ function LogMeal({ date, initialSlot, onDone }: { date: string; initialSlot: Slo
       </div>
 
       <div className="flex flex-col gap-3">
-        <Tabs value={tab} onValueChange={(v) => setTab(v as 'search' | 'new')}>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
           <TabsList aria-label="Come aggiungere">
             <TabsTrigger value="search">Cerca</TabsTrigger>
+            <TabsTrigger value="barcode">Codice a barre</TabsTrigger>
             <TabsTrigger value="new">Nuovo alimento</TabsTrigger>
           </TabsList>
           <TabsContent value="search" className="flex flex-col gap-3">
@@ -179,9 +185,18 @@ function LogMeal({ date, initialSlot, onDone }: { date: string; initialSlot: Slo
               />
             ) : null}
           </TabsContent>
+          <TabsContent value="barcode">
+            <BarcodeTab
+              onPick={pick}
+              onCreate={(code) => {
+                setNewBarcode(code)
+                setTab('new')
+              }}
+            />
+          </TabsContent>
           <TabsContent value="new">
             <FoodForm
-              food={{ name: query.trim() }}
+              food={{ name: query.trim(), barcode: newBarcode }}
               submitLabel="Crea e scegli"
               pending={create.isPending}
               error={create.error}

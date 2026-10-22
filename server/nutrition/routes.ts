@@ -13,7 +13,7 @@ import { addGoal, goalFor, goalHistory } from './goals.ts'
 import { check, ConflictError, readJson } from './http.ts'
 import { logMeal, nextSlot, removeItem, setGrams, slotForHour } from './meals.ts'
 import { Amount, Day, Grams, Slot } from './schemas.ts'
-import { searchFoods } from './search.ts'
+import { findBarcode, searchFoods } from './search.ts'
 
 export type NutritionDeps = {
   database: Database
@@ -82,6 +82,8 @@ const CustomFoodInput = z.object({
   caffeineMg: CustomFields.caffeineMg.optional().transform((v) => v ?? null),
 })
 const CustomFoodPatch = z.object(CustomFields).partial().strict()
+
+const Barcode = z.string().regex(/^\d{6,14}$/)
 
 // Id di alimenti e righe.
 const Id = z.uuid()
@@ -159,6 +161,12 @@ export function nutritionRoutes({
     const q = c.req.query('q') ?? ''
     const italy = c.req.query('italy') !== '0'
     return c.json(await searchFoods({ db: c.get('db'), external }, q, { italy }))
+  })
+
+  // Codice a barre, scritto a mano o letto dalla fotocamera (NUT-005).
+  app.get('/foods/barcode/:code', async (c) => {
+    const code = check(Barcode, c.req.param('code'))
+    return c.json(await findBarcode({ db: c.get('db'), external }, code))
   })
 
   // Alimenti personali (NUT-006).

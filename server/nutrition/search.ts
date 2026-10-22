@@ -2,7 +2,7 @@
 // OpenFoodFacts, poi USDA (e YAZIO con NUT-021), senza doppioni per nome.
 import type { Queryable } from '../db.ts'
 import type { Food, FoodCandidate } from './foods.ts'
-import { normalizeName, searchLocal } from './foods.ts'
+import { FOOD_COLUMNS, normalizeName, searchLocal } from './foods.ts'
 import type { ExternalSearch } from './foodsearch.ts'
 
 export type SearchResult = FoodCandidate & { id: string | null; yazioProductId: string | null }
@@ -52,4 +52,20 @@ export async function searchFoods(
     for (const c of list) add({ ...c, id: null, yazioProductId: c.yazioProductId ?? null })
   }
   return { results: results.slice(0, limit), unavailable }
+}
+
+// Codice a barre (NUT-005): prima il catalogo locale, poi OpenFoodFacts.
+// Un prodotto esterno non entra nel catalogo finché non lo si usa.
+export async function findBarcode(
+  { db, external }: Pick<SearchDeps, 'db' | 'external'>,
+  code: string,
+): Promise<{ food: SearchResult | null; unavailable: SearchSource[] }> {
+  const { rows } = await db.query<Food>(`select ${FOOD_COLUMNS} from foods where barcode = $1`, [code])
+  if (rows[0]) return { food: rows[0], unavailable: [] }
+  const off = await external.offBarcode(code)
+  if (off === undefined) return { food: null, unavailable: ['openfoodfacts'] }
+  return {
+    food: off ? { ...off, id: null, yazioProductId: off.yazioProductId ?? null } : null,
+    unavailable: [],
+  }
 }
