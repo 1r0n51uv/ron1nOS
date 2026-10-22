@@ -1424,7 +1424,19 @@ components:
     NutritionDay:
       type: object
       required:
-        [date, goal, totals, plannedKcal, slots, suggestedSlot, nextSlot, waterMl, caffeine, supplements]
+        [
+          date,
+          goal,
+          quota,
+          totals,
+          plannedKcal,
+          slots,
+          suggestedSlot,
+          nextSlot,
+          waterMl,
+          caffeine,
+          supplements,
+        ]
       properties:
         date: { type: string, format: date }
         goal:
@@ -1437,6 +1449,19 @@ components:
                 carbs: { type: number }
                 fat: { type: number }
                 waterMl: { type: [number, "null"] }
+            - { type: "null" }
+        quota:
+          description: >
+            Le kcal del giorno (NUT-016): obiettivo di base più l'energia
+            attiva letta da YAZIO, al massimo +1200 kcal. null senza
+            obiettivo.
+          oneOf:
+            - type: object
+              required: [kcal, baseKcal, activityKcal]
+              properties:
+                kcal: { type: number }
+                baseKcal: { type: number }
+                activityKcal: { type: number }
             - { type: "null" }
         totals: { $ref: "#/components/schemas/Macros" }
         plannedKcal: { type: number, description: kcal pianificate e non ancora mangiate }
