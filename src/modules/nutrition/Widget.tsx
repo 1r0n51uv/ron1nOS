@@ -41,7 +41,7 @@ export function NutritionWidget({ className }: { className?: string }) {
   }
   if (!data) return <WidgetSkeleton title="Nutrizione" className={className} />
 
-  const target = data.goal?.kcal ?? 0
+  const target = data.quota?.kcal ?? 0
   const eaten = data.totals.kcal
 
   return (

@@ -1,7 +1,10 @@
 // Il giorno del diario (NUT-001, NUT-002): i 5 slot con il loro stato,
 // i totali mangiati e il pianificato, rispetto all'obiettivo del giorno.
 import type { Queryable } from '../db.ts'
+import { activityOf } from './fromyazio.ts'
 import { goalFor } from './goals.ts'
+import type { Quota } from './quota.ts'
+import { quotaFor } from './quota.ts'
 import type { Slot } from './schemas.ts'
 import { SLOTS } from './schemas.ts'
 import type { DaySupplement } from './supplements.ts'
@@ -40,6 +43,9 @@ export type SlotDay = {
 export type Day = {
   date: string
   goal: { kcal: number; protein: number; carbs: number; fat: number; waterMl: number | null } | null
+  // Le kcal da mangiare nel giorno (NUT-016): obiettivo più attività. null
+  // senza obiettivo.
+  quota: Quota | null
   totals: Macros
   // Kcal pianificate e non ancora mangiate.
   plannedKcal: number
@@ -94,8 +100,9 @@ export function macrosFor(
 }
 
 export async function getDay(db: Queryable, date: string): Promise<Day> {
-  const [goal, items, planned, water, caffeine, supplements] = await Promise.all([
+  const [goal, activity, items, planned, water, caffeine, supplements] = await Promise.all([
     goalFor(db, date),
+    activityOf(db, date),
     db.query<MealItem & { slot: Slot; mealId: string }>(
       `select i.id, i.food_id as "foodId", i.food_name as name, i.quantity_g as grams, i.calories as kcal,
               i.protein_g as protein, i.carbs_g as carbs, i.fat_g as fat, i.origin, i.yazio_sync as sync,
@@ -204,6 +211,7 @@ export async function getDay(db: Queryable, date: string): Promise<Day> {
       fat: goal.fat,
       waterMl: goal.waterMl,
     },
+    quota: goal && quotaFor(goal.kcal, activity),
     totals: sum(slots.flatMap((s) => (s.meal ? [s.meal] : []))),
     plannedKcal: slots.reduce((a, s) => a + (s.state === 'planned' ? (s.planned?.kcal ?? 0) : 0), 0),
     slots,
