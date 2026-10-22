@@ -520,3 +520,40 @@ export const useSetEquivalent = () =>
   useFoodMutation(({ foodId, productId }: { foodId: string; productId: string | null }) =>
     unmatchedSource.match(foodId, productId),
   )
+
+// Andamento (/api/v1/nutrition/report, NUT-017): tutto calcolato dal backend.
+export type ReportDays = 30 | 90
+
+export type Report = {
+  days: number
+  from: string
+  to: string
+  series: {
+    date: string
+    kcal: number
+    protein: number
+    carbs: number
+    fat: number
+    logged: boolean
+    goalKcal: number | null
+  }[]
+  averageKcal: number | null
+  trendKcalPerWeek: number | null
+  adherence: { inTarget: number; total: number; pct: number | null }
+  macros: { protein: number; carbs: number; fat: number } | null
+  goal: { protein: number; carbs: number; fat: number } | null
+  weight: {
+    points: { date: string; kg: number }[]
+    first: number | null
+    last: number | null
+    delta: number | null
+  }
+}
+
+export const reportSource = {
+  get: (days: ReportDays) => api.get<Report>(`/nutrition/report?days=${days}`),
+}
+
+export function useReport(days: ReportDays) {
+  return useQuery({ queryKey: ['nutrition', 'report', days], queryFn: () => reportSource.get(days) })
+}

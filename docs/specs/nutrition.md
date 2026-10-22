@@ -33,7 +33,7 @@ prova").
 
 #### NUT-001 · Widget Nutrizione
 
-Stato: pianificato (#46) · Origine: pkm, cambia
+Stato: fatto (#46) · Origine: pkm, cambia
 
 Il widget in dashboard mostra la giornata di oggi.
 
@@ -49,7 +49,7 @@ Accettazione:
 
 #### NUT-002 · Pagina Nutrizione
 
-Stato: pianificato (#47) · Origine: pkm, cambia
+Stato: fatto (#47) · Origine: pkm, cambia
 
 Una pagina `/pasti` con tutto il giorno, come la schermata Dieta unificata
 di pkm (ADR-0036): striscia dei giorni (10 indietro, 13 avanti, oggi
@@ -66,7 +66,7 @@ Accettazione:
 
 #### NUT-003 · Registrare un pasto
 
-Stato: pianificato (#48) · Origine: pkm
+Stato: fatto (#48) · Origine: pkm
 
 Si aggiunge un alimento a uno slot di un giorno qualsiasi.
 
@@ -81,7 +81,7 @@ Accettazione:
 
 #### NUT-004 · Ricerca alimenti
 
-Stato: pianificato (#49) · Origine: pkm, cambia
+Stato: fatto (#49) · Origine: pkm, cambia
 
 Il backend cerca in più fonti e unisce i risultati, senza duplicati per
 nome.
@@ -97,7 +97,7 @@ Accettazione:
 
 #### NUT-005 · Codice a barre
 
-Stato: pianificato (#50) · Origine: pkm, cambia
+Stato: fatto (#50) · Origine: pkm, cambia
 
 Accettazione:
 
@@ -108,7 +108,7 @@ Accettazione:
 
 #### NUT-006 · Alimenti personali
 
-Stato: pianificato (#51) · Origine: pkm
+Stato: fatto (#51) · Origine: pkm
 
 Accettazione:
 
@@ -118,7 +118,7 @@ Accettazione:
 
 #### NUT-007 · Correggere un pasto
 
-Stato: pianificato (#52) · Origine: pkm
+Stato: fatto (#52) · Origine: pkm
 
 Accettazione:
 
@@ -132,7 +132,7 @@ Accettazione:
 
 #### NUT-008 · Ricette
 
-Stato: pianificato (#53) · Origine: pkm
+Stato: fatto (#53) · Origine: pkm
 
 Accettazione:
 
@@ -143,7 +143,7 @@ Accettazione:
 
 #### NUT-009 · Pianificare un pasto
 
-Stato: pianificato (#54) · Origine: pkm
+Stato: fatto (#54) · Origine: pkm
 
 Accettazione:
 
@@ -156,7 +156,7 @@ Accettazione:
 
 #### NUT-010 · Template settimanale
 
-Stato: pianificato (#55) · Origine: pkm, cambia
+Stato: fatto (#55) · Origine: pkm, cambia
 
 Una dieta settimanale con nome (es. "massa", "definizione"): per ogni
 giorno e slot una ricetta o un alimento singolo (ADR-0029, ADR-0032).
@@ -173,7 +173,7 @@ Accettazione:
 
 #### NUT-011 · Lista della spesa
 
-Stato: pianificato (#56) · Origine: pkm
+Stato: fatto (#56) · Origine: pkm
 
 Accettazione:
 
@@ -187,7 +187,7 @@ Accettazione:
 
 #### NUT-012 · Acqua
 
-Stato: pianificato (#57) · Origine: pkm
+Stato: fatto (#57) · Origine: pkm
 
 Accettazione:
 
@@ -197,7 +197,7 @@ Accettazione:
 
 #### NUT-013 · Caffeina
 
-Stato: pianificato (#58) · Origine: pkm
+Stato: fatto (#58) · Origine: pkm
 
 Accettazione:
 
@@ -207,7 +207,7 @@ Accettazione:
 
 #### NUT-014 · Integratori
 
-Stato: pianificato (#59) · Origine: pkm
+Stato: fatto (#59) · Origine: pkm
 
 Accettazione:
 
@@ -219,7 +219,7 @@ Accettazione:
 
 #### NUT-015 · Obiettivo nutrizionale
 
-Stato: pianificato (#60) · Origine: pkm, cambia
+Stato: fatto (#60) · Origine: pkm, cambia
 
 Accettazione:
 
@@ -238,7 +238,7 @@ Accettazione:
 
 #### NUT-016 · Quota del giorno
 
-Stato: pianificato (#66) · Origine: pkm, cambia
+Stato: fatto (#66) · Origine: pkm, cambia
 
 Accettazione:
 
@@ -253,7 +253,7 @@ Accettazione:
 
 #### NUT-017 · Andamento
 
-Stato: pianificato (#67) · Origine: pkm, cambia
+Stato: fatto (#67) · Origine: pkm, cambia
 
 Accettazione:
 
@@ -296,7 +296,7 @@ Accettazione:
 
 #### NUT-020 · Collegamento all'account YAZIO
 
-Stato: pianificato (#61) · Origine: nuovo
+Stato: fatto (#61) · Origine: nuovo
 
 Accettazione:
 
@@ -312,7 +312,7 @@ Accettazione:
 
 #### NUT-021 · Catalogo YAZIO nella ricerca
 
-Stato: pianificato (#63) · Origine: nuovo
+Stato: fatto (#63) · Origine: nuovo
 
 Accettazione:
 
@@ -323,7 +323,7 @@ Accettazione:
 
 #### NUT-022 · Lettura dal diario YAZIO
 
-Stato: pianificato (#64) · Origine: nuovo
+Stato: fatto (#64) · Origine: nuovo
 
 Ciò che si registra direttamente nell'app YAZIO compare in ron1nOS.
 
@@ -343,7 +343,7 @@ Accettazione:
 
 #### NUT-023 · Scrittura sul diario YAZIO
 
-Stato: pianificato (#65) · Origine: nuovo
+Stato: fatto (#65) · Origine: nuovo
 
 Ciò che si registra in ron1nOS (web o iOS) finisce anche in YAZIO.
 
@@ -366,7 +366,7 @@ Accettazione:
 
 #### NUT-024 · Obiettivi, esercizi e peso da YAZIO
 
-Stato: pianificato (#62) · Origine: nuovo
+Stato: fatto (#62) · Origine: nuovo
 
 Accettazione:
 
