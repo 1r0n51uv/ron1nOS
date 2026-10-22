@@ -1,24 +1,16 @@
-import { useEffect, useId, useState } from 'react'
+import { useId, useState } from 'react'
 
 import { AlertRow, Icon } from '@/components/ron1n'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { ApiError } from '@/lib/api'
+import { useDebounced } from '@/lib/useDebounced'
 import { num } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { Food } from '../data'
 import { useFoodSearch } from '../data'
 import { SOURCE_NAME, SOURCE_TAG } from './meal'
-
-function useDebounced<T>(value: T, ms = 300) {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), ms)
-    return () => clearTimeout(id)
-  }, [value, ms])
-  return debounced
-}
 
 // Ricerca alimenti con Solo Italia (NUT-004): il testo lo tiene chi la usa,
 // per passarlo a Nuovo alimento.

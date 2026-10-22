@@ -8,6 +8,8 @@ import type { z } from 'zod'
 export class InvalidRequestError extends Error {}
 // 404 not_found.
 export class NotFoundError extends Error {}
+// 503 yazio_unreachable: YAZIO non risponde a una richiesta fatta a mano.
+export class YazioUnavailableError extends Error {}
 // 409: la richiesta è valida ma lo stato non la permette (es. obiettivo da YAZIO).
 export class ConflictError extends Error {
   readonly code: string

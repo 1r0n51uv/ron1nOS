@@ -167,10 +167,11 @@ export async function moveItem(db: Queryable, id: string, day: string, slot: Slo
   const item = await itemDay(db, id)
   if (item.day === day && item.slot === slot) return
   const mealId = await mealEntry(db, day, slot)
-  await db.query('update meal_entry_items set meal_entry_id = $2, updated_at = now() where id = $1', [
-    id,
-    mealId,
-  ])
+  await db.query(
+    `update meal_entry_items set meal_entry_id = $2, updated_at = now(),
+       yazio_sync = case when yazio_sync = 'error' then 'local' else yazio_sync end where id = $1`,
+    [id, mealId],
+  )
   await dropIfEmpty(db, item.mealId)
 }
 
@@ -181,7 +182,8 @@ export async function setGrams(db: Queryable, id: string, grams: number) {
   const f = grams / item.grams
   await db.query(
     `update meal_entry_items set quantity_g = $2, calories = calories * $3, protein_g = protein_g * $3,
-       carbs_g = carbs_g * $3, fat_g = fat_g * $3, caffeine_mg = caffeine_mg * $3, updated_at = now()
+       carbs_g = carbs_g * $3, fat_g = fat_g * $3, caffeine_mg = caffeine_mg * $3, updated_at = now(),
+       yazio_sync = case when yazio_sync = 'error' then 'local' else yazio_sync end
       where id = $1`,
     [id, grams, f],
   )

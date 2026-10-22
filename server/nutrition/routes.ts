@@ -11,11 +11,12 @@ import { addDays, localHour, today } from './dates.ts'
 import { getDay } from './day.ts'
 import type { ExternalSearch } from './foodsearch.ts'
 import { addGoal, goalFor, goalHistory } from './goals.ts'
-import { check, ConflictError, InvalidRequestError, readJson } from './http.ts'
+import { check, ConflictError, InvalidRequestError, readJson, YazioUnavailableError } from './http.ts'
 import { logMeal, nextSlot, removeItem, setGrams, slotForHour } from './meals.ts'
 import { Amount, Day, Grams, Slot } from './schemas.ts'
 import { deletePlan, setPlan, setPlanStatus } from './plans.ts'
 import { createRecipe, deleteRecipe, getRecipe, listRecipes, updateRecipe } from './recipes.ts'
+import { countUnmatched, listUnmatched, setEquivalent } from './matching.ts'
 import { findBarcode, searchFoods } from './search.ts'
 import { yazioSearch } from './yaziosearch.ts'
 import {
@@ -42,7 +43,8 @@ import {
   listTemplates,
   updateTemplate,
 } from './templates.ts'
-import { activityOf, latestWeight, READ_FROM_YAZIO } from './fromyazio.ts'
+import { hasPending, queueSize } from './diarywrite.ts'
+import { activityOf, FLUSH_STEPS, latestWeight, SYNC_STEPS } from './fromyazio.ts'
 import type { SyncRunner, SyncStep } from './yazio.ts'
 import { createSyncRunner, setSyncEnabled, syncEnabled, yazioLink } from './yazio.ts'
 
@@ -65,6 +67,8 @@ export type NutritionDeps = {
 }
 
 const SyncInput = z.object({ enabled: z.boolean() })
+
+const EquivalentInput = z.object({ productId: z.string().trim().min(1).max(100).nullable() })
 
 const Candidate = z.object({
   source: z.enum(['openfoodfacts', 'usda', 'yazio']),
@@ -204,14 +208,31 @@ const GoalInput = z.object({
   effectiveFrom: Day.optional(),
 })
 
+function withoutQueue(day: Awaited<ReturnType<typeof getDay>>) {
+  return {
+    ...day,
+    slots: day.slots.map((s) =>
+      s.meal
+        ? {
+            ...s,
+            meal: {
+              ...s.meal,
+              items: s.meal.items.map((i) => (i.sync === 'pending' ? { ...i, sync: 'local' as const } : i)),
+            },
+          }
+        : s,
+    ),
+  }
+}
+
 export function nutritionRoutes({
   database,
   goalsFromYazio,
   now = () => new Date(),
   external = offline,
   yazio,
-  syncSteps = READ_FROM_YAZIO,
-  sync = createSyncRunner({ yazio, steps: syncSteps, now }),
+  syncSteps = SYNC_STEPS,
+  sync = createSyncRunner({ yazio, steps: syncSteps, flushSteps: FLUSH_STEPS, hasPending, now }),
 }: NutritionDeps) {
   const app = new Hono<{ Variables: { db: Db } }>()
   // YAZIO in uso: configurato, sincronizzazione accesa e almeno un giro
@@ -235,7 +256,9 @@ export function nutritionRoutes({
   // per oggi, lo slot dell'ora corrente (NUT-003) e il prossimo pasto da
   // segnare (NUT-001).
   async function dayView(db: Db, day: string) {
-    const result = await getDay(db, day)
+    const [raw, active] = await Promise.all([getDay(db, day), yazioActive(db)])
+    // Senza YAZIO in uso nessuna riga è in coda: resta solo in ron1nOS.
+    const result = active ? raw : withoutQueue(raw)
     if (day !== today(now())) return { ...result, suggestedSlot: null, nextSlot: null }
     const suggestedSlot = slotForHour(localHour(now()))
     return { ...result, suggestedSlot, nextSlot: nextSlot(result.slots, suggestedSlot) }
@@ -518,14 +541,19 @@ export function nutritionRoutes({
   // obiettivo di oggi, energia attiva di oggi, peso di riferimento.
   async function yazioView(db: Db) {
     const day = today(now())
-    const [link, goal, activity, weight] = await Promise.all([
+    const [link, goal, activity, weight, queue, unmatched] = await Promise.all([
       yazioLink(db, sync.configured),
       goalFor(db, day),
       activityOf(db, day),
       latestWeight(db),
+      queueSize(db, day),
+      countUnmatched(db),
     ])
     return {
       ...link,
+      // In coda verso YAZIO e senza equivalente (NUT-023).
+      queue: link.syncEnabled ? queue : 0,
+      unmatched,
       imported: {
         goal: goal?.source === 'yazio' ? goal : null,
         activityKcal: activity?.kcal ?? null,
@@ -559,6 +587,30 @@ export function nutritionRoutes({
     }
     await sync.run(db, yc)
     return c.json(await yazioView(db))
+  })
+
+  // Senza equivalente (NUT-023): l'elenco, la ricerca nel catalogo YAZIO e
+  // l'abbinamento a mano.
+  app.get('/yazio/unmatched', async (c) => c.json({ foods: await listUnmatched(c.get('db')) }))
+
+  app.get('/yazio/products', async (c) => {
+    const q = (c.req.query('q') ?? '').trim()
+    const yc = sync.client(c.get('db'))
+    if (!yc) {
+      throw new ConflictError('yazio_not_configured', 'YAZIO non è configurato')
+    }
+    if (q.length < 2) return c.json({ products: [] })
+    const found = await yazioSearch(yc)(q)
+    if (found === null) throw new YazioUnavailableError('YAZIO non risponde')
+    return c.json({ products: found })
+  })
+
+  app.put('/foods/:id/yazio', async (c) => {
+    const id = check(Id, c.req.param('id'))
+    const input = await readJson(c, EquivalentInput)
+    const db = c.get('db')
+    await setEquivalent(db, id, input.productId)
+    return c.json({ foods: await listUnmatched(db) })
   })
 
   return app

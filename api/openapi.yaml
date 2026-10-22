@@ -758,7 +758,9 @@ paths:
         Un giro di sincronizzazione subito, lo stesso che il backend fa da
         solo ogni 15 minuti: obiettivo, energia attiva di oggi e di ieri,
         pesate nuove (al primo giro lo storico) e il diario degli ultimi 3
-        giorni (NUT-022). Le voci nuove di YAZIO entrano con `origin`
+        giorni (NUT-022), poi l'invio delle righe nuove o cambiate, delle
+        cancellazioni e dell'acqua (NUT-023), che il backend fa anche ogni
+        minuto quando c'è qualcosa in coda. Le voci nuove di YAZIO entrano con `origin`
         `yazio`, quelle cancellate in YAZIO spariscono, una voce cambiata in
         YAZIO vince sulla riga di ron1nOS, l'acqua prende il totale di
         YAZIO. Un errore di YAZIO non dà un errore HTTP: finisce in `state`
@@ -775,6 +777,82 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/yazio/unmatched:
+    get:
+      summary: Alimenti senza equivalente YAZIO (NUT-023)
+      description: >
+        Alimenti con righe che non sono partite verso YAZIO perché non c'è un
+        prodotto equivalente. Esclusi quelli lasciati solo in ron1nOS.
+      operationId: listUnmatched
+      responses:
+        "200":
+          description: Gli alimenti, con quante righe e l'ultima volta che sono stati usati.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [foods]
+                properties:
+                  foods: { type: array, items: { $ref: "#/components/schemas/Unmatched" } }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/yazio/products:
+    get:
+      summary: Cerca nel catalogo YAZIO per abbinare un alimento (NUT-023)
+      operationId: searchYazioProducts
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Prodotti YAZIO venduti in Italia, come alimenti con `yazioProductId`.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [products]
+                properties:
+                  products: { type: array, items: { $ref: "#/components/schemas/Food" } }
+        "409":
+          description: "`yazio_not_configured`: mancano le variabili YAZIO_*."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503":
+          description: "`yazio_unreachable` o `database_unavailable`."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /nutrition/foods/{id}/yazio:
+    put:
+      summary: Abbina un alimento a un prodotto YAZIO (NUT-023)
+      description: >
+        Con `productId` le righe dell'alimento tornano in coda e partono al
+        prossimo invio; l'abbinamento vale anche dopo. Con `null` l'alimento
+        resta solo in ron1nOS.
+      operationId: setYazioEquivalent
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId]
+              properties:
+                productId: { type: [string, "null"] }
+      responses:
+        "200":
+          description: Gli alimenti ancora senza equivalente.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [foods]
+                properties:
+                  foods: { type: array, items: { $ref: "#/components/schemas/Unmatched" } }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/shopping:
     get:
@@ -1241,9 +1319,30 @@ components:
         carbs: { type: number, minimum: 0, maximum: 100 }
         fat: { type: number, minimum: 0, maximum: 100 }
         caffeineMg: { type: [number, "null"], minimum: 0 }
+    Unmatched:
+      type: object
+      required: [food, rows, last]
+      properties:
+        food:
+          type: object
+          required: [id, name, brand, source, kcal]
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+            brand: { type: [string, "null"] }
+            source: { type: string, enum: [custom, openfoodfacts, usda, yazio] }
+            kcal: { type: number, description: kcal per 100 g }
+        rows: { type: integer }
+        last:
+          type: object
+          required: [day, slot, grams]
+          properties:
+            day: { type: string, format: date }
+            slot: { $ref: "#/components/schemas/MealSlot" }
+            grams: { type: number }
     YazioLink:
       type: object
-      required: [configured, state, error, lastSyncAt, syncEnabled, imported]
+      required: [configured, state, error, lastSyncAt, syncEnabled, queue, unmatched, imported]
       properties:
         configured:
           { type: boolean, description: "false se mancano le variabili YAZIO_* nel .env del server" }
@@ -1251,6 +1350,8 @@ components:
         error: { type: [string, "null"], description: Il motivo dell'errore, in italiano }
         lastSyncAt: { type: [string, "null"], format: date-time, description: Ultimo giro riuscito }
         syncEnabled: { type: boolean }
+        queue: { type: integer, description: Righe e cancellazioni in coda verso YAZIO (NUT-023) }
+        unmatched: { type: integer, description: Alimenti senza equivalente YAZIO }
         imported:
           type: object
           description: Quello che arriva da YAZIO (NUT-024); si modifica solo nell'app YAZIO.
@@ -1566,7 +1667,14 @@ components:
             name: { type: string }
             grams: { type: number }
             origin: { type: string, enum: [ron1nos, yazio] }
-            sync: { type: string, enum: [local, pending, synced, error, unmatched] }
+            sync:
+              type: string
+              enum: [local, pending, synced, error, unmatched]
+              description: >
+                Stato verso YAZIO (NUT-023): `local` resta solo in ron1nOS,
+                `pending` in coda, `synced` inviata, `error` rifiutata da
+                YAZIO (si riprova al giro completo), `unmatched` senza
+                equivalente.
     NutritionGoal:
       type: object
       required: [id, source, kcal, protein, carbs, fat, waterMl, effectiveFrom]
