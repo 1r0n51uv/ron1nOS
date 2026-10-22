@@ -1,5 +1,5 @@
 import { num } from '@/lib/format'
-import type { Food, Macros, MealInput, Recipe } from '../data'
+import type { Food, Macros, MealInput, PlannedItem, Recipe } from '../data'
 
 export type FoodDraft = { food: Food; grams: number }
 // Una ricetta intera, per `factor` porzioni (NUT-008).
@@ -76,4 +76,32 @@ export const SOURCE_NAME: Record<Exclude<Food['source'], 'custom'>, string> = {
 
 export function macroLine(m: { protein: number; carbs: number; fat: number }) {
   return `P ${num(m.protein)} · C ${num(m.carbs)} · G ${num(m.fat)}`
+}
+
+// Le righe di un piano da modificare (NUT-009): valori per 100 g ricavati
+// dalla quantità; le righe senza alimento si perdono.
+export function plannedDrafts(items: PlannedItem[]): FoodDraft[] {
+  return items
+    .filter((i) => i.foodId && i.grams > 0)
+    .map((i) => {
+      const f = 100 / i.grams
+      return {
+        grams: i.grams,
+        food: {
+          id: i.foodId,
+          source: 'custom',
+          externalId: null,
+          name: i.name,
+          brand: null,
+          barcode: null,
+          servingSizeG: null,
+          kcal: i.kcal * f,
+          protein: i.protein * f,
+          carbs: i.carbs * f,
+          fat: i.fat * f,
+          caffeineMg: null,
+          yazioProductId: null,
+        },
+      }
+    })
 }

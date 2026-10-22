@@ -35,7 +35,10 @@ export async function addItems(
   db: Queryable,
   mealId: string,
   items: { food: Food; grams: number }[],
-  { sync = 'local' }: { sync?: 'local' | 'pending' } = {},
+  {
+    sync = 'local',
+    plannedMealId = null,
+  }: { sync?: 'local' | 'pending'; plannedMealId?: string | null } = {},
 ) {
   const { rows: last } = await db.query<{ n: number }>(
     `select coalesce(max(order_index) + 1, 0)::int as n from meal_entry_items where meal_entry_id = $1`,
@@ -54,8 +57,8 @@ export async function addItems(
     )
     const { rows } = await db.query<{ id: string }>(
       `insert into meal_entry_items (meal_entry_id, food_id, food_name, quantity_g, calories, protein_g, carbs_g,
-         fat_g, caffeine_mg, order_index, yazio_sync)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id`,
+         fat_g, caffeine_mg, order_index, yazio_sync, planned_meal_id)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) returning id`,
       [
         mealId,
         food.id,
@@ -70,6 +73,7 @@ export async function addItems(
         ((food.caffeineMg ?? 0) * grams) / 100,
         last[0].n + i,
         sync,
+        plannedMealId,
       ],
     )
     ids.push(rows[0].id)

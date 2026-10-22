@@ -6,6 +6,7 @@ import type { SlotDay } from '../data'
 import { SLOT_LABELS } from '../data'
 import { AddMealDialog } from '../log/AddMealDialog'
 import { ItemRow } from './ItemRow'
+import { PlanBar } from './PlanBar'
 
 const STATE_TAG: Record<SlotDay['state'], string | null> = {
   empty: null,
@@ -67,6 +68,7 @@ export function SlotCard({ date, slot }: { date: string; slot: SlotDay }) {
           ))}
         </ul>
       ) : null}
+      <PlanBar date={date} slot={slot} />
     </article>
   )
 }

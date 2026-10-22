@@ -6,7 +6,7 @@ import { ApiError } from '@/lib/api'
 import { renderWithProviders } from '@/test/render'
 import type * as data from '../data'
 import type { Food } from '../data'
-import { useCreateFood, useFoodSearch, useLogMeal, useRecipes } from '../data'
+import { useCreateFood, useFoodSearch, useLogMeal, useRecipes, useSetPlan } from '../data'
 import { AddMealDialog } from './AddMealDialog'
 
 vi.mock('../data', async (importOriginal) => ({
@@ -15,6 +15,7 @@ vi.mock('../data', async (importOriginal) => ({
   useLogMeal: vi.fn(),
   useCreateFood: vi.fn(),
   useRecipes: vi.fn(),
+  useSetPlan: vi.fn(),
 }))
 
 const food = (over: Partial<Food>): Food => ({
@@ -51,12 +52,17 @@ const fage = food({
 })
 
 const mutate = vi.fn()
+const planMutate = vi.fn()
 const createFood = vi.fn()
 let logError: unknown = null
 beforeEach(() => {
   mutate.mockReset()
+  planMutate.mockReset()
   createFood.mockReset()
   logError = null
+  vi.mocked(useSetPlan).mockImplementation(
+    () => ({ mutate: planMutate, isPending: false, error: null }) as unknown as ReturnType<typeof useSetPlan>,
+  )
   vi.mocked(useRecipes).mockReturnValue({
     data: {
       recipes: [
@@ -199,5 +205,26 @@ describe('AddMealDialog (NUT-003)', () => {
     expect(within(dialog).getByText('479 kcal · P 43 · C 68 · G 4')).toBeInTheDocument()
     fireEvent.click(within(dialog).getByRole('button', { name: 'Registra' }))
     expect(mutate.mock.calls[0][0].items).toEqual([{ recipeId: 'r1', factor: 1 }])
+  })
+
+  it('Pianifica: sceglie il giorno e manda il piano', () => {
+    renderWithProviders(
+      <AddMealDialog mode="plan" date="2026-10-21" slot="dinner">
+        <Button>Apri</Button>
+      </AddMealDialog>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Apri' }))
+    const dialog = screen.getByRole('dialog', { name: 'Cosa vuoi mangiare' })
+    fireEvent.change(within(dialog).getByLabelText('Giorno'), { target: { value: '2026-10-25' } })
+    expect(within(dialog).getByText('PIANIFICA · DOMENICA 25 OTTOBRE')).toBeInTheDocument()
+    fireEvent.mouseDown(within(dialog).getByRole('tab', { name: 'Ricetta' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: /Riso, pollo e zucchine/ }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Pianifica' }))
+    expect(planMutate.mock.calls[0][0]).toEqual({
+      date: '2026-10-25',
+      slot: 'dinner',
+      items: [{ recipeId: 'r1', factor: 1 }],
+    })
+    expect(mutate).not.toHaveBeenCalled()
   })
 })
