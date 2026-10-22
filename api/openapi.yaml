@@ -1072,10 +1072,12 @@ paths:
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/foods/search:
     get:
-      summary: Ricerca alimenti su catalogo locale, OpenFoodFacts e USDA (NUT-004)
+      summary: Ricerca alimenti su catalogo locale, OpenFoodFacts, USDA e YAZIO (NUT-004, NUT-021)
       description: >
         Almeno 2 caratteri. Prima il catalogo locale (alimenti già usati o
-        creati), poi OpenFoodFacts e USDA, senza doppioni per nome e marca.
+        creati), poi OpenFoodFacts e USDA, poi i prodotti YAZIO venduti in
+        Italia se YAZIO è collegato (con `yazioProductId`), senza doppioni
+        per nome e marca.
         I risultati esterni hanno `id` null: entrano nel catalogo solo quando
         si usano. Una fonte che non risponde finisce in `unavailable`.
       operationId: searchFoods

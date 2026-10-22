@@ -17,6 +17,7 @@ import { Amount, Day, Grams, Slot } from './schemas.ts'
 import { deletePlan, setPlan, setPlanStatus } from './plans.ts'
 import { createRecipe, deleteRecipe, getRecipe, listRecipes, updateRecipe } from './recipes.ts'
 import { findBarcode, searchFoods } from './search.ts'
+import { yazioSearch } from './yaziosearch.ts'
 import {
   createSupplement,
   deleteSupplement,
@@ -217,15 +218,15 @@ export function nutritionRoutes({
     if (client?.db !== db) client = { db, client: yazio(db) }
     return client.client
   }
-  // Collegato vuol dire con almeno un giro riuscito: con le credenziali
-  // sbagliate dal primo giorno l'obiettivo resta modificabile a mano.
-  const goalsLocked =
-    goalsFromYazio ??
-    (async (db: Queryable) => {
-      if (!yazio) return false
-      const link = await yazioLink(db, true)
-      return link.syncEnabled && link.lastSyncAt !== null
-    })
+  // YAZIO in uso: configurato, sincronizzazione accesa e almeno un giro
+  // riuscito. Con le credenziali sbagliate dal primo giorno l'obiettivo
+  // resta modificabile a mano.
+  const yazioActive = async (db: Queryable) => {
+    if (!yazio) return false
+    const link = await yazioLink(db, true)
+    return link.syncEnabled && link.lastSyncAt !== null
+  }
+  const goalsLocked = goalsFromYazio ?? yazioActive
   // Un solo giro alla volta: Sincronizza ora durante un giro aspetta quello.
   let running: Promise<boolean> | null = null
 
@@ -282,7 +283,10 @@ export function nutritionRoutes({
   app.get('/foods/search', async (c) => {
     const q = c.req.query('q') ?? ''
     const italy = c.req.query('italy') !== '0'
-    return c.json(await searchFoods({ db: c.get('db'), external }, q, { italy }))
+    const db = c.get('db')
+    const yc = (await yazioActive(db)) ? yazioClient(db) : null
+    const extra = yc ? [{ source: 'yazio' as const, search: yazioSearch(yc) }] : []
+    return c.json(await searchFoods({ db, external, extra }, q, { italy }))
   })
 
   // Codice a barre, scritto a mano o letto dalla fotocamera (NUT-005).
