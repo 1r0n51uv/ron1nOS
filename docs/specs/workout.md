@@ -37,11 +37,11 @@ l'ultimo allenamento e la settimana.
 
 Accettazione:
 
-- [ ] In testata il nome della routine dell'ultimo allenamento (dal CSV).
-- [ ] Ultimo allenamento: giorno (`oggi`, `ieri` o data breve), durata,
-      numero di esercizi e serie, volume in kg, numeri in `font-mono`.
-- [ ] Due valori della settimana: allenamenti questa settimana e giorni di
-      fila (GYM-013).
+- [ ] Una foto dell'ultimo allenamento: l'immagine (GYM-014) del suo primo
+      esercizio, con sopra il nome della routine, il giorno (`oggi`, `ieri`
+      o data estesa) e la durata.
+- [ ] Sotto, solo due numeri: allenamenti questa settimana e giorni di
+      fila (GYM-013), in `font-mono`.
 - [ ] Senza dati mostra `Nessun allenamento · importa il CSV di Liftin'`
       con il link alla pagina.
 - [ ] Il link `Dettagli` apre la pagina Allenamenti (GYM-002).
@@ -51,16 +51,19 @@ Accettazione:
 
 Stato: proposto · Origine: pkm, cambia
 
-Una pagina `/allenamenti` (oggi `ComingSoon`) con, dall'alto: i valori di
-costanza (GYM-013), la dashboard esercizi (GYM-007), i record personali
-(GYM-010), il volume per gruppo muscolare (GYM-012) e lo storico delle
-sessioni (GYM-004). In testata il pulsante `Importa CSV` (GYM-003) e il
-link all'elenco degli esercizi (GYM-009).
+Una pagina `/allenamenti` (oggi `ComingSoon`) fatta soprattutto di
+immagini e con pochi numeri. Dall'alto: titolo con una riga di costanza
+(GYM-013), la dashboard esercizi (GYM-007), i nuovi record (GYM-010)
+accanto al volume per gruppo muscolare (GYM-012), lo storico delle sessioni
+(GYM-004). In testata il pulsante `Importa CSV` (GYM-003) e il link
+all'elenco degli esercizi (GYM-009).
 
 Accettazione:
 
 - [ ] La voce Allenamenti della barra di navigazione apre la pagina.
 - [ ] Senza dati la pagina mostra solo un invito a importare il CSV.
+- [ ] Ogni esercizio mostrato ha la sua immagine (GYM-014); le foto sono in
+      bianco e nero e scurite, così l'unico colore resta l'accento rosso.
 - [ ] Ogni sezione ha il suo skeleton e il suo messaggio di errore, senza
       bloccare le altre.
 
@@ -87,13 +90,12 @@ Accettazione:
       e numero di serie. Un re-import aggiorna le righe già presenti e non
       le duplica; un re-import identico non cambia nulla.
 - [ ] Prima di confermare il dialog mostra l'anteprima calcolata dal
-      server: sessioni nuove e aggiornate, serie nuove e aggiornate, righe
-      scartate, periodo coperto. `Importa` applica, `Annulla` non scrive
+      server, in tre righe: allenamenti nuovi, allenamenti aggiornati,
+      righe scartate, più il periodo coperto. `Importa` applica, `Annulla` non scrive
       niente.
 - [ ] Errori chiari: file vuoto, colonne mancanti (con i nomi), nessuna
       riga valida, file troppo grande.
-- [ ] Le sessioni eliminate (GYM-006) non tornano con un re-import e
-      l'anteprima le conta a parte.
+- [ ] Le sessioni eliminate (GYM-006) non tornano con un re-import.
 - [ ] Dopo l'import widget e pagina si aggiornano senza ricaricare.
 
 ### Storico
@@ -104,8 +106,8 @@ Stato: proposto · Origine: pkm
 
 Accettazione:
 
-- [ ] Elenco dalla più recente: data, routine, durata, esercizi, serie,
-      volume.
+- [ ] Elenco dalla più recente: le miniature dei primi tre esercizi,
+      routine, giorno e durata. Niente altri numeri nella riga.
 - [ ] Filtro per routine, con i nomi presi dai dati.
 - [ ] Caricamento a pagine da 20 sessioni.
 
@@ -115,12 +117,13 @@ Stato: proposto · Origine: pkm
 
 Accettazione:
 
-- [ ] Serie raggruppate per esercizio nell'ordine del CSV: numero, peso,
-      ripetizioni o durata, percezione se c'è.
-- [ ] Le serie di riscaldamento sono segnate e non entrano nei totali.
-- [ ] Per esercizio: volume e miglior 1RM stimato della sessione; un
-      record personale stabilito in quella sessione è segnato (GYM-010).
-- [ ] Totali della sessione: durata, serie, volume.
+- [ ] In testata routine, giorno e ora, durata e volume della sessione.
+- [ ] Una card per esercizio, nell'ordine del CSV, con l'immagine
+      (GYM-014) e le serie come `peso × reps` (o durata); niente colonne di
+      1RM o percezione.
+- [ ] Le serie di riscaldamento sono tratteggiate e non entrano nei totali.
+- [ ] Un record personale stabilito in quella sessione è segnato sulla
+      card (GYM-010).
 - [ ] I dati sono in sola lettura.
 
 #### GYM-006 · Eliminare una sessione
@@ -145,24 +148,26 @@ Stato: proposto · Origine: pkm (ADR-0030)
 
 Accettazione:
 
-- [ ] Griglia dei 6 esercizi più allenati per numero di serie, con nome,
-      ultimo 1RM stimato e sparkline; sotto `top 6 di N`.
+- [ ] Griglia dei 6 esercizi più allenati per numero di serie, card grandi
+      con l'immagine (GYM-014), nome, gruppo e un solo numero: il miglior
+      1RM stimato.
 - [ ] Per un esercizio a tempo la card mostra la durata migliore al posto
       dell'1RM.
 - [ ] Un clic apre i grafici dell'esercizio (GYM-008).
 
-#### GYM-008 · Grafici di un esercizio
+#### GYM-008 · Pagina di un esercizio
 
 Stato: proposto · Origine: pkm, cambia
 
 Accettazione:
 
-- [ ] Due grafici per sessione: miglior 1RM stimato e volume.
-- [ ] Per gli esercizi a tempo, al posto dei due grafici, la durata
-      migliore e la durata totale per sessione.
+- [ ] In testata l'immagine grande dell'esercizio (GYM-014) con nome,
+      gruppo e tre numeri: 1RM stimato, peso più alto, sessioni.
+- [ ] Un grafico per volta, con un selettore `1RM stimato` / `Volume`; per
+      gli esercizi a tempo `Durata migliore` / `Durata totale`.
 - [ ] Periodo: 3 mesi, 6 mesi, 1 anno, tutto.
-- [ ] Sotto i grafici le ultime sessioni dell'esercizio, con link al
-      dettaglio.
+- [ ] Sotto il grafico le ultime 3 volte: giorno, serie e peso, 1RM, con
+      link al dettaglio.
 - [ ] Il gruppo muscolare dell'esercizio, modificabile da qui (GYM-011).
 
 #### GYM-009 · Elenco degli esercizi
@@ -171,9 +176,10 @@ Stato: proposto · Origine: nuovo
 
 Accettazione:
 
-- [ ] Tutti gli esercizi con ricerca per nome: gruppo muscolare, numero di
-      sessioni e di serie, ultima volta, miglior 1RM stimato o durata.
-- [ ] Ordinamento per nome, serie o ultima volta.
+- [ ] Griglia di card con immagine (GYM-014), nome, gruppo e ultima volta,
+      dalla più recente; ricerca per nome.
+- [ ] Un filtro `Da completare` mostra gli esercizi senza gruppo o senza
+      immagine, con un'etichetta sulla card che dice cosa manca.
 - [ ] Un clic apre i grafici dell'esercizio (GYM-008).
 - [ ] I nomi sono quelli del CSV, senza alias né unione.
 
@@ -186,8 +192,8 @@ Accettazione:
 - [ ] Per esercizio: miglior 1RM stimato, peso più alto, più ripetizioni a
       un dato peso, volume più alto in una sessione; per gli esercizi a
       tempo, durata più lunga. Ognuno con la data.
-- [ ] Nella pagina, i record stabiliti negli ultimi 30 giorni, dal più
-      recente.
+- [ ] Nella pagina, al massimo 3 record degli ultimi 30 giorni, dal più
+      recente, con la miniatura dell'esercizio.
 - [ ] Riscaldamento e serie a 0 kg esclusi, come nelle altre metriche.
 
 ### Gruppi muscolari
@@ -205,8 +211,10 @@ Accettazione:
       `Gambe`, `Glutei`, `Addome`, `Altro`.
 - [ ] Un gruppo per esercizio, assegnato dall'elenco esercizi (GYM-009) o
       dai grafici (GYM-008).
-- [ ] Gli esercizi senza gruppo finiscono in `Non assegnato` e l'elenco
-      mostra quanti sono, con un filtro per vederli.
+- [ ] Gli esercizi senza gruppo finiscono in `Non assegnato` e compaiono
+      nel filtro `Da completare` (GYM-009).
+- [ ] Quando si sceglie l'immagine (GYM-014), il gruppo viene proposto dai
+      muscoli principali del catalogo, se non è già assegnato.
 - [ ] L'assegnazione è legata al nome dell'esercizio e sopravvive ai
       re-import.
 
@@ -218,9 +226,35 @@ Accettazione:
 
 - [ ] Volume e numero di serie per gruppo, settimana per settimana, sulle
       ultime 12 settimane, in barre impilate.
-- [ ] Sotto, la tabella della settimana corrente e della precedente con la
-      variazione.
+- [ ] Sotto, solo la legenda dei gruppi; niente tabella.
 - [ ] `Non assegnato` compare come gruppo a sé.
+
+### Immagini
+
+#### GYM-014 · Immagine di un esercizio
+
+Stato: proposto · Origine: nuovo
+
+Ogni esercizio ha una foto, presa da
+[free-exercise-db](https://github.com/yuhonas/free-exercise-db): 876
+esercizi in pubblico dominio (Unlicense), ognuno con due foto, muscoli
+principali e attrezzatura.
+
+Accettazione:
+
+- [ ] Il backend tiene una copia del catalogo (JSON e foto) in un volume
+      del server, scaricata al primo avvio e aggiornabile; le pagine non
+      caricano immagini da GitHub.
+- [ ] I nomi italiani più comuni (panca piana, squat, stacco, rematore,
+      military press, lat machine, plank…) hanno un abbinamento già pronto
+      in un dizionario nel codice.
+- [ ] Per gli altri, `Scegli immagine` apre un dialog con ricerca nel
+      catalogo (nomi in inglese) e una griglia di foto; la scelta vale per
+      tutto lo storico di quel nome e sopravvive ai re-import.
+- [ ] Senza immagine la card mostra un riquadro neutro con l'icona della
+      palestra e l'etichetta `Scegli immagine`.
+- [ ] Le foto si mostrano in bianco e nero e scurite, con il testo sopra su
+      una sfumatura scura.
 
 ### Costanza
 
@@ -262,7 +296,8 @@ nel database `ron1nos` del Postgres condiviso, migrazione SQL nuova in
 - `workout_sessions`: giorno, routine, ora di inizio, durata.
 - `workout_sets`: sessione, esercizio, numero di serie, riscaldamento,
   peso, ripetizioni, durata, percezione.
-- `workout_exercise_groups`: nome normalizzato dell'esercizio e gruppo.
+- `workout_exercises`: nome normalizzato dell'esercizio, gruppo e id
+  dell'immagine nel catalogo.
 - `workout_deleted_sessions`: giorno e routine delle sessioni eliminate.
 
 Statistiche, record e serie dei grafici si calcolano nel server a ogni
@@ -284,6 +319,9 @@ Tutti sotto `/api/v1/workout`.
 | `GET /exercises?q=&sort=`             | elenco esercizi, top 6 in testa        | 007, 009  |
 | `GET /exercises/{name}?range=`        | grafici e ultime sessioni              | 008       |
 | `PUT /exercises/{name}/group`         | gruppo muscolare                       | 011       |
+| `GET /catalog?q=`                     | ricerca nel catalogo immagini          | 014       |
+| `PUT /exercises/{name}/image`         | immagine scelta                        | 014       |
+| `GET /catalog/images/{id}/{n}.jpg`    | foto servita dal backend               | 014       |
 | `GET /records?days=`                  | record personali                       | 010       |
 | `GET /muscle-groups?weeks=`           | volume per gruppo                      | 012       |
 
@@ -296,8 +334,8 @@ Tutti sotto `/api/v1/workout`.
 2. **Mockup** del widget e delle pagine:
    [canvas Modulo Allenamento](https://claude.ai/artifact/PRfY9udWyoGFidTM26i81W)
    (widget in tre stati, pagina `/allenamenti`, import con anteprima,
-   dettaglio sessione, grafici di un esercizio, elenco esercizi), da
-   approvare.
+   dettaglio sessione, pagina di un esercizio, elenco esercizi, scelta
+   dell'immagine), da approvare.
 3. **Base dati e import**: migrazione, parser e merge, rotte di import.
 4. **API di lettura**: storico, esercizi, record, gruppi, riepilogo.
 5. **Web**: widget, pagina, dialog di import, un pezzo per issue.
@@ -331,5 +369,8 @@ Prese il 2026-10-22.
 8. **Modifiche.** Sola lettura; si può solo eliminare una sessione, e
    l'eliminazione resiste ai re-import.
 9. **Nomi degli esercizi.** Testo libero dal CSV, senza alias.
-10. **Rimandati.** Calcolatore dischi e riscaldamento, peso corporeo
+10. **Immagini e densità** (2026-10-22, dopo i primi mockup). Un'immagine
+    per ogni esercizio (GYM-014) e schermate con meno numeri: widget,
+    pagina, dettaglio, esercizio ed elenco rifatti di conseguenza.
+11. **Rimandati.** Calcolatore dischi e riscaldamento, peso corporeo
     accanto ai grafici, Apple Salute, progressione suggerita.
