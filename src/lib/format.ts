@@ -65,3 +65,10 @@ export function fileSize(value: number) {
   const digits = i >= 2 && v < 10 ? 1 : 0
   return `${num(v, digits)} ${units[i]}`
 }
+
+// Un giorno `YYYY-MM-DD` come "22 ott", senza passare dal fuso del browser.
+export function shortDay(day: string) {
+  return new Date(`${day}T12:00:00Z`)
+    .toLocaleDateString(it, { day: 'numeric', month: 'short', timeZone: 'UTC' })
+    .replace('.', '')
+}

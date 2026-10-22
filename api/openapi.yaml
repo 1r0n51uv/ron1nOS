@@ -239,8 +239,103 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+  /nutrition/goals:
+    get:
+      summary: Obiettivo nutrizionale valido in un giorno e storico (NUT-015)
+      operationId: getNutritionGoals
+      parameters:
+        - { $ref: "#/components/parameters/NutritionDate" }
+      responses:
+        "200":
+          description: >
+            `current` è l'obiettivo valido nel giorno (null se non c'è), `history`
+            le righe dalla più recente. `editable` è false quando l'obiettivo
+            arriva da YAZIO.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [current, history, editable]
+                properties:
+                  current:
+                    oneOf:
+                      - { $ref: "#/components/schemas/NutritionGoal" }
+                      - { type: "null" }
+                  history:
+                    type: array
+                    items: { $ref: "#/components/schemas/NutritionGoal" }
+                  editable: { type: boolean }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    post:
+      summary: Nuovo obiettivo manuale (solo senza YAZIO)
+      description: >
+        Aggiunge una riga allo storico, valida da `effectiveFrom` (di default
+        oggi, Europe/Rome). I giorni precedenti tengono l'obiettivo che avevano.
+      operationId: addNutritionGoal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kcal, protein, carbs, fat]
+              properties:
+                kcal: { type: number, minimum: 800, maximum: 8000 }
+                protein: { type: number, minimum: 0, description: grammi }
+                carbs: { type: number, minimum: 0, description: grammi }
+                fat: { type: number, minimum: 0, description: grammi }
+                waterMl: { type: [number, "null"], minimum: 0 }
+                effectiveFrom: { type: string, format: date }
+      responses:
+        "201":
+          description: Obiettivo salvato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NutritionGoal" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "409":
+          description: "`goals_from_yazio`: l'obiettivo arriva da YAZIO e si cambia lì."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
 components:
+  parameters:
+    NutritionDate:
+      name: date
+      in: query
+      description: Giorno locale Europe/Rome; di default oggi.
+      schema: { type: string, format: date }
+  responses:
+    InvalidRequest:
+      description: "`invalid_request`: richiesta non valida, il messaggio dice quale campo."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: "`not_found`: risorsa inesistente."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    DatabaseUnavailable:
+      description: "`database_unavailable`: Postgres non raggiungibile."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
   schemas:
+    NutritionGoal:
+      type: object
+      required: [id, source, kcal, protein, carbs, fat, waterMl, effectiveFrom]
+      properties:
+        id: { type: string, format: uuid }
+        source: { type: string, enum: [manual, yazio] }
+        kcal: { type: number }
+        protein: { type: number, description: grammi }
+        carbs: { type: number, description: grammi }
+        fat: { type: number, description: grammi }
+        waterMl: { type: [number, "null"] }
+        effectiveFrom: { type: string, format: date }
     Draft:
       type: object
       required: [id, source, status, infoHash, name, size, files]
@@ -343,6 +438,8 @@ components:
             - start_failed
             - glances_unreachable
             - database_unavailable
+            - invalid_request
+            - goals_from_yazio
             - not_found
             - internal
         message: { type: string, description: Messaggio in italiano da mostrare. }

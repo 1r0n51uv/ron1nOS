@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
+import { E2E_DATABASE_URL } from './e2e/db.ts'
+
 // E2E sulla build di produzione servita dal backend. In CI il browser
 // arriva da `npx playwright install`; in locale si può indicare un Chromium
 // già installato con PLAYWRIGHT_CHROMIUM_PATH.
@@ -56,7 +58,7 @@ export default defineConfig({
         QBT_PASSWORD: 'admin',
         GLANCES_URL: 'http://localhost:18081',
         // Postgres vero: in CI il servizio del job, in locale lo stesso utente.
-        DATABASE_URL: process.env.E2E_DATABASE_URL ?? 'postgres://ron1nos:ron1nos@localhost:5432/ron1nos',
+        DATABASE_URL: E2E_DATABASE_URL,
       },
     },
   ],
