@@ -41,14 +41,16 @@ import {
   listTemplates,
   updateTemplate,
 } from './templates.ts'
+import { activityOf, latestWeight, READ_FROM_YAZIO } from './fromyazio.ts'
 import type { SyncStep } from './yazio.ts'
 import { runSync, setSyncEnabled, syncEnabled, yazioLink } from './yazio.ts'
 
 export type NutritionDeps = {
   database: Database
   // Con YAZIO collegato e la sincronizzazione accesa l'obiettivo arriva da
-  // lì e non si modifica a mano (NUT-015, NUT-024).
-  goalsFromYazio?: () => Promise<boolean>
+  // lì e non si modifica a mano (NUT-015, NUT-024). Di default lo decide lo
+  // stato del collegamento.
+  goalsFromYazio?: (db: Queryable) => Promise<boolean>
   now?: () => Date
   // OpenFoodFacts e USDA; senza, la ricerca usa solo il catalogo locale.
   external?: ExternalSearch
@@ -200,11 +202,11 @@ const GoalInput = z.object({
 
 export function nutritionRoutes({
   database,
-  goalsFromYazio = async () => false,
+  goalsFromYazio,
   now = () => new Date(),
   external = offline,
   yazio,
-  syncSteps,
+  syncSteps = READ_FROM_YAZIO,
 }: NutritionDeps) {
   const app = new Hono<{ Variables: { db: Db } }>()
 
@@ -215,6 +217,15 @@ export function nutritionRoutes({
     if (client?.db !== db) client = { db, client: yazio(db) }
     return client.client
   }
+  // Collegato vuol dire con almeno un giro riuscito: con le credenziali
+  // sbagliate dal primo giorno l'obiettivo resta modificabile a mano.
+  const goalsLocked =
+    goalsFromYazio ??
+    (async (db: Queryable) => {
+      if (!yazio) return false
+      const link = await yazioLink(db, true)
+      return link.syncEnabled && link.lastSyncAt !== null
+    })
   // Un solo giro alla volta: Sincronizza ora durante un giro aspetta quello.
   let running: Promise<boolean> | null = null
 
@@ -483,13 +494,13 @@ export function nutritionRoutes({
     const [current, history, fromYazio] = await Promise.all([
       goalFor(db, day),
       goalHistory(db),
-      goalsFromYazio(),
+      goalsLocked(db),
     ])
     return c.json({ current, history, editable: !fromYazio })
   })
 
   app.post('/goals', async (c) => {
-    if (await goalsFromYazio()) {
+    if (await goalsLocked(c.get('db'))) {
       throw new ConflictError('goals_from_yazio', "L'obiettivo arriva da YAZIO: si cambia nell'app YAZIO")
     }
     const input = await readJson(c, GoalInput)
@@ -505,14 +516,34 @@ export function nutritionRoutes({
     return c.json(goal, 201)
   })
 
+  // Collegamento a YAZIO (NUT-020) e quello che ne arriva (NUT-024):
+  // obiettivo di oggi, energia attiva di oggi, peso di riferimento.
+  async function yazioView(db: Db) {
+    const day = today(now())
+    const [link, goal, activity, weight] = await Promise.all([
+      yazioLink(db, !!yazio),
+      goalFor(db, day),
+      activityOf(db, day),
+      latestWeight(db),
+    ])
+    return {
+      ...link,
+      imported: {
+        goal: goal?.source === 'yazio' ? goal : null,
+        activityKcal: activity?.kcal ?? null,
+        weight,
+      },
+    }
+  }
+
   // Collegamento a YAZIO (NUT-020).
-  app.get('/yazio', async (c) => c.json(await yazioLink(c.get('db'), !!yazio)))
+  app.get('/yazio', async (c) => c.json(await yazioView(c.get('db'))))
 
   app.put('/yazio/sync', async (c) => {
     const input = await readJson(c, SyncInput)
     const db = c.get('db')
     await setSyncEnabled(db, input.enabled)
-    return c.json(await yazioLink(db, !!yazio))
+    return c.json(await yazioView(db))
   })
 
   // Sincronizza ora: un giro subito, risponde con lo stato aggiornato.
@@ -532,7 +563,7 @@ export function nutritionRoutes({
       running = null
     })
     await running
-    return c.json(await yazioLink(db, true))
+    return c.json(await yazioView(db))
   })
 
   return app

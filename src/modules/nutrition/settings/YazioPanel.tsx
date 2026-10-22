@@ -2,9 +2,10 @@ import { AlertRow, StatusPill, ToggleTile, WidgetCard } from '@/components/ron1n
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
 import { Button } from '@/components/ui/button'
 import { ApiError } from '@/lib/api'
+import { num, shortDay } from '@/lib/format'
 import type { YazioLink } from '../data'
 import { useSetYazioSync, useSyncYazio, useYazio } from '../data'
-import { whenLine } from '../format'
+import { goalLine, whenLine } from '../format'
 
 const errorText = (error: unknown) =>
   error instanceof ApiError ? error.message : error ? 'Backend non raggiungibile' : null
@@ -80,8 +81,37 @@ export function YazioPanel() {
             </p>
           )}
           {message ? <AlertRow title="Richiesta non riuscita." body={message} /> : null}
+          {data.configured ? <Imported imported={data.imported} /> : null}
         </div>
       </WidgetCard>
     </section>
+  )
+}
+
+// Obiettivo, attività e peso letti da YAZIO (NUT-024): qui solo si leggono.
+function Imported({ imported: { goal, activityKcal, weight } }: { imported: YazioLink['imported'] }) {
+  const rows = [
+    goal ? ['Obiettivo', goalLine(goal)] : null,
+    goal?.waterMl != null ? ['Acqua', `${num(goal.waterMl)} ml`] : null,
+    activityKcal != null ? ['Attività di oggi', `+${num(activityKcal)} kcal`] : null,
+    weight ? ['Peso', `${num(weight.kg, 1)} kg · ${shortDay(weight.day)}`] : null,
+  ].filter((r) => r !== null)
+  return (
+    <div aria-label="Da YAZIO" role="group" className="flex flex-col border-t border-glass-border pt-3">
+      <div className="flex items-baseline justify-between gap-4">
+        <span className="eyebrow">Da YAZIO</span>
+        <span className="text-xs text-ink-muted">si modificano nell’app YAZIO</span>
+      </div>
+      {rows.length ? (
+        rows.map(([label, value]) => (
+          <div key={label} className="flex min-h-8 items-center justify-between gap-4 text-sm">
+            <span>{label}</span>
+            <span className="font-mono text-[13px]">{value}</span>
+          </div>
+        ))
+      ) : (
+        <span className="mt-2 text-[13px] text-ink-muted">Niente ancora: arriva con il primo giro.</span>
+      )}
+    </div>
   )
 }

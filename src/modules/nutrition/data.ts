@@ -446,6 +446,13 @@ export type YazioLink = {
   error: string | null
   lastSyncAt: string | null
   syncEnabled: boolean
+  // Quello che arriva da YAZIO (NUT-024): obiettivo e attività di oggi,
+  // peso di riferimento.
+  imported: {
+    goal: Goal | null
+    activityKcal: number | null
+    weight: { day: string; kg: number } | null
+  }
 }
 
 export const yazioSource = {

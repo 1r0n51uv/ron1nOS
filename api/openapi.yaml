@@ -755,8 +755,9 @@ paths:
     post:
       summary: Sincronizza ora (NUT-020)
       description: >
-        Un giro di sincronizzazione subito. Un errore di YAZIO non dà un
-        errore HTTP: finisce in `state` ed `error` della risposta.
+        Un giro di sincronizzazione subito: obiettivo, energia attiva di
+        oggi e di ieri, pesate nuove (al primo giro lo storico). Un errore
+        di YAZIO non dà un errore HTTP: finisce in `state` ed `error`.
       operationId: syncYazio
       responses:
         "200":
@@ -1235,7 +1236,7 @@ components:
         caffeineMg: { type: [number, "null"], minimum: 0 }
     YazioLink:
       type: object
-      required: [configured, state, error, lastSyncAt, syncEnabled]
+      required: [configured, state, error, lastSyncAt, syncEnabled, imported]
       properties:
         configured:
           { type: boolean, description: "false se mancano le variabili YAZIO_* nel .env del server" }
@@ -1243,6 +1244,26 @@ components:
         error: { type: [string, "null"], description: Il motivo dell'errore, in italiano }
         lastSyncAt: { type: [string, "null"], format: date-time, description: Ultimo giro riuscito }
         syncEnabled: { type: boolean }
+        imported:
+          type: object
+          description: Quello che arriva da YAZIO (NUT-024); si modifica solo nell'app YAZIO.
+          required: [goal, activityKcal, weight]
+          properties:
+            goal:
+              description: L'obiettivo di oggi, se arriva da YAZIO.
+              oneOf:
+                - { $ref: "#/components/schemas/NutritionGoal" }
+                - { type: "null" }
+            activityKcal: { type: [number, "null"], description: Energia attiva di oggi }
+            weight:
+              description: Il peso di riferimento, l'ultima pesata.
+              oneOf:
+                - type: object
+                  required: [day, kg]
+                  properties:
+                    day: { type: string, format: date }
+                    kg: { type: number }
+                - { type: "null" }
     Supplement:
       type: object
       required: [id, name, dose, schedule, active]

@@ -25,13 +25,9 @@ export type YazioLink = {
   syncEnabled: boolean
 }
 
-// Un passo del giro: lettura (NUT-022) e invio (NUT-023) si aggiungono qui.
+// Un passo del giro: obiettivo, attività e peso (NUT-024), poi diario
+// (NUT-022) e invio (NUT-023).
 export type SyncStep = (ctx: { db: Queryable; client: YazioClient; day: string }) => Promise<void>
-
-// Finché lettura e invio non ci sono, il giro verifica solo l'accesso.
-export const checkConnection: SyncStep = async ({ client, day }) => {
-  await client.water(day)
-}
 
 type Row = {
   sync_enabled: boolean
@@ -73,7 +69,7 @@ export async function syncEnabled(db: Queryable) {
 export async function runSync(
   db: Queryable,
   client: YazioClient,
-  { steps = [checkConnection], now = new Date() }: { steps?: SyncStep[]; now?: Date } = {},
+  { steps, now = new Date() }: { steps: SyncStep[]; now?: Date },
 ) {
   try {
     for (const step of steps) await step({ db, client, day: today(now) })
