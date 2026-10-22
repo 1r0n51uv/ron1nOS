@@ -17,7 +17,8 @@ const TILES = [
   { key: 'fat', label: 'Grassi', unit: ' g' },
 ] as const
 
-// Una ricetta: alimenti, totali, Registra oggi, Modifica, Elimina (NUT-008).
+// Una ricetta: alimenti, totali, Registra oggi, Pianifica (NUT-009),
+// Modifica, Elimina (NUT-008).
 export function RecipeDetail({
   recipe,
   onEdit,
@@ -70,6 +71,11 @@ export function RecipeDetail({
             <Button size="sm">
               <Icon name="plus" size={16} />
               Registra oggi
+            </Button>
+          </AddMealDialog>
+          <AddMealDialog mode="plan" date={today} slot={slot} recipe={recipe}>
+            <Button variant="glass" size="sm">
+              Pianifica
             </Button>
           </AddMealDialog>
           <Button variant="glass" size="sm" onClick={onEdit}>

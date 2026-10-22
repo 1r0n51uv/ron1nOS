@@ -13,6 +13,7 @@ import { addGoal, goalFor, goalHistory } from './goals.ts'
 import { check, ConflictError, readJson } from './http.ts'
 import { logMeal, nextSlot, removeItem, setGrams, slotForHour } from './meals.ts'
 import { Amount, Day, Grams, Slot } from './schemas.ts'
+import { deletePlan, setPlan, setPlanStatus } from './plans.ts'
 import { createRecipe, deleteRecipe, getRecipe, listRecipes, updateRecipe } from './recipes.ts'
 import { findBarcode, searchFoods } from './search.ts'
 
@@ -59,6 +60,10 @@ const MealInput = z.object({
     .min(1)
     .max(30),
 })
+
+const PlanInput = MealInput
+
+const PlanStatusInput = z.object({ status: z.enum(['planned', 'eaten', 'skipped']) })
 
 const RecipeInput = z.object({
   name: z.string().trim().min(1).max(200),
@@ -186,6 +191,28 @@ export function nutritionRoutes({
   app.get('/foods/barcode/:code', async (c) => {
     const code = check(Barcode, c.req.param('code'))
     return c.json(await findBarcode({ db: c.get('db'), external }, code))
+  })
+
+  // Pianificare un pasto (NUT-009). Rispondono con il giorno aggiornato.
+  app.put('/plans', async (c) => {
+    const input = await readJson(c, PlanInput)
+    const db = c.get('db')
+    await db.tx((tx) => setPlan(tx, { day: input.date, slot: input.slot, items: input.items }))
+    return c.json(await dayView(db, input.date))
+  })
+
+  app.delete('/plans/:id', async (c) => {
+    const db = c.get('db')
+    const day = await db.tx((tx) => deletePlan(tx, check(Id, c.req.param('id'))))
+    return c.json(await dayView(db, day))
+  })
+
+  app.put('/plans/:id/status', async (c) => {
+    const id = check(Id, c.req.param('id'))
+    const { status } = await readJson(c, PlanStatusInput)
+    const db = c.get('db')
+    const day = await db.tx((tx) => setPlanStatus(tx, id, status))
+    return c.json(await dayView(db, day))
   })
 
   // Ricette (NUT-008).

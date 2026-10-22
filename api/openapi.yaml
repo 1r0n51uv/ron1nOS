@@ -362,6 +362,98 @@ paths:
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/plans:
+    put:
+      summary: Pianifica un pasto su un giorno e uno slot (NUT-009)
+      description: >
+        Crea o sostituisce il piano del giorno e slot, nel passato o nel
+        futuro. Le righe sono come in POST /nutrition/meals (alimenti o una
+        ricetta); con una sola ricetta il piano la ricorda. Un piano saltato
+        torna pianificato; uno mangiato non si cambia (409 `plan_eaten`).
+      operationId: setPlan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, slot, items]
+              properties:
+                date: { type: string, format: date }
+                slot: { $ref: "#/components/schemas/MealSlot" }
+                items:
+                  type: array
+                  minItems: 1
+                  maxItems: 30
+                  description: Come `items` di POST /nutrition/meals.
+                  items: { type: object }
+      responses:
+        "200":
+          description: Il giorno aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NutritionDay" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: "`plan_eaten`: il pasto è già mangiato."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/plans/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    delete:
+      summary: Elimina un piano non ancora mangiato (NUT-009)
+      operationId: deletePlan
+      responses:
+        "200":
+          description: Il giorno aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NutritionDay" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: "`plan_eaten`: il pasto è già mangiato."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/plans/{id}/status:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      summary: L'interruttore di un piano, mangiato o saltato (NUT-009)
+      description: >
+        `eaten` crea le righe del diario dagli alimenti del piano. Lasciare
+        `eaten` (verso `planned` o `skipped`) cancella le righe create così,
+        non quelle aggiunte a mano (ADR-0032).
+      operationId: setPlanStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [planned, eaten, skipped] }
+      responses:
+        "200":
+          description: Il giorno aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NutritionDay" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: "`plan_empty`: il piano non ha alimenti da registrare."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/recipes:
     get:
       summary: Ricette, per nome (NUT-008)
@@ -988,6 +1080,8 @@ components:
             - goals_from_yazio
             - barcode_exists
             - food_not_custom
+            - plan_eaten
+            - plan_empty
             - not_found
             - internal
         message: { type: string, description: Messaggio in italiano da mostrare. }

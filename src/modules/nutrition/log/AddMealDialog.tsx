@@ -13,13 +13,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ApiError } from '@/lib/api'
 import { num } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { Food, Recipe, SlotId } from '../data'
-import { SLOT_LABELS, useCreateFood, useLogMeal } from '../data'
-import { eyebrowDay } from '../dates'
+import { SLOT_LABELS, useCreateFood, useLogMeal, useSetPlan } from '../data'
+import { eyebrowDay, isDay } from '../dates'
 import { FoodForm } from '../foods/FoodForm'
 import { BarcodeTab } from './BarcodeTab'
 import { FoodSearch } from './FoodSearch'
@@ -31,19 +32,24 @@ import { RecipeTab } from './RecipeTab'
 const SLOTS = Object.keys(SLOT_LABELS) as SlotId[]
 
 type Tab = 'search' | 'barcode' | 'recipe' | 'new'
+type Mode = 'log' | 'plan'
 
 // Montato solo a modale aperto: chiudendo si riparte da capo.
 function LogMeal({
-  date,
+  mode,
+  initialDate,
   initialSlot,
-  recipe,
+  initialItems,
   onDone,
 }: {
-  date: string
+  mode: Mode
+  initialDate: string
   initialSlot: SlotId
-  recipe?: Recipe
+  initialItems: Draft[]
   onDone: () => void
 }) {
+  const plan = mode === 'plan'
+  const [date, setDate] = useState(initialDate)
   const [slot, setSlot] = useState(initialSlot)
   const [tab, setTab] = useState<Tab>('search')
   // Il codice a barre sconosciuto passa al modulo Nuovo alimento.
@@ -51,8 +57,10 @@ function LogMeal({
   const create = useCreateFood()
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<Food | null>(null)
-  const [items, setItems] = useState<Draft[]>(() => (recipe ? [{ recipe, factor: 1 }] : []))
-  const log = useLogMeal()
+  const [items, setItems] = useState<Draft[]>(initialItems)
+  const logMeal = useLogMeal()
+  const setPlan = useSetPlan()
+  const log = plan ? setPlan : logMeal
   const total = totalOf(items)
   const error =
     log.error instanceof ApiError ? log.error.message : log.error ? 'Backend non raggiungibile' : null
@@ -65,16 +73,36 @@ function LogMeal({
   }
 
   function submit() {
+    if (!isDay(date)) return
     log.mutate({ date, slot, items: items.map(toItem) }, { onSuccess: onDone })
   }
 
   return (
     <DialogContent className="max-w-[720px]">
       <DialogHeader>
-        <div className="font-mono text-xs tracking-[0.2em] text-ink-muted">REGISTRA · {eyebrowDay(date)}</div>
-        <DialogTitle>Cosa hai mangiato</DialogTitle>
-        <DialogDescription className="sr-only">Cerca gli alimenti e aggiungili a un pasto.</DialogDescription>
+        <div className="font-mono text-xs tracking-[0.2em] text-ink-muted">
+          {plan ? 'PIANIFICA' : 'REGISTRA'} · {isDay(date) ? eyebrowDay(date) : '—'}
+        </div>
+        <DialogTitle>{plan ? 'Cosa vuoi mangiare' : 'Cosa hai mangiato'}</DialogTitle>
+        <DialogDescription className="sr-only">
+          {plan
+            ? 'Scegli giorno, pasto e alimenti da pianificare.'
+            : 'Cerca gli alimenti e aggiungili a un pasto.'}
+        </DialogDescription>
       </DialogHeader>
+
+      {plan ? (
+        <label className="flex items-center gap-3 text-[13px] text-ink-muted">
+          Giorno
+          <Input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-44 font-mono"
+            required
+          />
+        </label>
+      ) : null}
 
       <div role="radiogroup" aria-label="Pasto" className="flex flex-wrap gap-2">
         {SLOTS.map((s) => (
@@ -171,7 +199,9 @@ function LogMeal({
         </div>
       ) : null}
 
-      {error ? <AlertRow title="Pasto non registrato." body={error} /> : null}
+      {error ? (
+        <AlertRow title={plan ? 'Pasto non pianificato.' : 'Pasto non registrato.'} body={error} />
+      ) : null}
 
       <DialogFooter>
         <span className="font-mono text-[13px] text-ink-muted">
@@ -181,8 +211,8 @@ function LogMeal({
           <DialogClose asChild>
             <Button variant="glass">Annulla</Button>
           </DialogClose>
-          <Button disabled={!items.length || log.isPending} onClick={submit}>
-            {log.isPending ? 'Registro…' : 'Registra'}
+          <Button disabled={!items.length || !isDay(date) || log.isPending} onClick={submit}>
+            {plan ? (log.isPending ? 'Pianifico…' : 'Pianifica') : log.isPending ? 'Registro…' : 'Registra'}
           </Button>
         </div>
       </DialogFooter>
@@ -190,24 +220,37 @@ function LogMeal({
   )
 }
 
-// Registrare un pasto (NUT-003). Il trigger è il pulsante che lo apre:
-// alla chiusura il focus torna lì. Con `recipe` la ricetta è già nel pasto.
+// Registrare (NUT-003) o pianificare (NUT-009) un pasto. Il trigger è il
+// pulsante che lo apre: alla chiusura il focus torna lì. Con `recipe` la
+// ricetta è già nel pasto, con `items` le righe di un piano da modificare.
 export function AddMealDialog({
+  mode = 'log',
   date,
   slot,
   recipe,
+  items,
   children,
 }: {
+  mode?: Mode
   date: string
   slot: SlotId
   recipe?: Recipe
+  items?: Draft[]
   children: ReactNode
 }) {
   const [open, setOpen] = useState(false)
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      {open ? <LogMeal date={date} initialSlot={slot} recipe={recipe} onDone={() => setOpen(false)} /> : null}
+      {open ? (
+        <LogMeal
+          mode={mode}
+          initialDate={date}
+          initialSlot={slot}
+          initialItems={items ?? (recipe ? [{ recipe, factor: 1 }] : [])}
+          onDone={() => setOpen(false)}
+        />
+      ) : null}
     </Dialog>
   )
 }

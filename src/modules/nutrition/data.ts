@@ -169,6 +169,20 @@ function useDayMutation<A>(fn: (args: A) => Promise<Day>) {
   })
 }
 
+// Pianificare un pasto (/api/v1/nutrition/plans, NUT-009).
+export type PlanStatus = 'planned' | 'eaten' | 'skipped'
+
+export const plansSource = {
+  set: (input: MealInput) => api.put<Day>('/nutrition/plans', input),
+  remove: (id: string) => api.delete<Day>(`/nutrition/plans/${id}`),
+  status: (id: string, status: PlanStatus) => api.put<Day>(`/nutrition/plans/${id}/status`, { status }),
+}
+
+export const useSetPlan = () => useDayMutation((input: MealInput) => plansSource.set(input))
+export const useDeletePlan = () => useDayMutation((id: string) => plansSource.remove(id))
+export const useSetPlanStatus = () =>
+  useDayMutation(({ id, status }: { id: string; status: PlanStatus }) => plansSource.status(id, status))
+
 export const useLogMeal = () => useDayMutation((input: MealInput) => mealsSource.log(input))
 export const useRemoveItem = () => useDayMutation((id: string) => mealsSource.removeItem(id))
 export const useSetGrams = () =>
