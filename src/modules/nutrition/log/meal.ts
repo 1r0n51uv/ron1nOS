@@ -1,6 +1,10 @@
-import type { Food, Macros, MealInput } from '../data'
+import { num } from '@/lib/format'
+import type { Food, Macros, MealInput, Recipe } from '../data'
 
-export type Draft = { food: Food; grams: number }
+export type FoodDraft = { food: Food; grams: number }
+// Una ricetta intera, per `factor` porzioni (NUT-008).
+export type RecipeDraft = { recipe: Recipe; factor: number }
+export type Draft = FoodDraft | RecipeDraft
 
 // Kcal e macro di una quantità, dai valori per 100 g.
 export function macrosOf(food: Food, grams: number): Macros {
@@ -8,10 +12,22 @@ export function macrosOf(food: Food, grams: number): Macros {
   return { kcal: food.kcal * f, protein: food.protein * f, carbs: food.carbs * f, fat: food.fat * f }
 }
 
+export function draftMacros(d: Draft): Macros {
+  if ('recipe' in d) {
+    const { recipe: r, factor: f } = d
+    return { kcal: r.kcal * f, protein: r.protein * f, carbs: r.carbs * f, fat: r.fat * f }
+  }
+  return macrosOf(d.food, d.grams)
+}
+
+export function draftName(d: Draft) {
+  return 'recipe' in d ? d.recipe.name : d.food.name
+}
+
 export function totalOf(items: Draft[]): Macros {
   return items.reduce(
-    (t, { food, grams }) => {
-      const m = macrosOf(food, grams)
+    (t, d) => {
+      const m = draftMacros(d)
       return {
         kcal: t.kcal + m.kcal,
         protein: t.protein + m.protein,
@@ -35,10 +51,14 @@ export function defaultGrams(food: Food) {
 }
 
 // Un alimento del catalogo va per id, uno esterno con i suoi valori.
-export function toItem({ food, grams }: Draft): MealInput['items'][number] {
+export function toFoodItem({ food, grams }: FoodDraft) {
   if (food.id) return { foodId: food.id, grams }
   const { id: _id, ...rest } = food
   return { food: rest, grams }
+}
+
+export function toItem(d: Draft): MealInput['items'][number] {
+  return 'recipe' in d ? { recipeId: d.recipe.id, factor: d.factor } : toFoodItem(d)
 }
 
 export const SOURCE_TAG: Record<Food['source'], string> = {
@@ -52,4 +72,8 @@ export const SOURCE_NAME: Record<Exclude<Food['source'], 'custom'>, string> = {
   openfoodfacts: 'OpenFoodFacts',
   usda: 'USDA',
   yazio: 'YAZIO',
+}
+
+export function macroLine(m: { protein: number; carbs: number; fat: number }) {
+  return `P ${num(m.protein)} · C ${num(m.carbs)} · G ${num(m.fat)}`
 }

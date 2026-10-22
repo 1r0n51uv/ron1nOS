@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 
 import { AlertRow, Icon } from '@/components/ron1n'
 import { Button } from '@/components/ui/button'
@@ -29,12 +29,19 @@ export function MealsPage() {
           <div className="eyebrow">{eyebrowDay(date)}</div>
           <h1 className="m-0 font-display text-[44px] leading-[48px] font-bold">Pasti</h1>
         </div>
-        <AddMealDialog date={date} slot={shown?.suggestedSlot ?? 'breakfast'}>
-          <Button disabled={!shown}>
-            <Icon name="plus" size={18} />
-            Registra
-          </Button>
-        </AddMealDialog>
+        <div className="flex items-center gap-2">
+          <nav aria-label="Nutrizione" className="flex gap-2">
+            <Button asChild variant="glass" size="sm">
+              <Link to="/pasti/ricette">Ricette e spesa</Link>
+            </Button>
+          </nav>
+          <AddMealDialog date={date} slot={shown?.suggestedSlot ?? 'breakfast'}>
+            <Button disabled={!shown}>
+              <Icon name="plus" size={18} />
+              Registra
+            </Button>
+          </AddMealDialog>
+        </div>
       </div>
 
       <DayStrip today={today} selected={date} />

@@ -6,7 +6,7 @@ import { ApiError } from '@/lib/api'
 import { renderWithProviders } from '@/test/render'
 import type * as data from '../data'
 import type { Food } from '../data'
-import { useCreateFood, useFoodSearch, useLogMeal } from '../data'
+import { useCreateFood, useFoodSearch, useLogMeal, useRecipes } from '../data'
 import { AddMealDialog } from './AddMealDialog'
 
 vi.mock('../data', async (importOriginal) => ({
@@ -14,6 +14,7 @@ vi.mock('../data', async (importOriginal) => ({
   useFoodSearch: vi.fn(),
   useLogMeal: vi.fn(),
   useCreateFood: vi.fn(),
+  useRecipes: vi.fn(),
 }))
 
 const food = (over: Partial<Food>): Food => ({
@@ -56,6 +57,24 @@ beforeEach(() => {
   mutate.mockReset()
   createFood.mockReset()
   logError = null
+  vi.mocked(useRecipes).mockReturnValue({
+    data: {
+      recipes: [
+        {
+          id: 'r1',
+          name: 'Riso, pollo e zucchine',
+          notes: null,
+          grams: 430,
+          kcal: 479,
+          protein: 42.5,
+          carbs: 68,
+          fat: 4,
+          items: [],
+        },
+      ],
+    },
+    error: null,
+  } as never)
   vi.mocked(useCreateFood).mockReturnValue({ mutate: createFood, isPending: false, error: null } as never)
   vi.mocked(useLogMeal).mockImplementation(
     () => ({ mutate, isPending: false, error: logError }) as unknown as ReturnType<typeof useLogMeal>,
@@ -169,5 +188,16 @@ describe('AddMealDialog (NUT-003)', () => {
     expect(within(dialog).getByRole('tab', { name: 'Cerca' })).toHaveAttribute('aria-selected', 'true')
     expect(within(dialog).getByRole('group', { name: 'Alimento scelto' })).toHaveTextContent('granola')
     expect(within(dialog).getByLabelText('Quantità in grammi')).toHaveValue(40)
+  })
+
+  it('Ricetta: entra nel pasto in un colpo', () => {
+    const dialog = open('lunch')
+    fireEvent.mouseDown(within(dialog).getByRole('tab', { name: 'Ricetta' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: /Riso, pollo e zucchine/ }))
+    const meal = within(dialog).getByRole('list', { name: 'Nel pasto' })
+    expect(within(meal).getByText('ricetta')).toBeInTheDocument()
+    expect(within(dialog).getByText('479 kcal · P 43 · C 68 · G 4')).toBeInTheDocument()
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Registra' }))
+    expect(mutate.mock.calls[0][0].items).toEqual([{ recipeId: 'r1', factor: 1 }])
   })
 })

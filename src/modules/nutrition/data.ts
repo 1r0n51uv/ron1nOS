@@ -143,7 +143,11 @@ export function useFoodSearch(q: string, italy: boolean) {
 export type MealInput = {
   date: string
   slot: SlotId
-  items: ({ foodId: string; grams: number } | { food: Omit<Food, 'id'>; grams: number })[]
+  items: (
+    | { foodId: string; grams: number }
+    | { food: Omit<Food, 'id'>; grams: number }
+    | { recipeId: string; factor: number }
+  )[]
 }
 
 export const mealsSource = {
@@ -217,3 +221,44 @@ export function useBarcode(code: string | null) {
     enabled: !!code,
   })
 }
+
+// Ricette (/api/v1/nutrition/recipes, NUT-008): kcal e macro dagli alimenti
+// di oggi. `missing`: l'alimento è stato eliminato e non conta.
+export type RecipeItem = Macros & {
+  id: string
+  foodId: string | null
+  name: string
+  grams: number
+  missing: boolean
+}
+
+export type Recipe = Macros & {
+  id: string
+  name: string
+  notes: string | null
+  grams: number
+  items: RecipeItem[]
+}
+
+export type RecipeInput = {
+  name: string
+  notes: string | null
+  items: ({ foodId: string; grams: number } | { food: Omit<Food, 'id'>; grams: number })[]
+}
+
+export const recipesSource = {
+  list: () => api.get<{ recipes: Recipe[] }>('/nutrition/recipes'),
+  create: (input: RecipeInput) => api.post<Recipe>('/nutrition/recipes', input),
+  update: (id: string, input: RecipeInput) => api.put<Recipe>(`/nutrition/recipes/${id}`, input),
+  remove: (id: string) => api.delete<void>(`/nutrition/recipes/${id}`),
+}
+
+export function useRecipes() {
+  return useQuery({ queryKey: ['nutrition', 'recipes'], queryFn: () => recipesSource.list() })
+}
+
+export const useSaveRecipe = () =>
+  useFoodMutation(({ id, input }: { id?: string; input: RecipeInput }) =>
+    id ? recipesSource.update(id, input) : recipesSource.create(input),
+  )
+export const useDeleteRecipe = () => useFoodMutation((id: string) => recipesSource.remove(id))
