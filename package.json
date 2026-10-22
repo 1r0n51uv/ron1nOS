@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run test:e2e",
     "test:e2e": "playwright test",
+    "auth:hash": "node server/auth/hash-cli.ts",
     "dev:server": "node --watch --env-file-if-exists=.env server/index.ts",
     "start": "node dist-server/index.js"
   },

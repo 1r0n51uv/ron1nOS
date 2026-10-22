@@ -17,6 +17,8 @@ export type Config = {
   yazio?: YazioConfig & { tokenKey: string }
   // OpenFoodFacts e USDA per la ricerca alimenti (NUT-004, NUT-005).
   foods: ExternalConfig
+  // Login della dashboard (AUTH-002): hash scrypt della password.
+  auth: { passwordHash?: string; cookieSecure: boolean }
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -42,6 +44,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       usdaUrl: (env.USDA_URL ?? 'https://api.nal.usda.gov/fdc/v1').replace(/\/+$/, ''),
       // DEMO_KEY basta per poche ricerche al giorno; una chiave gratuita su api.data.gov.
       usdaKey: env.USDA_API_KEY || 'DEMO_KEY',
+    },
+    auth: {
+      passwordHash: env.AUTH_PASSWORD_HASH || undefined,
+      // Il cookie viaggia solo su HTTPS (Caddy); false solo negli e2e su localhost.
+      cookieSecure: env.AUTH_COOKIE_SECURE !== 'false',
     },
   }
 }
