@@ -52,6 +52,13 @@ Postgres vero: in CI è il servizio del job, in locale quello del comando
 sopra (`TEST_DATABASE_URL` ed `E2E_DATABASE_URL` per cambiarlo); ogni file
 di test lavora in uno schema suo.
 
+YAZIO passa solo da [`server/yazio`](server/yazio): login con password
+grant, token cifrati in Postgres con `YAZIO_TOKEN_KEY`, risposte validate con
+zod (un formato cambiato diventa `yazio_format_changed`), nuovi tentativi
+su 429, 5xx e rete. I test usano il YAZIO finto di
+`server/testing/fake-yazio.ts`, mai quello vero; le prove con l'account vero
+si fanno a mano con [`scripts/yazio-probe`](scripts/yazio-probe/README.md).
+
 ### Qualità del codice
 
 | Comando                | Cosa fa                                                        |
