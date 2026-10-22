@@ -314,6 +314,28 @@ paths:
       responses:
         "204":
           description: Bozza tolta, o già assente.
+  /documents/types:
+    get:
+      summary: Tipi di documento con i loro campi (DOC-003)
+      description: >
+        Prima i tipi già pronti, poi quelli creati dall'utente. Il modulo
+        Documenti risponde 503 `documents_disabled` finché il login non è
+        acceso e DOCUMENTS_KEY non è impostata.
+      operationId: getDocumentTypes
+      responses:
+        "200":
+          description: Tipi di documento.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DocumentType" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "503":
+          description: "`documents_disabled` o `database_unavailable`."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
   /server/stats:
     get:
       summary: Risorse del server lette da Glances
@@ -1397,6 +1419,29 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
   schemas:
+    DocumentTypeField:
+      type: object
+      required: [key, label, kind, copyable]
+      properties:
+        key: { type: string, pattern: "^[a-z][a-z0-9_]{0,39}$" }
+        label: { type: string, maxLength: 60 }
+        kind: { type: string, enum: [text, date, code] }
+        copyable: { type: boolean }
+    DocumentType:
+      type: object
+      required: [id, key, name, icon, preset, fields, documents]
+      properties:
+        id: { type: string, format: uuid }
+        key:
+          type: [string, "null"]
+          description: Chiave stabile dei tipi già pronti (identity_card…), null per quelli creati.
+        name: { type: string }
+        icon: { type: string }
+        preset: { type: boolean }
+        fields:
+          type: array
+          items: { $ref: "#/components/schemas/DocumentTypeField" }
+        documents: { type: integer, description: Documenti di questo tipo. }
     Food:
       type: object
       description: Alimento, valori per 100 g. `id` null per un candidato esterno non ancora nel catalogo.

@@ -4,6 +4,7 @@ import { createApp } from './app.ts'
 import { isPasswordHash } from './auth/password.ts'
 import { loadConfig } from './config.ts'
 import { createDb, startDatabase } from './db.ts'
+import { createVault, parseKey } from './documents/crypto.ts'
 import { createDraftService } from './drafts.ts'
 import { createGlancesClient } from './glances.ts'
 import { createExternalSearch } from './nutrition/foodsearch.ts'
@@ -23,6 +24,13 @@ if (!config.auth.passwordHash) {
   console.warn('AUTH_PASSWORD_HASH mancante: login spento, la dashboard è aperta a chi è nella tailnet')
 } else if (!isPasswordHash(config.auth.passwordHash)) {
   console.warn('AUTH_PASSWORD_HASH non valido: rigeneralo con npm run auth:hash')
+}
+
+const documentsKey = parseKey(config.documentsKey)
+if (!documentsKey) {
+  console.warn('DOCUMENTS_KEY mancante o non di 32 byte: il modulo Documenti resta spento')
+} else if (!config.auth.passwordHash) {
+  console.warn('il modulo Documenti resta spento finché il login non è acceso')
 }
 
 if (!config.databaseUrl) console.warn('DATABASE_URL mancante: il modulo Nutrizione risponderà con errore')
@@ -48,6 +56,7 @@ const app = createApp({
   database,
   nutrition: { external: createExternalSearch(config.foods), sync },
   auth: config.auth,
+  documents: { vault: documentsKey ? createVault(documentsKey) : undefined },
 })
 
 // Bozze orfane del wizard: all'avvio e ogni ora.

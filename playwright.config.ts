@@ -87,6 +87,8 @@ export default defineConfig({
         // Login acceso come in produzione; cookie senza Secure su http://localhost.
         AUTH_PASSWORD_HASH: E2E_PASSWORD_HASH,
         AUTH_COOKIE_SECURE: 'false',
+        // Chiave di prova del modulo Documenti (DOC-015).
+        DOCUMENTS_KEY: 'ABB9OVQtWCp76GiMotgkxs3SgJ6emQ/YjCrpY8CAnBc=',
       },
     },
   ],

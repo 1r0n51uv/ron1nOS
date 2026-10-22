@@ -19,6 +19,8 @@ export type Config = {
   foods: ExternalConfig
   // Login della dashboard (AUTH-002): hash scrypt della password.
   auth: { passwordHash?: string; cookieSecure: boolean }
+  // Modulo Documenti (DOC-015): chiave AES-256 in base64.
+  documentsKey?: string
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -50,6 +52,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       // Il cookie viaggia solo su HTTPS (Caddy); false solo negli e2e su localhost.
       cookieSecure: env.AUTH_COOKIE_SECURE !== 'false',
     },
+    documentsKey: env.DOCUMENTS_KEY || undefined,
   }
 }
 
