@@ -5,7 +5,8 @@ import type { Queryable } from '../db.ts'
 import { macrosFor } from './day.ts'
 import type { Food, FoodCandidate } from './foods.ts'
 import { ensureFood, getFood } from './foods.ts'
-import { NotFoundError } from './http.ts'
+import { InvalidRequestError, NotFoundError } from './http.ts'
+import { recipeFoods } from './recipes.ts'
 import type { Slot } from './schemas.ts'
 
 export type NewItem = { grams: number } & ({ foodId: string } | { food: FoodCandidate })
@@ -76,13 +77,20 @@ export async function addItems(
   return ids
 }
 
+// Una ricetta si registra in un colpo (NUT-008), per `factor` porzioni.
+export type LogItem = NewItem | { recipeId: string; factor: number }
+
 export async function logMeal(
   db: Queryable,
-  { day, slot, items }: { day: string; slot: Slot; items: NewItem[] },
+  { day, slot, items }: { day: string; slot: Slot; items: LogItem[] },
   opts: { sync?: 'local' | 'pending' } = {},
 ) {
   const foods = []
-  for (const item of items) foods.push({ food: await resolveFood(db, item), grams: item.grams })
+  for (const item of items) {
+    if ('recipeId' in item) foods.push(...(await recipeFoods(db, item.recipeId, item.factor)).foods)
+    else foods.push({ food: await resolveFood(db, item), grams: item.grams })
+  }
+  if (!foods.length) throw new InvalidRequestError('La ricetta non ha alimenti')
   const mealId = await mealEntry(db, day, slot)
   return addItems(db, mealId, foods, opts)
 }

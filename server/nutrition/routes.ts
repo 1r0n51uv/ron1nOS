@@ -13,6 +13,7 @@ import { addGoal, goalFor, goalHistory } from './goals.ts'
 import { check, ConflictError, readJson } from './http.ts'
 import { logMeal, nextSlot, removeItem, setGrams, slotForHour } from './meals.ts'
 import { Amount, Day, Grams, Slot } from './schemas.ts'
+import { createRecipe, deleteRecipe, getRecipe, listRecipes, updateRecipe } from './recipes.ts'
 import { findBarcode, searchFoods } from './search.ts'
 
 export type NutritionDeps = {
@@ -49,10 +50,28 @@ const MealInput = z.object({
   slot: Slot,
   items: z
     .array(
-      z.union([z.object({ foodId: z.uuid(), grams: Grams }), z.object({ food: Candidate, grams: Grams })]),
+      z.union([
+        z.object({ foodId: z.uuid(), grams: Grams }),
+        z.object({ food: Candidate, grams: Grams }),
+        z.object({ recipeId: z.uuid(), factor: z.number().finite().min(0.1).max(10).default(1) }),
+      ]),
     )
     .min(1)
     .max(30),
+})
+
+const RecipeInput = z.object({
+  name: z.string().trim().min(1).max(200),
+  notes: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() === '' ? null : v),
+    z.string().trim().max(2000).nullable().default(null),
+  ),
+  items: z
+    .array(
+      z.union([z.object({ foodId: z.uuid(), grams: Grams }), z.object({ food: Candidate, grams: Grams })]),
+    )
+    .min(1)
+    .max(50),
 })
 
 // Alimento personale: i campi facoltativi accettano null o stringa vuota.
@@ -167,6 +186,31 @@ export function nutritionRoutes({
   app.get('/foods/barcode/:code', async (c) => {
     const code = check(Barcode, c.req.param('code'))
     return c.json(await findBarcode({ db: c.get('db'), external }, code))
+  })
+
+  // Ricette (NUT-008).
+  app.get('/recipes', async (c) => c.json({ recipes: await listRecipes(c.get('db')) }))
+
+  app.get('/recipes/:id', async (c) => c.json(await getRecipe(c.get('db'), check(Id, c.req.param('id')))))
+
+  app.post('/recipes', async (c) => {
+    const input = await readJson(c, RecipeInput)
+    const db = c.get('db')
+    const id = await db.tx((tx) => createRecipe(tx, input))
+    return c.json(await getRecipe(db, id), 201)
+  })
+
+  app.put('/recipes/:id', async (c) => {
+    const id = check(Id, c.req.param('id'))
+    const input = await readJson(c, RecipeInput)
+    const db = c.get('db')
+    await db.tx((tx) => updateRecipe(tx, id, input))
+    return c.json(await getRecipe(db, id))
+  })
+
+  app.delete('/recipes/:id', async (c) => {
+    await deleteRecipe(c.get('db'), check(Id, c.req.param('id')))
+    return c.body(null, 204)
   })
 
   // Alimenti personali (NUT-006).
