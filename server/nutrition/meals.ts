@@ -95,3 +95,11 @@ export function slotForHour(hour: number): Slot {
   if (hour < 18) return 'afternoon_snack'
   return 'dinner'
 }
+
+// Il prossimo pasto da segnare (NUT-001): dallo slot dell'ora in poi, il
+// primo ancora vuoto o solo pianificato. null se sono tutti segnati.
+export function nextSlot(slots: { slot: Slot; state: string }[], from: Slot): Slot | null {
+  const start = slots.findIndex((s) => s.slot === from)
+  const next = slots.slice(Math.max(0, start)).find((s) => s.state === 'empty' || s.state === 'planned')
+  return next?.slot ?? null
+}

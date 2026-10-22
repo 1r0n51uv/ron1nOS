@@ -11,7 +11,7 @@ import { getDay } from './day.ts'
 import type { ExternalSearch } from './foodsearch.ts'
 import { addGoal, goalFor, goalHistory } from './goals.ts'
 import { check, ConflictError, readJson } from './http.ts'
-import { logMeal, slotForHour } from './meals.ts'
+import { logMeal, nextSlot, slotForHour } from './meals.ts'
 import { Amount, Day, Grams, Slot } from './schemas.ts'
 import { searchFoods } from './search.ts'
 
@@ -111,11 +111,14 @@ export function nutritionRoutes({
     await next()
   })
 
-  // Il giorno completo: slot, totali, obiettivo (NUT-001, NUT-002). Lo slot
-  // proposto è quello dell'ora corrente, solo per oggi (NUT-003).
+  // Il giorno completo: slot, totali, obiettivo (NUT-001, NUT-002). Solo
+  // per oggi, lo slot dell'ora corrente (NUT-003) e il prossimo pasto da
+  // segnare (NUT-001).
   async function dayView(db: Db, day: string) {
-    const suggestedSlot = day === today(now()) ? slotForHour(localHour(now())) : null
-    return { ...(await getDay(db, day)), suggestedSlot }
+    const result = await getDay(db, day)
+    if (day !== today(now())) return { ...result, suggestedSlot: null, nextSlot: null }
+    const suggestedSlot = slotForHour(localHour(now()))
+    return { ...result, suggestedSlot, nextSlot: nextSlot(result.slots, suggestedSlot) }
   }
 
   app.get('/day', async (c) => {

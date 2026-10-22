@@ -2,8 +2,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { testDb } from '../testing/db.ts'
-import { nutritionApp, resetNutrition, seedFood } from '../testing/nutrition.ts'
-import { slotForHour } from './meals.ts'
+import { nutritionApp, resetNutrition, seedFood, seedMeal, seedPlanned } from '../testing/nutrition.ts'
+import { nextSlot, slotForHour } from './meals.ts'
 
 let db: Awaited<ReturnType<typeof testDb>>
 beforeAll(async () => {
@@ -141,5 +141,26 @@ describe('slot proposto', () => {
     const api = nutritionApp(db, { now })
     expect((await api.get('/day')).body.suggestedSlot).toBe('lunch')
     expect((await api.get('/day?date=2026-10-20')).body.suggestedSlot).toBeNull()
+  })
+
+  it('il prossimo pasto: dallo slot dell’ora, il primo non segnato', () => {
+    const slots = (states: string[]) =>
+      (['breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'dinner'] as const).map((slot, i) => ({
+        slot,
+        state: states[i],
+      }))
+    expect(nextSlot(slots(['eaten', 'empty', 'eaten', 'planned', 'empty']), 'lunch')).toBe('afternoon_snack')
+    expect(nextSlot(slots(['empty', 'empty', 'empty', 'empty', 'empty']), 'breakfast')).toBe('breakfast')
+    expect(nextSlot(slots(['empty', 'empty', 'empty', 'skipped', 'eaten']), 'afternoon_snack')).toBeNull()
+  })
+
+  it('GET /day dà il prossimo pasto solo per oggi', async () => {
+    const pollo = await seedFood(db, { name: 'Petto di pollo', kcal: 110 })
+    await seedMeal(db, '2026-10-21', 'lunch', [{ name: 'Riso', grams: 80, kcal: 280 }])
+    await seedPlanned(db, '2026-10-21', 'dinner', [{ foodId: pollo, name: 'Petto di pollo', grams: 150 }])
+    const api = nutritionApp(db, { now })
+    // 12:30: il pranzo è segnato, la merenda è vuota.
+    expect((await api.get('/day')).body.nextSlot).toBe('afternoon_snack')
+    expect((await api.get('/day?date=2026-10-20')).body.nextSlot).toBeNull()
   })
 })

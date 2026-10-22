@@ -588,7 +588,7 @@ components:
       enum: [breakfast, morning_snack, lunch, afternoon_snack, dinner]
     NutritionDay:
       type: object
-      required: [date, goal, totals, plannedKcal, slots, suggestedSlot]
+      required: [date, goal, totals, plannedKcal, slots, suggestedSlot, nextSlot]
       properties:
         date: { type: string, format: date }
         goal:
@@ -609,6 +609,14 @@ components:
           items: { $ref: "#/components/schemas/NutritionSlot" }
         suggestedSlot:
           description: Lo slot dell'ora corrente, solo per oggi; null negli altri giorni.
+          oneOf:
+            - { $ref: "#/components/schemas/MealSlot" }
+            - { type: "null" }
+        nextSlot:
+          description: >
+            Solo per oggi, il prossimo pasto da segnare: dallo slot dell'ora in
+            poi, il primo vuoto o pianificato. null se sono tutti segnati e
+            negli altri giorni.
           oneOf:
             - { $ref: "#/components/schemas/MealSlot" }
             - { type: "null" }
