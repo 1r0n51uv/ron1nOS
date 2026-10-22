@@ -4,6 +4,8 @@ import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 
+import type { Database } from './db.ts'
+import { DatabaseUnavailableError } from './db.ts'
 import type { DraftService } from './drafts.ts'
 import {
   createDraftService,
@@ -36,6 +38,7 @@ type Deps = {
   drafts?: DraftService
   glances?: GlancesClient
   fetchTorrent?: (url: string) => Promise<Buffer>
+  database?: Database
 }
 
 class InvalidLinkError extends Error {}
@@ -46,10 +49,12 @@ export function createApp({
   drafts = createDraftService({ qbt }),
   glances,
   fetchTorrent = defaultFetchTorrent,
+  database = { status: () => 'disabled' },
 }: Deps) {
   const app = new Hono()
 
-  app.get('/api/v1/health', (c) => c.json({ ok: true }))
+  // ok resta true anche senza database: il resto della dashboard funziona.
+  app.get('/api/v1/health', (c) => c.json({ ok: true, database: database.status() }))
 
   app.get('/api/v1/downloads', async (c) => {
     const [transfer, torrents] = await Promise.all([qbt.transferInfo(), qbt.torrents()])
@@ -130,6 +135,10 @@ export function createApp({
         { error: 'qbittorrent_unreachable', message: 'qBittorrent non raggiungibile' },
         503,
       )
+    }
+    if (err instanceof DatabaseUnavailableError) {
+      console.warn(`database non raggiungibile: ${err.message}`)
+      return c.json<ApiError>({ error: 'database_unavailable', message: 'Database non raggiungibile' }, 503)
     }
     if (err instanceof GlancesUnreachableError) {
       return c.json<ApiError>({ error: 'glances_unreachable', message: 'Glances non raggiungibile' }, 503)

@@ -19,9 +19,16 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [ok]
+                required: [ok, database]
                 properties:
                   ok: { type: boolean, const: true }
+                  database:
+                    type: string
+                    enum: [disabled, starting, ok, unavailable]
+                    description: >
+                      Postgres del modulo Nutrizione. `disabled` senza DATABASE_URL,
+                      `starting` mentre si applicano le migrazioni, `unavailable` se
+                      all'avvio non risponde (il backend riprova da solo).
   /downloads:
     get:
       summary: Velocità totale e torrent di qBittorrent
@@ -335,6 +342,7 @@ components:
             - insufficient_space
             - start_failed
             - glances_unreachable
+            - database_unavailable
             - not_found
             - internal
         message: { type: string, description: Messaggio in italiano da mostrare. }

@@ -29,7 +29,8 @@ export default defineConfig({
     },
   ],
   // Il backend compilato (npm run build) serve la SPA e l'API, collegato a
-  // un qBittorrent e a un Glances finti: lo stesso percorso della produzione.
+  // un qBittorrent e a un Glances finti e a un Postgres vero: lo stesso
+  // percorso della produzione.
   webServer: [
     {
       command: 'node e2e/fake-qbittorrent.ts',
@@ -54,6 +55,8 @@ export default defineConfig({
         QBT_USERNAME: 'admin',
         QBT_PASSWORD: 'admin',
         GLANCES_URL: 'http://localhost:18081',
+        // Postgres vero: in CI il servizio del job, in locale lo stesso utente.
+        DATABASE_URL: process.env.E2E_DATABASE_URL ?? 'postgres://ron1nos:ron1nos@localhost:5432/ron1nos',
       },
     },
   ],

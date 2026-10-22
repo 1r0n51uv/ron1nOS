@@ -10,7 +10,11 @@ test.afterEach(async ({ request }) => {
 test('health del backend', async ({ request }) => {
   const res = await request.get('/api/v1/health')
   expect(res.ok()).toBe(true)
-  expect(await res.json()).toEqual({ ok: true })
+  expect(await res.json()).toMatchObject({ ok: true })
+})
+
+test('il backend applica le migrazioni e usa il database', async ({ request }) => {
+  await expect.poll(async () => (await (await request.get('/api/v1/health')).json()).database).toBe('ok')
 })
 
 test('GET /api/v1/downloads legge da qBittorrent, ordinato', async ({ request }) => {
