@@ -177,10 +177,10 @@ Stato: in corso (#154)
 
 Accettazione:
 
-- [ ] `Esporta` scarica un JSON con preferenze e layout di tutti i
+- [x] `Esporta` scarica un JSON con preferenze e layout di tutti i
       dispositivi, con una versione di formato. Niente dati dei moduli,
       niente segreti, niente immagine di sfondo.
-- [ ] `Importa` legge il file, lo valida sul backend
+- [x] `Importa` legge il file, lo valida sul backend
       (`POST /api/v1/preferences/import`), mostra cosa cambierà e chiede
       conferma.
 

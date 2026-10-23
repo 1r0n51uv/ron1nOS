@@ -14,6 +14,7 @@ import {
   MAX_BACKGROUND_BYTES,
   putBackground,
 } from './background.ts'
+import { exportBackup, importBackup, readBackup } from './backup.ts'
 import { applyPatch, DEFAULT_PREFERENCES, Preferences, PreferencesPatch } from './schema.ts'
 import { getPreferences, patchPreferences } from './store.ts'
 
@@ -106,6 +107,33 @@ export function preferencesRoutes({ database }: { database: Database }) {
         : prefs
     return c.json(await respond(db, next))
   })
+
+  // Backup della configurazione (SET-011): si scarica come file.
+  app.get('/export', async (c) => {
+    const backup = await exportBackup(ready())
+    const day = backup.exportedAt.slice(0, 10)
+    return c.json(backup, 200, {
+      'Content-Disposition': `attachment; filename="ron1nos-configurazione-${day}.json"`,
+    })
+  })
+
+  // Senza `?confirm=1` dice solo cosa cambierebbe; con, lo importa.
+  app.post(
+    '/import',
+    bodyLimit({
+      maxSize: 512 * 1024,
+      onError: () => {
+        throw new InvalidRequestError('File troppo grande per essere un backup')
+      },
+    }),
+    async (c) => {
+      const raw = await c.req.json().catch(() => {
+        throw new InvalidRequestError('Il file non è un JSON valido')
+      })
+      const backup = readBackup(raw)
+      return c.json(await importBackup(ready(), backup, c.req.query('confirm') === '1'))
+    },
+  )
 
   return app
 }

@@ -848,6 +848,59 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/PreferencesResponse" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /preferences/export:
+    get:
+      summary: Scarica il backup della configurazione
+      description: >
+        Preferenze e layout di tutti i dispositivi, con una versione di
+        formato (SET-011). Niente dati dei moduli, niente segreti, niente
+        immagine di sfondo. Risponde come allegato.
+      operationId: exportPreferences
+      responses:
+        "200":
+          description: Il backup.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConfigBackup" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /preferences/import:
+    post:
+      summary: Controlla o importa un backup della configurazione
+      description: >
+        Il corpo è il file scaricato da `/preferences/export`. Senza
+        `confirm=1` dice solo cosa cambierebbe; con, lo scrive. Se lo sfondo
+        del file è un'immagine e sul server non c'è, torna quello
+        predefinito e lo dice in `notes`.
+      operationId: importPreferences
+      parameters:
+        - name: confirm
+          in: query
+          required: false
+          schema: { type: string, enum: ["1"] }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ConfigBackup" }
+      responses:
+        "200":
+          description: Le parti che cambiano, e se sono state scritte.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [changes, notes, applied]
+                properties:
+                  changes: { type: array, items: { type: string } }
+                  notes: { type: array, items: { type: string } }
+                  applied: { type: boolean }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "422":
+          description: "`invalid_layout`: un layout del file non rispetta le regole della dashboard."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /server/stats:
     get:
       summary: Risorse del server lette da Glances
@@ -3378,6 +3431,19 @@ components:
             device: { type: string, enum: [desktop, iphone] }
             updatedAt: { type: [string, "null"], format: date-time }
             stored: { type: boolean, description: "false senza database: le modifiche non si salvano." }
+    ConfigBackup:
+      type: object
+      required: [app, format, exportedAt, preferences, layouts]
+      properties:
+        app: { type: string, enum: [ron1nOS] }
+        format: { type: integer, enum: [1] }
+        exportedAt: { type: string, format: date-time }
+        preferences: { $ref: "#/components/schemas/Preferences" }
+        layouts:
+          type: object
+          properties:
+            desktop: { $ref: "#/components/schemas/DashboardLayout" }
+            iphone: { $ref: "#/components/schemas/DashboardLayout" }
     Session:
       type: object
       required: [id, device, createdAt, lastSeenAt, current]
