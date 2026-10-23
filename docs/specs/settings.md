@@ -80,7 +80,7 @@ Accettazione:
 
 #### SET-004 · Dashboard
 
-Stato: in corso (#148)
+Stato: fatto (#181)
 
 Accettazione:
 
@@ -91,19 +91,19 @@ Accettazione:
 
 #### SET-005 · Moduli
 
-Stato: pianificato (#149)
+Stato: in corso (#149)
 
 Accettazione:
 
-- [ ] Elenco dei moduli con interruttore acceso/spento e, se ne ha, il
+- [x] Elenco dei moduli con interruttore acceso/spento e, se ne ha, il
       link alle sue impostazioni.
-- [ ] Un modulo spento sparisce dalla barra di navigazione, dalla
+- [x] Un modulo spento sparisce dalla barra di navigazione, dalla
       dashboard e dal catalogo dei widget; la sua pagina mostra `Modulo
 spento` con il link per riaccenderlo.
-- [ ] Le rotte API del modulo spento rispondono `404` con codice
+- [x] Le rotte API del modulo spento rispondono `404` con codice
       `module_disabled`; i suoi job in background (es. sincronizzazione
       YAZIO) si fermano. I dati restano.
-- [ ] Dashboard e Impostazioni non si possono spegnere.
+- [x] Dashboard e Impostazioni non si possono spegnere.
 
 #### SET-006 · Navigazione
 

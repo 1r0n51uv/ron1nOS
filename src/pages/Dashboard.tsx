@@ -15,6 +15,7 @@ import { summarize, useContainers } from '@/modules/containers/data'
 import type { SlotId } from '@/modules/nutrition/data'
 import { useDay } from '@/modules/nutrition/data'
 import { todayRome } from '@/modules/nutrition/dates'
+import { useDisabledModules } from '@/preferences/data'
 import { AddWidgetDialog } from '@/widgets/AddWidgetDialog'
 import { DashboardGrid } from '@/widgets/DashboardGrid'
 import { addWidget } from '@/widgets/grid'
@@ -92,6 +93,7 @@ function HeaderMenu({ value, onChange }: { value: HeaderForm; onChange: (form: H
 // dei moduli spenti restano nel layout ma non si vedono. Ogni modifica si
 // salva da sola (DASH-004); dopo `Rimuovi` resta `Annulla` per 8 secondi.
 function useWidgets() {
+  const disabled = useDisabledModules()
   const { layout, setLayout, stored, saveFailed, retry } = useDashboardLayout()
   const items = layout?.items ?? []
   const [removed, setRemoved] = useState<{ title: string; items: LayoutItem[] } | null>(null)
@@ -111,7 +113,7 @@ function useWidgets() {
       if (layout) setLayout({ header, items: layout.items })
     },
     items,
-    widgets: availableWidgets(),
+    widgets: availableWidgets(disabled),
     stored,
     saveFailed,
     retry,

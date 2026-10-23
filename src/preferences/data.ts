@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '@/lib/api'
+import type { ModuleId } from '../../server/dashboard/catalog.ts'
 import type { Preferences, PreferencesPatch } from '../../server/preferences/schema.ts'
 import { applyPatch, DEFAULT_PREFERENCES, normalize } from '../../server/preferences/schema.ts'
 
@@ -79,6 +80,11 @@ export function usePreferences() {
     },
     placeholderData: cached,
   })
+}
+
+// Moduli spenti in Impostazioni › Moduli (SET-005).
+export function useDisabledModules(): readonly ModuleId[] {
+  return usePreferences().data?.disabledModules ?? []
 }
 
 // La modifica si vede subito; se il server la rifiuta torna la versione di prima.
