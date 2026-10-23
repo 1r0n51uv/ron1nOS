@@ -80,7 +80,7 @@ Accettazione:
 
 #### DASH-003 · Griglia libera
 
-Stato: in corso (#141)
+Stato: fatto (#162)
 
 Accettazione:
 
@@ -95,27 +95,28 @@ Accettazione:
 
 #### DASH-004 · Modifica sempre attiva
 
-Stato: pianificato (#142)
+Stato: in corso (#142)
 
 Non c'è una modalità modifica da aprire e chiudere: la dashboard si
 cambia mentre la si usa.
 
 Accettazione:
 
-- [ ] Al passaggio del mouse su un widget compaiono la maniglia di
+- [x] Al passaggio del mouse su un widget compaiono la maniglia di
       trascinamento nell'intestazione, l'angolo di ridimensionamento in
       basso a destra e il menu `⋯` (`Opzioni`, `Rimuovi`). Il resto del
-      widget resta cliccabile come oggi.
-- [ ] Si trascina solo dalla maniglia, per non spostare un widget per
+      widget resta cliccabile come oggi. `Opzioni` entra nel menu con
+      DASH-005.
+- [x] Si trascina solo dalla maniglia, per non spostare un widget per
       sbaglio cliccando un link o un pulsante.
-- [ ] Il ridimensionamento rispetta le dimensioni minime e massime del
+- [x] Il ridimensionamento rispetta le dimensioni minime e massime del
       widget (DASH-001).
-- [ ] `Rimuovi` toglie subito il widget e mostra `Widget rimosso ·
+- [x] `Rimuovi` toglie subito il widget e mostra `Widget rimosso ·
 Annulla` per 8 secondi.
-- [ ] `Aggiungi widget`, accanto alla testata, apre il catalogo diviso per
+- [x] `Aggiungi widget`, accanto alla testata, apre il catalogo diviso per
       modulo, con anteprima; il widget scelto entra nel primo spazio
       libero in alto, alla dimensione predefinita.
-- [ ] Tutto si fa anche da tastiera: maniglia focalizzabile, frecce per
+- [x] Tutto si fa anche da tastiera: maniglia focalizzabile, frecce per
       spostare, `Shift` + frecce per ridimensionare, `Canc` per rimuovere.
 
 #### DASH-005 · Opzioni del widget

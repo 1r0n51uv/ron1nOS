@@ -4,6 +4,7 @@
 // catena.
 import { GRID_COLUMNS } from '../../server/dashboard/catalog.ts'
 import type { LayoutItem } from './layout'
+import type { WidgetDef } from './types'
 
 export { GRID_COLUMNS }
 export const ROW_PX = 24
@@ -57,4 +58,42 @@ export function firstFree(items: Rect[], w: number, h: number) {
       if (!items.some((i) => overlaps(i, rect))) return rect
     }
   }
+}
+
+// Una cella della griglia in pixel, spazio compreso: serve a tradurre un
+// trascinamento in colonne e righe.
+export const ROW_UNIT_PX = ROW_PX + GAP_PX
+
+export function columnUnit(gridWidth: number) {
+  return (gridWidth - GAP_PX * (GRID_COLUMNS - 1)) / GRID_COLUMNS + GAP_PX
+}
+
+// Dimensioni tenute tra la minima e la massima del widget (DASH-001).
+export function clampSize(size: WidgetDef['size'], w: number, h: number) {
+  return {
+    w: Math.min(Math.max(w, size.min.w), size.max.w),
+    h: Math.min(Math.max(h, size.min.h), size.max.h),
+  }
+}
+
+// Sposta di dx colonne e dy righe.
+export function moveBy(items: LayoutItem[], id: string, dx: number, dy: number) {
+  const item = items.find((i) => i.id === id)
+  return item ? place(items, id, { ...item, x: item.x + dx, y: item.y + dy }) : items
+}
+
+// Allarga di dw colonne e dh righe, nei limiti del widget.
+export function resizeBy(items: LayoutItem[], widget: WidgetDef, dw: number, dh: number) {
+  const item = items.find((i) => i.id === widget.id)
+  if (!item) return items
+  const size = clampSize(widget.size, item.w + dw, item.h + dh)
+  // Allargandosi non esce a destra: se c'è spazio resta dov'è.
+  const w = Math.max(Math.min(size.w, GRID_COLUMNS - item.x), widget.size.min.w)
+  return place(items, widget.id, { x: item.x, y: item.y, w, h: size.h })
+}
+
+// Aggiunge un widget nel primo spazio libero, alla dimensione predefinita.
+export function addWidget(items: LayoutItem[], widget: WidgetDef): LayoutItem[] {
+  const { w, h } = widget.size.default
+  return [...items, { id: widget.id, ...firstFree(items, w, h) }]
 }

@@ -4,6 +4,8 @@ import { LoginPage } from '@/auth/LoginPage'
 import { RequireAuth } from '@/auth/RequireAuth'
 import { AppShell } from '@/layout/AppShell'
 import { ComingSoon } from '@/pages/ComingSoon'
+import { DocumentPage } from '@/modules/documents/DocumentPage'
+import { DocumentsPage } from '@/modules/documents/DocumentsPage'
 import { MealsPage } from '@/modules/nutrition/page/MealsPage'
 import { RecipesPage } from '@/modules/nutrition/recipes/RecipesPage'
 import { ReportPage } from '@/modules/nutrition/report/ReportPage'
@@ -24,6 +26,8 @@ export default function App() {
           <Route path="pasti/template" element={<TemplatesPage />} />
           <Route path="pasti/andamento" element={<ReportPage />} />
           <Route path="allenamenti" element={<WorkoutPage />} />
+          <Route path="documenti" element={<DocumentsPage />} />
+          <Route path="documenti/:id" element={<DocumentPage />} />
           <Route path="note" element={<ComingSoon title="Note" />} />
           <Route path="casa" element={<ComingSoon title="Casa" />} />
           <Route path="server" element={<ComingSoon title="Server e container" />} />

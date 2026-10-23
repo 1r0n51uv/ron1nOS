@@ -1920,6 +1920,7 @@ components:
           pinnedAt,
           files,
           thumbFileId,
+          firstFile,
           updatedAt,
         ]
       properties:
@@ -1938,6 +1939,13 @@ components:
           type: [string, "null"]
           format: uuid
           description: Primo allegato, se è un'immagine con miniatura.
+        firstFile:
+          type: [object, "null"]
+          description: Tipo e dimensione del primo allegato.
+          required: [mime, size]
+          properties:
+            mime: { type: string }
+            size: { type: integer }
         updatedAt: { type: string, format: date-time }
     Document:
       type: object

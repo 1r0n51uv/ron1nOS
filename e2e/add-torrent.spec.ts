@@ -28,6 +28,6 @@ for (const [how, close] of closers) {
     await expect(page.getByRole('dialog')).toBeVisible()
     await close(page)
     await expect(page.getByRole('dialog')).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Aggiungi' })).toBeFocused()
+    await expect(page.getByRole('button', { name: 'Aggiungi', exact: true })).toBeFocused()
   })
 }

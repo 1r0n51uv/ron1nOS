@@ -173,6 +173,7 @@ describe('elenco, ricerca ed evidenza (DOC-002, DOC-008, DOC-010)', () => {
       typeIcon: 'passport',
       files: 0,
       thumbFileId: null,
+      firstFile: null,
     })
     const titles = async (q: string) =>
       (await get(`/documents?${q}`)).body.map((d: { title: string }) => d.title)
@@ -225,7 +226,11 @@ describe('allegati (DOC-011, DOC-012, DOC-014)', () => {
     expect([size.format, size.width, size.height]).toEqual(['jpeg', 400, 267])
 
     const list = (await get('/documents')).body[0]
-    expect(list).toMatchObject({ files: 1, thumbFileId: meta.id })
+    expect(list).toMatchObject({
+      files: 1,
+      thumbFileId: meta.id,
+      firstFile: { mime: 'image/png', size: image.length },
+    })
   })
 
   it('nel database il file è cifrato', async () => {

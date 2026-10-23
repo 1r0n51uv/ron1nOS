@@ -51,6 +51,8 @@ export type DocumentSummary = {
   files: number
   // Miniatura del primo allegato, se è un'immagine.
   thumbFileId: string | null
+  // Tipo e dimensione del primo allegato, per la card senza miniatura.
+  firstFile: { mime: string; size: number } | null
   updatedAt: string
 }
 
@@ -158,6 +160,8 @@ type SummaryRow = Omit<Row, 'envelope' | 'created_at'> & {
   type_icon: string | null
   files: number
   thumb_file_id: string | null
+  first_mime: string | null
+  first_size: number | null
 }
 
 // Prima i fissati, nell'ordine in cui sono stati fissati (DOC-008), poi gli
@@ -188,10 +192,11 @@ export async function listDocuments(
     `select d.id, d.type_id, t.name as type_name, t.icon as type_icon, d.title, d.holder,
             d.expires_on, d.warnings, d.tags, d.pinned_at, d.updated_at,
             (select count(*) from document_files f where f.document_id = d.id)::int as files,
-            case when first.has_thumb then first.id end as thumb_file_id
+            case when first.has_thumb then first.id end as thumb_file_id,
+            first.mime as first_mime, first.size as first_size
        from documents d left join document_types t on t.id = d.type_id
        left join lateral (
-         select f.id, f.thumb is not null as has_thumb from document_files f
+         select f.id, f.mime, f.size, f.thumb is not null as has_thumb from document_files f
           where f.document_id = d.id order by f.position, f.created_at limit 1
        ) first on true
       ${where.length ? `where ${where.join(' and ')}` : ''}
@@ -211,6 +216,7 @@ export async function listDocuments(
     pinnedAt: r.pinned_at?.toISOString() ?? null,
     files: r.files,
     thumbFileId: r.thumb_file_id,
+    firstFile: r.first_mime === null ? null : { mime: r.first_mime, size: r.first_size ?? 0 },
     updatedAt: r.updated_at.toISOString(),
   }))
 }
