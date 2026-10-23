@@ -42,7 +42,17 @@ export function backgroundUrl(version: string) {
 }
 
 // La sorgente passa da un oggetto così i test possono sostituirla.
-export const source = { getPreferences, patchPreferences, uploadBackground, removeBackground }
+// Backup della configurazione (SET-011): il file si scarica da qui, e si
+// controlla o importa sul backend.
+export const EXPORT_URL = '/api/v1/preferences/export'
+
+export type ImportPlan = { changes: string[]; notes: string[]; applied: boolean }
+
+export function importBackup(backup: unknown, confirm: boolean) {
+  return api.post<ImportPlan>(`/preferences/import${confirm ? '?confirm=1' : ''}`, backup)
+}
+
+export const source = { getPreferences, patchPreferences, uploadBackground, removeBackground, importBackup }
 
 const key = ['preferences']
 export const STORAGE_KEY = 'ron1nos.preferences'
@@ -86,6 +96,20 @@ export function usePreferences() {
 // Moduli spenti in Impostazioni › Moduli (SET-005).
 export function useDisabledModules(): readonly ModuleId[] {
   return usePreferences().data?.disabledModules ?? []
+}
+
+// Controllo e import del backup: importato, si rileggono preferenze e layout.
+export function useImportBackup() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ backup, confirm }: { backup: unknown; confirm: boolean }) =>
+      source.importBackup(backup, confirm),
+    onSuccess: (plan) => {
+      if (!plan.applied) return
+      void queryClient.invalidateQueries({ queryKey: key })
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
 }
 
 // Unità e fuso orario scelti in Impostazioni › Formati (SET-010).
