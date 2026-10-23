@@ -80,7 +80,7 @@ Accettazione:
 
 #### DASH-003 · Griglia libera
 
-Stato: in corso (#141)
+Stato: fatto (#162)
 
 Accettazione:
 
