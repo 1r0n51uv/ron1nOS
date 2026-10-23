@@ -42,7 +42,7 @@ Accettazione:
 
 #### SET-002 · Preferenze sul server
 
-Stato: in corso (#137)
+Stato: fatto (#174)
 
 Accettazione:
 
