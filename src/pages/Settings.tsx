@@ -9,6 +9,7 @@ import { GoalsPanel } from '@/modules/nutrition/settings/GoalsPanel'
 import { SupplementsPanel } from '@/modules/nutrition/settings/SupplementsPanel'
 import { UnmatchedPanel } from '@/modules/nutrition/settings/UnmatchedPanel'
 import { YazioPanel } from '@/modules/nutrition/settings/YazioPanel'
+import { AppearanceSection } from '@/preferences/AppearanceSection'
 import { StorageNotice } from '@/preferences/StorageNotice'
 import { DashboardPanel } from '@/widgets/DashboardPanel'
 import { findSection, MODULE_SETTINGS, SECTIONS } from './settings/sections'
@@ -62,7 +63,9 @@ export function SettingsSection() {
   return (
     <>
       <SectionTitle>{found.label}</SectionTitle>
-      {found.id === 'dashboard' ? (
+      {found.id === 'aspetto' ? (
+        <AppearanceSection />
+      ) : found.id === 'dashboard' ? (
         <DashboardPanel />
       ) : found.id === 'moduli' ? (
         <ModulesSection />

@@ -5,6 +5,8 @@ import { BrowserRouter } from 'react-router'
 
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { isUnauthenticated, ME_KEY } from '@/auth/data'
+import { applyAppearance } from '@/preferences/appearance'
+import { cached } from '@/preferences/data'
 import App from './App.tsx'
 import './index.css'
 
@@ -20,6 +22,9 @@ const queryClient: QueryClient = new QueryClient({
     },
   }),
 })
+
+// L'ultimo aspetto noto prima del primo disegno, senza sfarfallio (SET-002).
+applyAppearance(cached())
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

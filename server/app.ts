@@ -8,6 +8,7 @@ import type { AuthDeps } from './auth/routes.ts'
 import { createAuth } from './auth/routes.ts'
 import { InvalidLayoutError } from './dashboard/layout.ts'
 import { dashboardRoutes } from './dashboard/routes.ts'
+import { BackgroundTooLargeError } from './preferences/background.ts'
 import { preferencesRoutes } from './preferences/routes.ts'
 import type { Database } from './db.ts'
 import { DocumentFullError } from './documents/files.ts'
@@ -190,6 +191,9 @@ export function createApp({
     }
     if (err instanceof FileTooLargeError) {
       return c.json<ApiError>({ error: 'file_too_large', message: 'File oltre i 20 MB' }, 413)
+    }
+    if (err instanceof BackgroundTooLargeError) {
+      return c.json<ApiError>({ error: 'file_too_large', message: 'Immagine oltre i 5 MB' }, 413)
     }
     if (err instanceof DocumentFullError) {
       return c.json<ApiError>(

@@ -6,7 +6,10 @@ function Card({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="card"
-      className={cn('flex flex-col gap-5 rounded-panel p-[26px] text-card-foreground glass-panel', className)}
+      className={cn(
+        'flex flex-col gap-(--card-gap) rounded-panel p-(--card-pad) text-card-foreground glass-panel',
+        className,
+      )}
       {...props}
     />
   )
@@ -37,7 +40,9 @@ function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
 }
 
 function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="card-content" className={cn('flex flex-col gap-5', className)} {...props} />
+  return (
+    <div data-slot="card-content" className={cn('flex flex-col gap-(--card-gap)', className)} {...props} />
+  )
 }
 
 export { Card, CardHeader, CardTitle, CardAction, CardContent }

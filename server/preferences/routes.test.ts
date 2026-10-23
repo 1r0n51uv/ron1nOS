@@ -12,7 +12,7 @@ beforeAll(async () => {
   db = await testDb()
 })
 afterAll(() => db.drop())
-beforeEach(() => db.query('delete from preferences'))
+beforeEach(() => db.query('delete from preferences; delete from preference_background'))
 
 function api(database: Database = { db, status: () => 'ok' }) {
   const app = createApp({ qbt: fakeQbt(), database })
@@ -24,14 +24,29 @@ function api(database: Database = { db, status: () => 'ok' }) {
     })
     return { status: res.status, body: JSON.parse(await res.text()) }
   }
-  return { get: () => call('GET'), patch: (body: unknown) => call('PATCH', body) }
+  const upload = async (content: Uint8Array, name = 'sfondo.png') => {
+    const form = new FormData()
+    form.append('file', new File([content], name))
+    const res = await app.request('/api/v1/preferences/background', { method: 'PUT', body: form })
+    return { status: res.status, body: JSON.parse(await res.text()) }
+  }
+  return {
+    get: () => call('GET'),
+    patch: (body: unknown) => call('PATCH', body),
+    upload,
+    image: () => app.request('/api/v1/preferences/background'),
+    removeImage: async () => {
+      const res = await app.request('/api/v1/preferences/background', { method: 'DELETE' })
+      return { status: res.status, body: JSON.parse(await res.text()) }
+    },
+  }
 }
 
 describe('rotte delle preferenze (SET-002)', () => {
   it('senza preferenze salvate restituisce i predefiniti', async () => {
     expect(await api().get()).toEqual({
       status: 200,
-      body: { ...DEFAULT_PREFERENCES, updatedAt: null, stored: true },
+      body: { ...DEFAULT_PREFERENCES, updatedAt: null, backgroundImage: null, stored: true },
     })
   })
 
@@ -65,5 +80,48 @@ describe('rotte delle preferenze (SET-002)', () => {
     const offline = api({ status: () => 'disabled' })
     expect((await offline.get()).body).toMatchObject({ ...DEFAULT_PREFERENCES, stored: false })
     expect((await offline.patch({ appearance: { glass: 'light' } })).status).toBe(503)
+  })
+})
+
+const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 1, 2, 3])
+
+describe('immagine di sfondo (SET-003)', () => {
+  it('si carica, si mette in uso e si rilegge con il suo tipo', async () => {
+    const res = await api().upload(PNG)
+    expect(res.status).toBe(200)
+    expect(res.body.appearance.background).toBe('image')
+    expect(res.body.backgroundImage).toEqual(expect.any(String))
+    const image = await api().image()
+    expect(image.status).toBe(200)
+    expect(image.headers.get('content-type')).toBe('image/png')
+    expect(new Uint8Array(await image.arrayBuffer())).toEqual(PNG)
+  })
+
+  it('rifiuta un file che non è JPEG, PNG o WebP, qualunque sia il nome', async () => {
+    const res = await api().upload(new TextEncoder().encode('%PDF-1.7'), 'finto.png')
+    expect(res).toEqual({
+      status: 400,
+      body: { error: 'invalid_request', message: 'Serve un’immagine JPEG, PNG o WebP' },
+    })
+  })
+
+  it('rifiuta con 413 un’immagine oltre i 5 MB', async () => {
+    const big = new Uint8Array(5 * 1024 * 1024 + 1)
+    big.set(PNG)
+    expect((await api().upload(big)).status).toBe(413)
+  })
+
+  it('senza immagine caricata lo sfondo `image` non si può scegliere', async () => {
+    const res = await api().patch({ appearance: { background: 'image' } })
+    expect(res.status).toBe(400)
+    expect((await api().image()).status).toBe(404)
+  })
+
+  it('togliere l’immagine in uso riporta lo sfondo predefinito', async () => {
+    await api().upload(PNG)
+    const res = await api().removeImage()
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({ appearance: { background: 'brace' }, backgroundImage: null })
+    expect((await api().image()).status).toBe(404)
   })
 })

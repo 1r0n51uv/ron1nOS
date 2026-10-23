@@ -34,6 +34,12 @@
   --blur-bar: 30px;
   --blur-chip: 20px;
 
+  /* Densità (SET-003): spaziature di card, pagina e griglia. */
+  --card-pad: 26px;
+  --card-gap: 20px;
+  --page-gap: 28px;
+  --grid-gap: 16px;
+
   /* Variabili shadcn mappate sui token ron1nOS. */
   --radius: 1rem;
   --background: var(--ground);
@@ -113,6 +119,35 @@
   --shadow-glow: var(--shadow-glow);
 }
 
+/*
+ * Aspetto scelto in Impostazioni (SET-003): attributi su <html> messi da
+ * applyAppearance. Medio e comoda sono i valori di :root.
+ */
+:root[data-glass='light'] {
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-strong: rgba(255, 255, 255, 0.07);
+  --glass-bar: rgba(28, 28, 30, 0.32);
+  --blur-panel: 14px;
+  --blur-bar: 16px;
+  --blur-chip: 10px;
+}
+
+:root[data-glass='strong'] {
+  --glass: rgba(255, 255, 255, 0.1);
+  --glass-strong: rgba(255, 255, 255, 0.15);
+  --glass-bar: rgba(28, 28, 30, 0.62);
+  --blur-panel: 44px;
+  --blur-bar: 44px;
+  --blur-chip: 30px;
+}
+
+:root[data-density='compact'] {
+  --card-pad: 18px;
+  --card-gap: 14px;
+  --page-gap: 20px;
+  --grid-gap: 12px;
+}
+
 /* La ricetta del vetro: riempimento, bordo, ombra con riflesso, blur. */
 @utility glass-panel {
   background: var(--glass);
@@ -168,6 +203,26 @@
       radial-gradient(620px 420px at 40% 120%, var(--haze), transparent 60%), var(--ground);
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
+  }
+  :root[data-background='nebbia'] body {
+    background:
+      radial-gradient(900px 600px at 50% 120%, rgba(110, 110, 130, 0.4), transparent 70%), var(--ground);
+    background-attachment: fixed;
+  }
+  :root[data-background='grafite'] body {
+    background: linear-gradient(160deg, #141416, var(--ground) 70%);
+    background-attachment: fixed;
+  }
+  :root[data-background='nero'] body {
+    background: var(--ground);
+  }
+  /* L'immagine caricata, scurita quanto basta per il testo chiaro. */
+  :root[data-background='image'] body {
+    background:
+      linear-gradient(rgba(7, 7, 7, 0.62), rgba(7, 7, 7, 0.62)),
+      var(--bg-image) center / cover no-repeat,
+      var(--ground);
+    background-attachment: fixed;
   }
   a {
     color: var(--brand-text);

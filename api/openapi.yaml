@@ -680,7 +680,8 @@ paths:
       description: >
         Ogni gruppo è facoltativo; in `appearance` e `formats` anche ogni campo.
         Campi sconosciuti o valori fuori elenco danno 400. `navOrder` deve
-        contenere tutte le voci una sola volta.
+        contenere tutte le voci una sola volta. Lo sfondo `image` si può
+        scegliere solo dopo aver caricato un'immagine.
       operationId: patchPreferences
       requestBody:
         required: true
@@ -694,6 +695,59 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/PreferencesResponse" }
         "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /preferences/background:
+    put:
+      summary: Carica l'immagine di sfondo e la mette in uso
+      description: >
+        Multipart, campo `file`: JPEG, PNG o WebP fino a 5 MB, riconosciuti dai
+        primi byte (SET-003). Sostituisce quella di prima e imposta
+        `appearance.background` a `image`.
+      operationId: putPreferencesBackground
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "200":
+          description: Le preferenze con l'immagine in uso.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PreferencesResponse" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "413":
+          description: "`file_too_large`: immagine oltre i 5 MB."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    get:
+      summary: L'immagine di sfondo caricata
+      operationId: getPreferencesBackground
+      responses:
+        "200":
+          description: L'immagine, con il suo tipo.
+          content:
+            image/jpeg: { schema: { type: string, format: binary } }
+            image/png: { schema: { type: string, format: binary } }
+            image/webp: { schema: { type: string, format: binary } }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    delete:
+      summary: Toglie l'immagine di sfondo
+      description: Se era in uso, torna lo sfondo predefinito.
+      operationId: deletePreferencesBackground
+      responses:
+        "200":
+          description: Le preferenze dopo la rimozione.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PreferencesResponse" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /server/stats:
     get:
@@ -2856,9 +2910,15 @@ components:
       allOf:
         - $ref: "#/components/schemas/Preferences"
         - type: object
-          required: [updatedAt, stored]
+          required: [updatedAt, backgroundImage, stored]
           properties:
             updatedAt: { type: [string, "null"], format: date-time }
+            backgroundImage:
+              type: [string, "null"]
+              format: date-time
+              description: >-
+                Quando è stata caricata l'immagine di sfondo, o null se non c'è.
+                Va nell'indirizzo dell'immagine (`?v=`) per non usare quella vecchia.
             stored: { type: boolean, description: "false senza database: le modifiche non si salvano." }
     Error:
       type: object

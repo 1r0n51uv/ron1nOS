@@ -19,6 +19,7 @@ describe('avviso senza database (SET-002)', () => {
     vi.spyOn(source, 'getPreferences').mockResolvedValue({
       ...DEFAULT_PREFERENCES,
       updatedAt: null,
+      backgroundImage: null,
       stored: false,
     })
     render(wrap(<StorageNotice />))
@@ -30,7 +31,7 @@ describe('avviso senza database (SET-002)', () => {
   it('con il database non mostra nulla', async () => {
     const get = vi
       .spyOn(source, 'getPreferences')
-      .mockResolvedValue({ ...DEFAULT_PREFERENCES, updatedAt: null, stored: true })
+      .mockResolvedValue({ ...DEFAULT_PREFERENCES, updatedAt: null, backgroundImage: null, stored: true })
     render(wrap(<StorageNotice />))
     await vi.waitFor(() => expect(get).toHaveBeenCalled())
     expect(screen.queryByRole('status')).toBeNull()
