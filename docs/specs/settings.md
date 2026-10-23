@@ -141,7 +141,7 @@ arriva l'app; fino ad allora la sezione non compare.
 
 #### SET-009 · Integrazioni
 
-Stato: in corso (#150)
+Stato: fatto (#186)
 
 Accettazione:
 
