@@ -1,0 +1,23 @@
+import { describe, expect, it } from 'vitest'
+
+import { dayWithYear, period, streak, weeklyAverage, workouts } from './format'
+
+describe('format', () => {
+  it('giorni e periodi', () => {
+    expect(dayWithYear('2026-10-19')).toBe('19 ott 2026')
+    expect(period('2026-10-19', '2026-10-19')).toBe('19 ott 2026')
+    expect(period('2024-03-04', '2026-10-21')).toBe('4 mar 2024 – 21 ott 2026')
+  })
+
+  it('singolare e plurale', () => {
+    expect(workouts(1)).toBe('1 allenamento')
+    expect(workouts(0)).toBe('0 allenamenti')
+    expect(streak(1)).toBe('1 giorno di fila')
+    expect(streak(4)).toBe('4 giorni di fila')
+  })
+
+  it('media per settimana', () => {
+    expect(weeklyAverage([{ count: 3 }, { count: 2 }, { count: 2 }])).toBe(2.3)
+    expect(weeklyAverage([])).toBe(0)
+  })
+})

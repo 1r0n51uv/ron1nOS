@@ -56,7 +56,7 @@ type Deps = {
   // Login della dashboard (docs/specs/auth.md); senza, l'API resta aperta.
   auth?: Omit<AuthDeps, 'database'>
   // Modulo Allenamento: catalogo delle immagini degli esercizi.
-  workout?: { catalog?: Catalog }
+  workout?: { catalog?: Catalog; now?: () => Date }
   // Modulo Documenti: la chiave di DOCUMENTS_KEY; senza, il modulo è spento.
   documents?: Omit<DocumentsDeps, 'database' | 'authEnabled'>
 }

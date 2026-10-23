@@ -266,17 +266,17 @@ Accettazione:
 
 #### GYM-013 · Allenamenti della settimana e giorni di fila
 
-Stato: pianificato (#121) · Origine: pkm
+Stato: fatto (#121) · Origine: pkm
 
 Accettazione:
 
-- [ ] Allenamenti questa settimana: sessioni da lunedì a oggi, fuso
+- [x] Allenamenti questa settimana: sessioni da lunedì a oggi, fuso
       `Europe/Rome`.
-- [ ] Giorni di fila: giorni di calendario consecutivi con almeno una
+- [x] Giorni di fila: giorni di calendario consecutivi con almeno una
       sessione, che finiscono oggi o ieri (`GymMath.currentStreakDays` di
       pkm).
-- [ ] Usati da widget (GYM-001) e pagina (GYM-002).
-- [ ] Nella pagina, un grafico a barre degli allenamenti per settimana
+- [x] Usati da widget (GYM-001) e pagina (GYM-002).
+- [x] Nella pagina, un grafico a barre degli allenamenti per settimana
       sulle ultime 26 settimane, con la media.
 
 ## Note

@@ -15,3 +15,14 @@ export function period(from: string, to: string) {
 export function workouts(n: number) {
   return `${n} ${n === 1 ? 'allenamento' : 'allenamenti'}`
 }
+
+// "1 giorno di fila", "4 giorni di fila".
+export function streak(n: number) {
+  return `${n} ${n === 1 ? 'giorno' : 'giorni'} di fila`
+}
+
+// Media degli allenamenti per settimana, con una cifra decimale.
+export function weeklyAverage(weeks: { count: number }[]) {
+  if (!weeks.length) return 0
+  return Math.round((weeks.reduce((s, w) => s + w.count, 0) / weeks.length) * 10) / 10
+}

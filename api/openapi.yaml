@@ -1745,6 +1745,23 @@ paths:
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /workout/summary:
+    get:
+      summary: Ultimo allenamento, settimana e giorni di fila (GYM-001, GYM-013)
+      description: >
+        Giorni locali Europe/Rome. `thisWeek` conta le sessioni da lunedì a
+        oggi (due nello stesso giorno contano due); `streakDays` i giorni di
+        calendario consecutivi con almeno una sessione che finiscono oggi o
+        ieri. `weeks` sono le ultime 26 settimane, l'ultima è quella
+        corrente. Le sessioni con un giorno dopo oggi non contano.
+      operationId: getWorkoutSummary
+      responses:
+        "200":
+          description: Il riepilogo.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkoutSummary" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
 components:
   securitySchemes:
     session:
