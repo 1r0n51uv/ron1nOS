@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import { dayWithYear, duration, period, streak, weeklyAverage, workoutDay, workouts } from './format'
+import {
+  dayWithYear,
+  duration,
+  period,
+  setLabel,
+  startTime,
+  streak,
+  weeklyAverage,
+  workoutDay,
+  workouts,
+} from './format'
 
 describe('format', () => {
   it('giorni e periodi', () => {
@@ -32,5 +42,17 @@ describe('workoutDay e duration', () => {
   it('minuti e ore', () => {
     expect(duration(2700)).toBe('45 min')
     expect(duration(3900)).toBe('1 h 05 min')
+  })
+})
+
+describe('setLabel e startTime', () => {
+  it('peso × reps o durata', () => {
+    expect(setLabel({ weightKg: 85, reps: 6, durationSeconds: null })).toBe('85 × 6')
+    expect(setLabel({ weightKg: 82.5, reps: 6, durationSeconds: null })).toBe('82,5 × 6')
+    expect(setLabel({ weightKg: 0, reps: null, durationSeconds: 75 })).toBe('1:15')
+  })
+
+  it('ora di Roma', () => {
+    expect(startTime('2026-10-20T16:00:00Z')).toBe('18:00')
   })
 })

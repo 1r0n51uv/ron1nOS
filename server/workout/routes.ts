@@ -14,6 +14,7 @@ import { exerciseImages, imageUrl, setExerciseImage } from './images.ts'
 import { importLiftin } from './import.ts'
 import { LiftinError, parseLiftin } from './liftin.ts'
 import { normalizeExercise } from './math.ts'
+import { deleteSession, getSession } from './detail.ts'
 import { decodeCursor, listRoutines, listSessions } from './sessions.ts'
 import { getSummary } from './summary.ts'
 
@@ -25,6 +26,7 @@ type WorkoutDeps = {
 }
 
 const ImageInput = z.object({ catalogId: z.string().min(1).max(200).nullable() })
+const SessionId = z.uuid()
 const ExerciseName = z.string().trim().min(1).max(200)
 
 // Il CSV completo di Liftin' resta sotto i 5 MB anche dopo anni.
@@ -97,6 +99,18 @@ export function workoutRoutes({ database, catalog, now = () => new Date() }: Wor
     const after = cursor ? decodeCursor(cursor) : undefined
     if (after === null) throw new InvalidRequestError('Cursore non valido')
     return c.json(await listSessions(c.get('db'), catalog, { routine: routine || undefined, after }))
+  })
+
+  // Dettaglio di una sessione (GYM-005).
+  app.get('/sessions/:id', async (c) =>
+    c.json(await getSession(c.get('db'), catalog, check(SessionId, c.req.param('id')))),
+  )
+
+  // Elimina una sessione (GYM-006): un re-import non la riporta.
+  app.delete('/sessions/:id', async (c) => {
+    const id = check(SessionId, c.req.param('id'))
+    await c.get('db').tx((tx) => deleteSession(tx, id))
+    return c.body(null, 204)
   })
 
   // Nomi delle routine per il filtro dello storico (GYM-004).

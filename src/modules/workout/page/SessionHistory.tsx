@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 
 import { AlertRow, WidgetCard } from '@/components/ron1n'
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
@@ -18,22 +19,27 @@ function Row({ session, today }: { session: SessionRow; today: string }) {
     .filter(Boolean)
     .join(' · ')
   return (
-    <li className="flex min-h-14 items-center gap-4 rounded-[14px] px-2 py-1.5 hover:bg-glass-hover">
-      <div className="flex shrink-0 gap-1.5" aria-hidden="true">
-        {session.exercises.map((e) => (
-          <ExercisePhoto
-            key={e.name}
-            name={e.name}
-            image={e.image}
-            className="size-11 rounded-[10px]"
-            compact
-          />
-        ))}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium">{session.routine || 'Allenamento'}</div>
-        <div className="font-mono text-xs text-ink-muted">{when}</div>
-      </div>
+    <li>
+      <Link
+        to={`/allenamenti/sessioni/${session.id}`}
+        className="flex min-h-14 items-center gap-4 rounded-[14px] px-2 py-1.5 text-ink no-underline hover:bg-glass-hover"
+      >
+        <div className="flex shrink-0 gap-1.5" aria-hidden="true">
+          {session.exercises.map((e) => (
+            <ExercisePhoto
+              key={e.name}
+              name={e.name}
+              image={e.image}
+              className="size-11 rounded-[10px]"
+              compact
+            />
+          ))}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-medium">{session.routine || 'Allenamento'}</div>
+          <div className="font-mono text-xs text-ink-muted">{when}</div>
+        </div>
+      </Link>
     </li>
   )
 }

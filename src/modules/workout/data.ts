@@ -154,3 +154,47 @@ export function useRoutines() {
     queryFn: () => api.get<{ routines: string[] }>('/workout/routines'),
   })
 }
+
+// Dettaglio di una sessione (GYM-005), in sola lettura.
+export type SessionDetail = {
+  id: string
+  day: string
+  routine: string
+  startedAt: string
+  durationSeconds: number | null
+  volumeKg: number
+  exercises: {
+    name: string
+    key: string
+    image: ExerciseImage | null
+    timed: boolean
+    volumeKg: number
+    record: boolean
+    sets: {
+      index: number
+      warmup: boolean
+      weightKg: number
+      reps: number | null
+      durationSeconds: number | null
+    }[]
+  }[]
+}
+
+export function useSession(id: string) {
+  return useQuery({
+    queryKey: ['workout', 'session', id],
+    queryFn: () => api.get<SessionDetail>(`/workout/sessions/${encodeURIComponent(id)}`),
+  })
+}
+
+// Elimina una sessione (GYM-006): sparisce da storico, grafici e costanza.
+export function useDeleteSession() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.delete<void>(`/workout/sessions/${encodeURIComponent(id)}`),
+    onSuccess: (_, id) => {
+      qc.removeQueries({ queryKey: ['workout', 'session', id] })
+      return qc.invalidateQueries({ queryKey: ['workout'] })
+    },
+  })
+}
