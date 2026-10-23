@@ -294,3 +294,29 @@ test.describe('ripristino del layout (DASH-008)', () => {
     await expect(page.locator('[data-widget="notes.summary"]')).toBeVisible()
   })
 })
+
+test.describe('primi widget del catalogo (DASH-002)', () => {
+  test.afterEach(() => sql('delete from dashboard_layouts'))
+
+  const added: [string, string, RegExp][] = [
+    ['nutrition.calories', 'Calorie', /kcal/],
+    ['nutrition.next-meal', 'Prossimo pasto', /Prossimo pasto/],
+    ['nutrition.supplements', 'Integratori', /Integratori/],
+    ['server.metric', 'Risorsa del server', /CPU/],
+    ['downloads.speed', 'Velocità download', /MB\/s/],
+    ['containers.status', 'Stato container', /attivi|ferm/],
+  ]
+
+  for (const [id, title, shows] of added) {
+    test(`${title} si aggiunge dal catalogo e compare in griglia`, async ({ page }) => {
+      await page.request.put('/api/v1/dashboard/layouts/desktop', { data: { header: 'full', items: [] } })
+      await page.goto('/')
+      await page.getByRole('button', { name: 'Aggiungi widget' }).click()
+      const dialog = page.getByRole('dialog', { name: 'Aggiungi widget' })
+      await dialog.getByRole('article', { name: title }).getByRole('button', { name: 'Aggiungi' }).click()
+      const widget = page.locator(`[data-widget="${id}"]`)
+      await expect(widget).toBeVisible()
+      await expect(widget.getByText(shows).first()).toBeVisible()
+    })
+  }
+})
