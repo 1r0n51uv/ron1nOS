@@ -1,3 +1,5 @@
+import { setDefaultAutoSelectFamilyAttemptTimeout } from 'node:net'
+
 import { serve } from '@hono/node-server'
 
 import { createApp } from './app.ts'
@@ -16,6 +18,11 @@ import { createQbtClient } from './qbittorrent.ts'
 import { createCatalog } from './workout/catalog.ts'
 import { createYazioClient } from './yazio/client.ts'
 import { dbTokenStore } from './yazio/tokens.ts'
+
+// Node prova ogni indirizzo per 250 ms: dal server l'IPv6 non va e l'IPv4
+// di USDA risponde più lento, così la ricerca andava in timeout in mezzo
+// secondo (prova del 2026-10-23). Con 2 s per indirizzo risponde.
+setDefaultAutoSelectFamilyAttemptTimeout(2_000)
 
 const config = loadConfig()
 if (!config.qbt.username || !config.qbt.password) {

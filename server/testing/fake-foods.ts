@@ -1,6 +1,7 @@
 // OpenFoodFacts e USDA finti, per i test unit (fetch in processo) e gli
-// e2e (e2e/fake-foods.ts). /off e /off-it sono la ricerca mondiale e quella
-// italiana, /usda FoodData Central. /__fake/state spegne una fonte.
+// e2e (e2e/fake-foods.ts). /off sono le schede e i codici a barre,
+// /off-search la ricerca search-a-licious (hits con countries_tags), /usda
+// FoodData Central. /__fake/state spegne una fonte.
 import { Hono } from 'hono'
 
 type OffProduct = {
@@ -109,26 +110,28 @@ export function createFakeFoods(state: FakeFoodsState = { off: true, usda: true,
     return c.json(state)
   })
 
-  for (const [prefix, country] of [
-    ['/off', 'world'],
-    ['/off-it', 'it'],
-  ] as const) {
-    app.get(`${prefix}/cgi/search.pl`, (c) => {
-      state.calls.push(`${prefix} ${c.req.query('search_terms')}`)
-      if (!state.off) return c.json({ error: 'giù' }, 503)
-      const q = c.req.query('search_terms') ?? ''
-      const products = OFF_PRODUCTS.filter(
-        (p) => p.countries.includes(country) && matches(`${p.product_name} ${p.brands ?? ''}`, q),
-      )
-      return c.json({ count: products.length, products })
-    })
-    app.get(`${prefix}/api/v2/product/:file`, (c) => {
-      if (!state.off) return c.json({ error: 'giù' }, 503)
-      const code = c.req.param('file').replace(/\.json$/, '')
-      const product = OFF_PRODUCTS.find((p) => p.code === code)
-      return product ? c.json({ status: 1, product }) : c.json({ status: 0 }, 404)
-    })
-  }
+  app.get('/off-search/search', (c) => {
+    const raw = c.req.query('q') ?? ''
+    // Il filtro Solo Italia arriva nella query, come in search-a-licious.
+    const italy = raw.includes('countries_tags:"en:italy"')
+    const q = raw.replace('countries_tags:"en:italy"', '').trim()
+    state.calls.push(`/off-search ${q}${italy ? ' (it)' : ''}`)
+    if (!state.off) return c.json({ error: 'giù' }, 503)
+    const hits = OFF_PRODUCTS.filter(
+      (p) => (!italy || p.countries.includes('it')) && matches(`${p.product_name} ${p.brands ?? ''}`, q),
+    ).map(({ countries, brands, serving_quantity: _, ...p }) => ({
+      ...p,
+      brands: brands ? [brands] : [],
+      countries_tags: countries.includes('it') ? ['en:italy', 'en:greece'] : ['en:germany'],
+    }))
+    return c.json({ hits, count: hits.length })
+  })
+  app.get('/off/api/v2/product/:file', (c) => {
+    if (!state.off) return c.json({ error: 'giù' }, 503)
+    const code = c.req.param('file').replace(/\.json$/, '')
+    const product = OFF_PRODUCTS.find((p) => p.code === code)
+    return product ? c.json({ status: 1, product }) : c.json({ status: 0 }, 404)
+  })
 
   app.get('/usda/foods/search', (c) => {
     state.calls.push(`/usda ${c.req.query('query')}`)
@@ -149,7 +152,7 @@ export function createFakeFoods(state: FakeFoodsState = { off: true, usda: true,
 
 export const FAKE_FOODS_CONFIG = (base = 'http://foods.test') => ({
   offUrl: `${base}/off`,
-  offItalyUrl: `${base}/off-it`,
+  offSearchUrl: `${base}/off-search`,
   usdaUrl: `${base}/usda`,
   usdaKey: 'DEMO_KEY',
 })

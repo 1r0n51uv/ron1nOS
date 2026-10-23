@@ -90,8 +90,10 @@ Accettazione:
 
 - [ ] Fonti: alimenti già usati (catalogo locale), OpenFoodFacts, USDA
       FoodData Central, e catalogo YAZIO se collegato (NUT-021).
-- [ ] Filtro `Solo Italia` attivo di default (OpenFoodFacts su
-      `it.openfoodfacts.org`, ADR-0036).
+- [ ] Filtro `Solo Italia` attivo di default (ADR-0036): la ricerca
+      OpenFoodFacts passa da `search.openfoodfacts.org` con
+      `countries_tags:"en:italy"` nella query, perché `cgi/search.pl`
+      risponde 503 a intermittenza (2026-10-23).
 - [ ] Un risultato esterno entra nel catalogo solo quando lo si usa.
 - [ ] Ogni risultato mostra la fonte (`OFF`, `USDA`, `YAZIO`, `mio`).
 
