@@ -219,6 +219,23 @@ describe('WorkoutPage', () => {
       new ApiError('database_unavailable', 'Database non raggiungibile', 503),
     )
     renderWithProviders(<WorkoutPage />)
-    expect(await screen.findByText('Database non raggiungibile')).toBeInTheDocument()
+    // Ogni sezione dice il suo errore: costanza, esercizi, record, gruppi e storico.
+    await waitFor(() => expect(screen.getAllByText('Database non raggiungibile')).toHaveLength(5))
+    expect(screen.getByText('Allenamenti non disponibili.')).toBeInTheDocument()
+    expect(screen.getByText('Storico non disponibile.')).toBeInTheDocument()
+  })
+
+  it('se il riepilogo non arriva le altre sezioni restano (GYM-002)', async () => {
+    mockApi(SUMMARY)
+    const ok = vi.mocked(api.get).getMockImplementation()!
+    vi.mocked(api.get).mockImplementation(async (path: string) => {
+      if (path === '/workout/summary') throw new ApiError('internal', 'Errore del server', 500)
+      return ok(path)
+    })
+    renderWithProviders(<WorkoutPage />)
+    expect(await screen.findByText('Allenamenti non disponibili.')).toBeInTheDocument()
+    expect(await screen.findByRole('list', { name: 'Sessioni' })).toBeInTheDocument()
+    expect(await screen.findByRole('list', { name: 'Esercizi più allenati' })).toBeInTheDocument()
+    expect(screen.queryByText('questa settimana ·')).not.toBeInTheDocument()
   })
 })
