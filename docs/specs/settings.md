@@ -59,7 +59,7 @@ Accettazione:
 
 #### SET-003 · Aspetto
 
-Stato: in corso (#147)
+Stato: fatto (#179)
 
 Resta il tema scuro con il solo rosso del marchio; si personalizzano
 sfondo, vetro e densità.
