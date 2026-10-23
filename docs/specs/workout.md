@@ -230,14 +230,15 @@ Accettazione:
 
 #### GYM-012 · Volume per gruppo muscolare
 
-Stato: pianificato (#134) · Origine: nuovo
+Stato: fatto (#134) · Origine: nuovo
 
 Accettazione:
 
-- [ ] Volume e numero di serie per gruppo, settimana per settimana, sulle
-      ultime 12 settimane, in barre impilate.
-- [ ] Sotto, solo la legenda dei gruppi; niente tabella.
-- [ ] `Non assegnato` compare come gruppo a sé.
+- [x] Volume e numero di serie per gruppo, settimana per settimana, sulle
+      ultime 12 settimane, in barre impilate. Un selettore passa da
+      `Volume` a `Serie`; i gruppi sono toni di grigio.
+- [x] Sotto, solo la legenda dei gruppi; niente tabella.
+- [x] `Non assegnato` compare come gruppo a sé, tratteggiato.
 
 ### Immagini
 

@@ -2097,6 +2097,54 @@ paths:
                                 image: { $ref: "#/components/schemas/ExerciseImage" }
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /workout/muscle-groups:
+    get:
+      summary: Volume e serie per gruppo muscolare (GYM-012)
+      description: >
+        Settimana per settimana, da lunedì, dalla meno recente fino a quella
+        corrente. Solo serie valide (niente riscaldamento, peso e
+        ripetizioni maggiori di 0). Gli esercizi senza gruppo sono il gruppo
+        `null`, Non assegnato. `groups` elenca i gruppi presenti
+        nell'ordine dell'elenco fisso, `null` in fondo.
+      operationId: getWorkoutGroupVolume
+      parameters:
+        - { name: weeks, in: query, schema: { type: integer, minimum: 1, maximum: 52, default: 12 } }
+      responses:
+        "200":
+          description: Il volume per gruppo.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [groups, weeks]
+                properties:
+                  groups:
+                    type: array
+                    items:
+                      oneOf:
+                        - { $ref: "#/components/schemas/MuscleGroup" }
+                        - { type: "null" }
+                  weeks:
+                    type: array
+                    items:
+                      type: object
+                      required: [monday, groups]
+                      properties:
+                        monday: { type: string, format: date }
+                        groups:
+                          type: array
+                          items:
+                            type: object
+                            required: [group, volumeKg, sets]
+                            properties:
+                              group:
+                                oneOf:
+                                  - { $ref: "#/components/schemas/MuscleGroup" }
+                                  - { type: "null" }
+                              volumeKg: { type: number }
+                              sets: { type: integer }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /workout/summary:
     get:
       summary: Ultimo allenamento, settimana e giorni di fila (GYM-001, GYM-013)
