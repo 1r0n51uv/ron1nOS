@@ -13,11 +13,11 @@ export function eta(seconds: number | null) {
   return `${Math.floor(min / 60)} h ${min % 60} min rimanenti`
 }
 
-export function summary({ torrents }: Downloads) {
+export function summary({ torrents }: Downloads, visible = VISIBLE) {
   const active = torrents.filter((t) => t.state === 'downloading').length
   const queued = torrents.filter((t) => t.state === 'queued').length
   const seeding = torrents.filter((t) => t.state === 'seeding').length
-  const hidden = Math.max(0, active - VISIBLE)
+  const hidden = Math.max(0, active - visible)
   return [
     hidden && `+${hidden} ${hidden === 1 ? 'attivo' : 'attivi'}`,
     queued && `${queued} in coda`,

@@ -5,7 +5,7 @@
 import { z } from 'zod'
 
 import type { Queryable } from '../db.ts'
-import { catalogEntry, GRID_COLUMNS, WIDGET_CATALOG } from './catalog.ts'
+import { catalogEntry, GRID_COLUMNS, optionsError, WIDGET_CATALOG } from './catalog.ts'
 
 export const DEVICES = ['desktop', 'iphone'] as const
 export type Device = (typeof DEVICES)[number]
@@ -49,10 +49,8 @@ export function validateLayout(layout: Layout) {
     if (item.variant && !entry.variants.includes(item.variant)) {
       throw new InvalidLayoutError(`Variante non disponibile: ${item.id}`)
     }
-    // Nessun widget dichiara ancora opzioni (arrivano con DASH-005).
-    if (item.options && Object.keys(item.options).length) {
-      throw new InvalidLayoutError(`Opzioni non valide: ${item.id}`)
-    }
+    const problem = item.options && optionsError(entry, item.options)
+    if (problem) throw new InvalidLayoutError(`Opzioni non valide: ${item.id}, ${problem}`)
   }
   const items = layout.items
   for (let i = 0; i < items.length; i++) {

@@ -2605,7 +2605,13 @@ components:
         w: { type: integer, minimum: 1, maximum: 24 }
         h: { type: integer, minimum: 1 }
         variant: { type: string, enum: [compact, detailed] }
-        options: { type: object, additionalProperties: true }
+        options:
+          type: object
+          additionalProperties: true
+          description: >-
+            Dati mostrati, solo le chiavi che il widget dichiara nel catalogo
+            (`server/dashboard/catalog.ts`): una scelta, più valori o un numero
+            di elementi. Le chiavi assenti valgono il predefinito.
     DashboardLayout:
       type: object
       required: [header, items]

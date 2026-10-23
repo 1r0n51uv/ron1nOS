@@ -8,10 +8,11 @@ Ogni modulo della dashboard vive nella sua cartella, con tre file:
   mutazioni, lasciando tipi e hook invariati.
 - `Widget.tsx`: il widget della dashboard, che legge solo dall'hook.
 - `widgets.ts`: i widget che il modulo offre alla dashboard, con id,
-  titolo, descrizione e componente. Dimensioni e varianti stanno nel
-  catalogo condiviso con il backend (`server/dashboard/catalog.ts`), e
+  titolo, descrizione e componente. Dimensioni, varianti e opzioni stanno
+  nel catalogo condiviso con il backend (`server/dashboard/catalog.ts`), e
   `src/widgets/registry.ts` unisce le due parti
-  ([specifica](../../docs/specs/dashboard.md)).
+  ([specifica](../../docs/specs/dashboard.md)). Il componente riceve
+  `variant` e `options` già completati con i predefiniti.
 
 | Modulo     | Sorgente prevista                                                                 |
 | ---------- | --------------------------------------------------------------------------------- |

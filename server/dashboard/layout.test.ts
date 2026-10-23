@@ -47,6 +47,20 @@ describe('validazione del layout (DASH-007)', () => {
     ).toThrow('Opzioni')
     expect(() => validateLayout(layout({ ...item('server.summary', 0, 0), options: {} }))).not.toThrow()
   })
+
+  it('accetta le opzioni dichiarate e rifiuta valori fuori dal catalogo (DASH-005)', () => {
+    const downloads = (limit: unknown) => layout({ ...item('downloads.summary', 0, 0), options: { limit } })
+    expect(() => validateLayout(downloads(5))).not.toThrow()
+    expect(() => validateLayout(downloads(9))).toThrow('limit')
+    const nutrition = (macros: unknown) =>
+      layout({ ...item('nutrition.summary', 0, 0), w: 8, h: 10, options: { macros } })
+    expect(() => validateLayout(nutrition(['fat']))).not.toThrow()
+    expect(() => validateLayout(nutrition(['fat', 'fat']))).toThrow('macros')
+    expect(() => validateLayout(nutrition('fat'))).toThrow('macros')
+    expect(() =>
+      validateLayout(layout({ ...item('weight.summary', 0, 0), variant: 'compact' })),
+    ).not.toThrow()
+  })
 })
 
 describe('layout predefinito (DASH-008)', () => {
