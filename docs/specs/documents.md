@@ -60,7 +60,7 @@ Accettazione:
 
 #### DOC-002 · Pagina Documenti
 
-Stato: pianificato (#103)
+Stato: fatto (#103)
 
 Una pagina `/documenti` con tutti i documenti.
 
@@ -104,7 +104,7 @@ Accettazione:
 
 #### DOC-004 · Dettaglio del documento
 
-Stato: pianificato (#105)
+Stato: fatto (#105)
 
 Accettazione:
 
@@ -120,7 +120,7 @@ Accettazione:
 
 #### DOC-005 · Creare e modificare un documento
 
-Stato: in corso (#106)
+Stato: fatto (#106)
 
 Accettazione:
 
@@ -140,7 +140,7 @@ Accettazione:
 
 #### DOC-006 · Campi liberi
 
-Stato: in corso (#107)
+Stato: fatto (#107)
 
 Su ogni documento si possono aggiungere coppie etichetta/valore, oltre ai
 campi del tipo. Per i file con info sono gli unici campi.
@@ -154,7 +154,7 @@ Accettazione:
 
 #### DOC-007 · Titolare
 
-Stato: in corso (#108)
+Stato: fatto (#108)
 
 Ogni documento ha un titolare, per tenere anche quelli dei familiari.
 
@@ -181,7 +181,7 @@ Accettazione:
 
 #### DOC-009 · Copia dei valori e delle immagini
 
-Stato: pianificato (#110)
+Stato: fatto (#110)
 
 Accettazione:
 
@@ -193,7 +193,7 @@ Accettazione:
 
 #### DOC-010 · Scadenze e preavvisi
 
-Stato: pianificato (#111)
+Stato: in corso (#111)
 
 Accettazione:
 
@@ -207,7 +207,7 @@ Accettazione:
 
 #### DOC-011 · Allegati
 
-Stato: in corso (#112)
+Stato: fatto (#112)
 
 Accettazione:
 
@@ -224,7 +224,7 @@ Accettazione:
 
 #### DOC-012 · Scaricare gli allegati
 
-Stato: in corso (#113)
+Stato: fatto (#113)
 
 Accettazione:
 
@@ -247,7 +247,7 @@ Accettazione:
 
 #### DOC-014 · Eliminare
 
-Stato: in corso (#115)
+Stato: fatto (#115)
 
 Accettazione:
 

@@ -20,6 +20,11 @@ const ICONS = {
   restart: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5',
   download: 'M12 4v12M7 11l5 5 5-5M5 20h14',
   container: 'M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10',
+  documents: 'M3 5h18v14H3zM7 10h4M7 14h10M15 9h2v2h-2z',
+  star: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z',
+  copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
+  trash: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
+  close: 'M6 6l12 12M18 6L6 18',
 } as const
 
 export type IconName = keyof typeof ICONS
