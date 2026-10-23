@@ -95,6 +95,25 @@ paths:
                   enabled: { type: boolean }
         "401": { $ref: "#/components/responses/Unauthenticated" }
   /auth/sessions:
+    get:
+      summary: Sessioni attive (SET-007)
+      description: >
+        La più recente prima, con il dispositivo letto dallo user agent. L'id
+        è ricavato dall'hash e non apre niente; i token non escono mai. Con il
+        login spento l'elenco è vuoto.
+      operationId: getSessions
+      responses:
+        "200":
+          description: Le sessioni.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sessions]
+                properties:
+                  sessions:
+                    type: array
+                    items: { $ref: "#/components/schemas/Session" }
     delete:
       summary: Esci ovunque
       description: Chiude tutte le sessioni, compresa questa.
@@ -102,6 +121,28 @@ paths:
       responses:
         "204":
           description: Sessioni chiuse e cookie tolto.
+  /auth/sessions/others:
+    delete:
+      summary: Chiude le altre sessioni (SET-007)
+      description: Resta aperta solo quella di questa richiesta.
+      operationId: deleteOtherSessions
+      responses:
+        "204":
+          description: Le altre sessioni sono chiuse.
+  /auth/sessions/{id}:
+    delete:
+      summary: Chiude una sessione (SET-007)
+      description: Se è quella di questa richiesta, toglie anche il cookie.
+      operationId: deleteSession
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Sessione chiusa.
+        "404": { $ref: "#/components/responses/NotFound" }
   /health:
     get:
       summary: Stato del backend
@@ -3289,6 +3330,15 @@ components:
             device: { type: string, enum: [desktop, iphone] }
             updatedAt: { type: [string, "null"], format: date-time }
             stored: { type: boolean, description: "false senza database: le modifiche non si salvano." }
+    Session:
+      type: object
+      required: [id, device, createdAt, lastSeenAt, current]
+      properties:
+        id: { type: string }
+        device: { type: string, description: "Es. Safari su iPhone." }
+        createdAt: { type: string, format: date-time }
+        lastSeenAt: { type: string, format: date-time }
+        current: { type: boolean, description: "La sessione di questa richiesta." }
     Integration:
       type: object
       required: [id, name, state, message, checkedAt, env]

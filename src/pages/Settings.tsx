@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Link, Navigate, NavLink, Outlet, useParams } from 'react-router'
 
 import { WidgetCard } from '@/components/ron1n'
-import { AccessPanel } from '@/auth/AccessPanel'
+import { AccountSection } from '@/auth/AccountSection'
 import { IntegrationsSection } from '@/integrations/IntegrationsSection'
 import { cn } from '@/lib/utils'
 import { FoodsPanel } from '@/modules/nutrition/settings/FoodsPanel'
@@ -74,7 +74,7 @@ export function SettingsSection() {
       ) : found.id === 'integrazioni' ? (
         <IntegrationsSection />
       ) : found.id === 'account' ? (
-        <AccessPanel />
+        <AccountSection />
       ) : (
         <WidgetCard title="In arrivo">
           <p className="m-0 text-sm text-ink-muted">Questa sezione non ha ancora impostazioni.</p>
