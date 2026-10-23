@@ -19,7 +19,7 @@ import { AddWidgetDialog } from '@/widgets/AddWidgetDialog'
 import { DashboardGrid } from '@/widgets/DashboardGrid'
 import { addWidget } from '@/widgets/grid'
 import type { DashboardLayout, LayoutItem } from '@/widgets/layout'
-import { useDashboardLayout } from '@/widgets/layout'
+import { HEADER_FORMS, useDashboardLayout } from '@/widgets/layout'
 import { availableWidgets, findWidget } from '@/widgets/registry'
 
 const MEAL_ARTICLE: Record<SlotId, string> = {
@@ -57,12 +57,6 @@ function useSummary(now: Date) {
 export const UNDO_MS = 8000
 
 type HeaderForm = DashboardLayout['header']
-
-const HEADER_FORMS: [HeaderForm, string][] = [
-  ['full', 'Completa'],
-  ['line', 'Una riga'],
-  ['hidden', 'Nascosta'],
-]
 
 // Forma della testata (DASH-006): si salva con il layout.
 function HeaderMenu({ value, onChange }: { value: HeaderForm; onChange: (form: HeaderForm) => void }) {

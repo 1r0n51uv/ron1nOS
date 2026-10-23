@@ -59,6 +59,16 @@ describe('useDashboardLayout (DASH-007)', () => {
     expect(put).toHaveBeenCalledWith('desktop', moved)
   })
 
+  it('un cambio in attesa si salva anche se la pagina se ne va prima (SET-004)', async () => {
+    const put = vi.spyOn(source, 'putLayout').mockImplementation(async (_d, l) => ({ ...saved, ...l }))
+    const { result, unmount } = renderHook(() => useDashboardLayout(), { wrapper })
+    await waitFor(() => expect(result.current.layout).toEqual(saved))
+    act(() => result.current.setLayout(moved))
+    expect(put).not.toHaveBeenCalled()
+    unmount()
+    expect(put).toHaveBeenCalledWith('desktop', moved)
+  })
+
   it('se il salvataggio fallisce tiene il layout e riprova a richiesta', async () => {
     const put = vi.spyOn(source, 'putLayout').mockRejectedValueOnce(new Error('giù'))
     const { result } = renderHook(() => useDashboardLayout(), { wrapper })
