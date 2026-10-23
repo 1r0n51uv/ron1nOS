@@ -38,8 +38,13 @@ export function putLayout(device: Device, layout: DashboardLayout) {
   return api.put<LayoutResponse>(`/dashboard/layouts/${device}`, layout)
 }
 
+// Ripristino (DASH-008): il server cancella il layout e risponde con il predefinito.
+export function deleteLayout(device: Device) {
+  return api.delete<LayoutResponse>(`/dashboard/layouts/${device}`)
+}
+
 // La sorgente passa da un oggetto così i test possono sostituirla.
-export const source = { getLayout, putLayout }
+export const source = { getLayout, putLayout, deleteLayout }
 
 const key = (device: Device) => ['dashboard', 'layout', device]
 
@@ -61,6 +66,13 @@ export function useDashboardLayout(device: Device = 'desktop') {
     onSuccess: (saved) => queryClient.setQueryData(key(device), saved),
   })
   const [pending, setPending] = useState<DashboardLayout | null>(null)
+  const restore = useMutation({
+    mutationFn: () => source.deleteLayout(device),
+    onSuccess: (layout) => {
+      setPending(null)
+      queryClient.setQueryData(key(device), layout)
+    },
+  })
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const { mutate } = save
 
@@ -87,5 +99,12 @@ export function useDashboardLayout(device: Device = 'desktop') {
     retry: () => {
       if (layout) flush(layout)
     },
+    // Un salvataggio in attesa non deve riscrivere il layout appena ripristinato.
+    reset: () => {
+      clearTimeout(timer.current)
+      return restore.mutateAsync()
+    },
+    resetting: restore.isPending,
+    resetFailed: restore.isError,
   }
 }

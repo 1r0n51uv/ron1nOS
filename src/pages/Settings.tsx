@@ -4,8 +4,9 @@ import { GoalsPanel } from '@/modules/nutrition/settings/GoalsPanel'
 import { SupplementsPanel } from '@/modules/nutrition/settings/SupplementsPanel'
 import { UnmatchedPanel } from '@/modules/nutrition/settings/UnmatchedPanel'
 import { YazioPanel } from '@/modules/nutrition/settings/YazioPanel'
+import { DashboardPanel } from '@/widgets/DashboardPanel'
 
-// Impostazioni: accesso alla dashboard e modulo Nutrizione.
+// Impostazioni: accesso, layout della dashboard e modulo Nutrizione.
 export function Settings() {
   return (
     <>
@@ -15,6 +16,7 @@ export function Settings() {
       </div>
       <div className="flex max-w-[960px] flex-col gap-5">
         <AccessPanel />
+        <DashboardPanel />
         <YazioPanel />
         <UnmatchedPanel />
         <GoalsPanel />

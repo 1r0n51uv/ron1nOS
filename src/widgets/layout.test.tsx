@@ -76,4 +76,21 @@ describe('useDashboardLayout (DASH-007)', () => {
     await waitFor(() => expect(result.current.saveFailed).toBe(false))
     expect(put).toHaveBeenLastCalledWith('desktop', moved)
   })
+
+  it('il ripristino cancella il layout, annulla il salvataggio in attesa e mostra il predefinito (DASH-008)', async () => {
+    const put = vi.spyOn(source, 'putLayout')
+    const restored: LayoutResponse = { ...saved, items: [{ id: 'notes.summary', x: 0, y: 0, w: 8, h: 7 }] }
+    const del = vi.spyOn(source, 'deleteLayout').mockResolvedValue(restored)
+    const { result } = renderHook(() => useDashboardLayout(), { wrapper })
+    await waitFor(() => expect(result.current.layout).toEqual(saved))
+
+    vi.useFakeTimers()
+    act(() => result.current.setLayout(moved))
+    vi.useRealTimers()
+    await act(() => result.current.reset())
+    expect(del).toHaveBeenCalledWith('desktop')
+    expect(result.current.layout).toEqual(restored)
+    await new Promise((r) => setTimeout(r, SAVE_DELAY_MS + 50))
+    expect(put).not.toHaveBeenCalled()
+  })
 })

@@ -103,6 +103,12 @@ export async function getLayout(db: Queryable, device: Device): Promise<StoredLa
   return { ...row.layout, updatedAt: row.updatedAt.toISOString() }
 }
 
+// Ripristino (DASH-008): senza riga salvata vale il predefinito.
+export async function deleteLayout(db: Queryable, device: Device): Promise<StoredLayout> {
+  await db.query('delete from dashboard_layouts where device = $1', [device])
+  return { ...defaultLayout(device), updatedAt: null }
+}
+
 export async function putLayout(db: Queryable, device: Device, layout: Layout): Promise<StoredLayout> {
   const { rows } = await db.query<{ updatedAt: Date }>(
     `insert into dashboard_layouts (device, layout) values ($1, $2)

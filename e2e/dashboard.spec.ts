@@ -269,3 +269,28 @@ test.describe('testata riducibile (DASH-006)', () => {
     await expect(greeting).toHaveCount(0)
   })
 })
+
+test.describe('ripristino del layout (DASH-008)', () => {
+  test.afterEach(() => sql('delete from dashboard_layouts'))
+
+  test('dalle impostazioni, con conferma, torna il layout predefinito', async ({ page }) => {
+    await page.request.put('/api/v1/dashboard/layouts/desktop', {
+      data: {
+        header: 'hidden',
+        items: [{ id: 'downloads.summary', x: 0, y: 0, w: 8, h: 8, options: { limit: 1 } }],
+      },
+    })
+    await page.goto('/impostazioni')
+    await page.getByRole('button', { name: 'Ripristina layout predefinito' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Ripristinare il layout predefinito?' })
+    await dialog.getByRole('button', { name: 'Ripristina', exact: true }).click()
+    await expect(dialog).toBeHidden()
+
+    const res = await page.request.get('/api/v1/dashboard/layouts/desktop')
+    expect(((await res.json()) as { updatedAt: string | null }).updatedAt).toBeNull()
+    await page.goto('/')
+    await expect(page.getByRole('heading', { level: 1, name: /^Buon/ })).toBeVisible()
+    await expect(page.locator('[data-widget="nutrition.summary"]')).toBeVisible()
+    await expect(page.locator('[data-widget="notes.summary"]')).toBeVisible()
+  })
+})

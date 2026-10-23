@@ -589,6 +589,20 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    delete:
+      summary: Ripristina il layout predefinito di un dispositivo
+      description: >
+        Cancella il layout salvato, opzioni dei widget comprese, e restituisce
+        quello predefinito (DASH-008).
+      operationId: deleteDashboardLayout
+      responses:
+        "200":
+          description: Il layout predefinito, ora in uso.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardLayoutResponse" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /server/stats:
     get:
       summary: Risorse del server lette da Glances
