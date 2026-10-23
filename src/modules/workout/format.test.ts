@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   dayWithYear,
   duration,
+  exerciseBest,
   period,
   setLabel,
   startTime,
@@ -54,5 +55,13 @@ describe('setLabel e startTime', () => {
 
   it('ora di Roma', () => {
     expect(startTime('2026-10-20T16:00:00Z')).toBe('18:00')
+  })
+})
+
+describe('exerciseBest', () => {
+  it('1RM arrotondato in kg, durata per gli esercizi a tempo', () => {
+    expect(exerciseBest({ best1RMKg: 75.83, bestDurationSeconds: null })).toBe('76 kg')
+    expect(exerciseBest({ best1RMKg: null, bestDurationSeconds: 90 })).toBe('1:30')
+    expect(exerciseBest({ best1RMKg: null, bestDurationSeconds: null })).toBe('–')
   })
 })

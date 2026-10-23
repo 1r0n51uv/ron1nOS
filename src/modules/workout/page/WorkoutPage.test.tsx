@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as apiModule from '@/lib/api'
 import { api, ApiError } from '@/lib/api'
 import { renderWithProviders } from '@/test/render'
-import type { SessionRow, WorkoutSummary } from '../data'
+import type { ExerciseRow, SessionRow, WorkoutSummary } from '../data'
 import { WorkoutPage } from './WorkoutPage'
 
 vi.mock('@/lib/api', async (importOriginal) => ({
@@ -45,9 +45,37 @@ const SESSIONS: SessionRow[] = Array.from({ length: 20 }, (_, i) => ({
   ],
 }))
 
-function mockApi(summary: WorkoutSummary) {
+const exercise = (name: string, extra: Partial<ExerciseRow> = {}): ExerciseRow => ({
+  name,
+  key: name.toLowerCase(),
+  image: { catalogId: 'X', source: 'dictionary', url: '/x.jpg' },
+  group: null,
+  timed: false,
+  sets: 10,
+  sessions: 4,
+  lastDay: '2026-10-21',
+  best1RMKg: 76.4,
+  bestDurationSeconds: null,
+  trend: [70, 72, 76.4],
+  ...extra,
+})
+
+const EXERCISES: ExerciseRow[] = [
+  exercise('Panca piana'),
+  exercise('Squat', { best1RMKg: 120, trend: [120] }),
+  exercise('Plank', { timed: true, best1RMKg: null, bestDurationSeconds: 90, trend: [60, 90], image: null }),
+  exercise('Croci'),
+  exercise('Stacco'),
+  exercise('Lat machine'),
+]
+
+function mockApi(summary: WorkoutSummary, exercises: ExerciseRow[] | Error = EXERCISES) {
   vi.mocked(api.get).mockImplementation(async (path: string) => {
     if (path === '/workout/summary') return summary
+    if (path === '/workout/exercises?sort=sets&limit=6') {
+      if (exercises instanceof Error) throw exercises
+      return { exercises }
+    }
     if (path === '/workout/routines') return { routines: ['Push', 'Gambe'] }
     if (path.startsWith('/workout/sessions?cursor='))
       return { sessions: [{ ...SESSIONS[1]!, id: 'ultima' }], nextCursor: null }
@@ -84,6 +112,27 @@ describe('WorkoutPage', () => {
     fireEvent.click(await screen.findByRole('radio', { name: 'Gambe' }))
     await waitFor(() => expect(api.get).toHaveBeenCalledWith('/workout/sessions?routine=Gambe'))
     expect(screen.getByRole('radio', { name: 'Gambe' })).toHaveAttribute('aria-checked', 'true')
+  })
+
+  it('mostra i 6 esercizi più allenati con migliore e andamento (GYM-007)', async () => {
+    mockApi(SUMMARY)
+    renderWithProviders(<WorkoutPage />)
+    const list = await screen.findByRole('list', { name: 'Esercizi più allenati' })
+    const cards = within(list).getAllByRole('link')
+    expect(cards).toHaveLength(6)
+    expect(cards[0]).toHaveAttribute('href', '/allenamenti/esercizi/panca%20piana')
+    expect(cards[0]).toHaveTextContent('Panca piana76 kg1RM stimato')
+    expect(within(cards[0]!).getByRole('img', { name: 'Andamento Panca piana' })).toBeInTheDocument()
+    // Una sola sessione: niente sparkline.
+    expect(within(cards[1]!).queryByRole('img', { name: 'Andamento Squat' })).not.toBeInTheDocument()
+    expect(cards[2]).toHaveTextContent('Plank1:30durata migliore')
+  })
+
+  it('se gli esercizi non arrivano lo dice solo nella loro sezione', async () => {
+    mockApi(SUMMARY, new ApiError('internal', 'Errore del server', 500))
+    renderWithProviders(<WorkoutPage />)
+    expect(await screen.findByText('Esercizi non disponibili.')).toBeInTheDocument()
+    expect(await screen.findByRole('list', { name: 'Sessioni' })).toBeInTheDocument()
   })
 
   it('senza allenamenti mostra solo l invito a importare', async () => {

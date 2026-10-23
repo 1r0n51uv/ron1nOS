@@ -1836,6 +1836,32 @@ paths:
               schema: { type: string, format: binary }
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/CatalogUnavailable" }
+  /workout/exercises:
+    get:
+      summary: Esercizi, con immagine e andamento (GYM-007, GYM-009)
+      description: >
+        Uno per nome normalizzato. Senza parametri dall'ultima volta più
+        recente; `sort=sets` dai più allenati per numero di serie, come la
+        dashboard esercizi con `limit=6`. `q` cerca nel nome.
+      operationId: listWorkoutExercises
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: sort, in: query, schema: { type: string, enum: [recent, sets], default: recent } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200 } }
+      responses:
+        "200":
+          description: Gli esercizi.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [exercises]
+                properties:
+                  exercises:
+                    type: array
+                    items: { $ref: "#/components/schemas/WorkoutExercise" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /workout/exercises/{name}/image:
     put:
       summary: Sceglie a mano l'immagine di un esercizio (GYM-014)
@@ -2096,6 +2122,132 @@ components:
         skippedRows: { type: integer, description: righe senza data valida o esercizio }
         from: { type: string, format: date, description: primo giorno nel file }
         to: { type: string, format: date, description: ultimo giorno nel file }
+    ExerciseImage:
+      type: [object, "null"]
+      description: >
+        Foto dell'esercizio dal catalogo (GYM-014): scelta a mano, dal
+        dizionario dei nomi italiani o dallo stesso nome inglese; null se
+        nessuna.
+      required: [catalogId, source, url]
+      properties:
+        catalogId: { type: string }
+        source: { type: string, enum: [manual, dictionary, catalog] }
+        url: { type: string, description: indirizzo della prima foto sotto /api/v1/workout/catalog/images }
+    CatalogExercise:
+      type: object
+      required: [id, name, primaryMuscles, equipment, images, url]
+      properties:
+        id: { type: string }
+        name: { type: string, description: nome inglese }
+        primaryMuscles: { type: array, items: { type: string } }
+        equipment: { type: [string, "null"] }
+        images: { type: integer, description: numero di foto }
+        url: { type: string }
+    WorkoutExerciseRef:
+      type: object
+      required: [name, image]
+      properties:
+        name: { type: string }
+        image: { $ref: "#/components/schemas/ExerciseImage" }
+    WorkoutSummary:
+      type: object
+      required: [today, last, thisWeek, streakDays, weeks]
+      properties:
+        today: { type: string, format: date, description: oggi a Roma }
+        last:
+          type: [object, "null"]
+          required: [id, day, routine, startedAt, durationSeconds, exercise]
+          properties:
+            id: { type: string, format: uuid }
+            day: { type: string, format: date }
+            routine: { type: string }
+            startedAt: { type: string, format: date-time }
+            durationSeconds: { type: [integer, "null"] }
+            exercise:
+              description: il primo esercizio della sessione
+              oneOf:
+                - { $ref: "#/components/schemas/WorkoutExerciseRef" }
+                - { type: "null" }
+        thisWeek: { type: integer, description: sessioni da lunedì a oggi }
+        streakDays: { type: integer, description: giorni di fila fino a oggi o ieri }
+        weeks:
+          type: array
+          description: ultime 26 settimane, dalla meno recente
+          items:
+            type: object
+            required: [monday, count]
+            properties:
+              monday: { type: string, format: date }
+              count: { type: integer }
+    WorkoutSessionRow:
+      type: object
+      required: [id, day, routine, startedAt, durationSeconds, exercises]
+      properties:
+        id: { type: string, format: uuid }
+        day: { type: string, format: date }
+        routine: { type: string }
+        startedAt: { type: string, format: date-time }
+        durationSeconds: { type: [integer, "null"] }
+        exercises:
+          type: array
+          description: i primi tre esercizi nell'ordine del CSV
+          items: { $ref: "#/components/schemas/WorkoutExerciseRef" }
+    WorkoutSessionDetail:
+      type: object
+      required: [id, day, routine, startedAt, durationSeconds, volumeKg, exercises]
+      properties:
+        id: { type: string, format: uuid }
+        day: { type: string, format: date }
+        routine: { type: string }
+        startedAt: { type: string, format: date-time }
+        durationSeconds: { type: [integer, "null"] }
+        volumeKg: { type: number, description: senza riscaldamento }
+        exercises:
+          type: array
+          items:
+            type: object
+            required: [name, key, image, timed, volumeKg, record, sets]
+            properties:
+              name: { type: string }
+              key: { type: string, description: nome normalizzato }
+              image: { $ref: "#/components/schemas/ExerciseImage" }
+              timed: { type: boolean }
+              volumeKg: { type: number }
+              record: { type: boolean, description: miglior 1RM stimato rispetto alle sessioni precedenti }
+              sets:
+                type: array
+                items:
+                  type: object
+                  required: [index, warmup, weightKg, reps, durationSeconds]
+                  properties:
+                    index: { type: integer }
+                    warmup: { type: boolean }
+                    weightKg: { type: number }
+                    reps: { type: [integer, "null"] }
+                    durationSeconds: { type: [integer, "null"] }
+    WorkoutExercise:
+      type: object
+      required:
+        [name, key, image, group, timed, sets, sessions, lastDay, best1RMKg, bestDurationSeconds, trend]
+      properties:
+        name: { type: string, description: come scritto nell'ultima sessione }
+        key: { type: string, description: nome normalizzato }
+        image: { $ref: "#/components/schemas/ExerciseImage" }
+        group:
+          type: [string, "null"]
+          enum: [petto, schiena, spalle, bicipiti, tricipiti, gambe, glutei, addome, altro, null]
+        timed: { type: boolean }
+        sets: { type: integer, description: serie fuori dal riscaldamento }
+        sessions: { type: integer }
+        lastDay: { type: string, format: date }
+        best1RMKg:
+          { type: [number, "null"], description: miglior 1RM stimato (Epley); null per gli esercizi a tempo }
+        bestDurationSeconds:
+          { type: [integer, "null"], description: durata più lunga, solo per gli esercizi a tempo }
+        trend:
+          type: array
+          description: il migliore di ogni sessione (1RM o durata), ultime 12, dalla meno recente
+          items: { type: number }
     DocumentExpiry:
       type: [object, "null"]
       description: >

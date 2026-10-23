@@ -65,3 +65,12 @@ export function startTime(iso: string) {
     timeZone: 'Europe/Rome',
   })
 }
+
+// Il migliore di un esercizio: 1RM stimato "76 kg" o, a tempo, la durata
+// più lunga "1:30".
+export function exerciseBest(e: { best1RMKg: number | null; bestDurationSeconds: number | null }) {
+  if (e.bestDurationSeconds !== null) {
+    return setLabel({ weightKg: 0, reps: null, durationSeconds: e.bestDurationSeconds })
+  }
+  return e.best1RMKg === null ? '–' : `${Math.round(e.best1RMKg)} kg`
+}
