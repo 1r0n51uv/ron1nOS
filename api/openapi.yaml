@@ -1384,6 +1384,41 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /workout/import/preview:
+    post:
+      summary: Anteprima dell'import del CSV di Liftin' (GYM-003)
+      description: >
+        Legge il file come `POST /workout/import` e restituisce gli stessi
+        conti, senza scrivere nulla. Il client non interpreta il CSV.
+      operationId: previewWorkoutImport
+      requestBody: { $ref: "#/components/requestBodies/LiftinCsv" }
+      responses:
+        "200":
+          description: Cosa farebbe l'import.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkoutImportSummary" }
+        "400": { $ref: "#/components/responses/LiftinInvalid" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /workout/import:
+    post:
+      summary: Importa il CSV di Liftin' (GYM-003)
+      description: >
+        Unisce il file allo storico. Una sessione è giorno (Europe/Rome) più
+        routine; una serie è sessione, esercizio (senza maiuscole e spazi in
+        più) e numero di serie. Le righe presenti si aggiornano, le nuove si
+        aggiungono; un re-import identico non cambia nulla. Le sessioni
+        eliminate non tornano.
+      operationId: importWorkouts
+      requestBody: { $ref: "#/components/requestBodies/LiftinCsv" }
+      responses:
+        "200":
+          description: Import applicato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkoutImportSummary" }
+        "400": { $ref: "#/components/responses/LiftinInvalid" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
 components:
   securitySchemes:
     session:
@@ -1397,7 +1432,27 @@ components:
       in: query
       description: Giorno locale Europe/Rome; di default oggi.
       schema: { type: string, format: date }
+  requestBodies:
+    LiftinCsv:
+      required: true
+      description: >
+        Il CSV esportato da Liftin' (`Date;Duration;Routine;Exercise;Set;Warmup;Weight;Reps/Time;Goal;Perception`,
+        separatore `;`), al massimo 5 MB.
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [file]
+            properties:
+              file: { type: string, format: binary }
   responses:
+    LiftinInvalid:
+      description: >
+        `invalid_request`: file assente, vuoto, oltre i 5 MB, senza le colonne
+        Date, Exercise o Set (il messaggio le elenca) o senza righe valide.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
     Unauthenticated:
       description: "`unauthenticated`: serve il login."
       content:
@@ -1442,6 +1497,30 @@ components:
           type: array
           items: { $ref: "#/components/schemas/DocumentTypeField" }
         documents: { type: integer, description: Documenti di questo tipo. }
+    WorkoutImportSummary:
+      type: object
+      required:
+        [
+          newSessions,
+          updatedSessions,
+          unchangedSessions,
+          deletedSessions,
+          newSets,
+          updatedSets,
+          skippedRows,
+          from,
+          to,
+        ]
+      properties:
+        newSessions: { type: integer, description: allenamenti nuovi }
+        updatedSessions: { type: integer, description: allenamenti già presenti con serie o durata cambiate }
+        unchangedSessions: { type: integer }
+        deletedSessions: { type: integer, description: allenamenti eliminati in ron1nOS, lasciati fuori }
+        newSets: { type: integer }
+        updatedSets: { type: integer }
+        skippedRows: { type: integer, description: righe senza data valida o esercizio }
+        from: { type: string, format: date, description: primo giorno nel file }
+        to: { type: string, format: date, description: ultimo giorno nel file }
     Food:
       type: object
       description: Alimento, valori per 100 g. `id` null per un candidato esterno non ancora nel catalogo.

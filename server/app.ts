@@ -29,6 +29,7 @@ import { QbtAuthError, QbtUnreachableError } from './qbittorrent.ts'
 import { ConflictError, InvalidRequestError, NotFoundError, YazioUnavailableError } from './nutrition/http.ts'
 import type { NutritionDeps } from './nutrition/routes.ts'
 import { nutritionRoutes } from './nutrition/routes.ts'
+import { workoutRoutes } from './workout/routes.ts'
 import { InvalidTorrentError, MAX_TORRENT_BYTES, parseTorrent } from './torrentfile.ts'
 
 export type ApiError = {
@@ -152,6 +153,9 @@ export function createApp({
 
   // Modulo Documenti (docs/specs/documents.md): dati cifrati in Postgres.
   app.route('/api/v1/documents', documentsRoutes({ ...documents, database, authEnabled: auth.enabled }))
+
+  // Modulo Allenamento (docs/specs/workout.md): CSV di Liftin' in Postgres.
+  app.route('/api/v1/workout', workoutRoutes({ database }))
 
   app.all('/api/*', (c) => c.json<ApiError>({ error: 'not_found', message: 'Rotta non trovata' }, 404))
 

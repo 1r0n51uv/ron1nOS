@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
+import { api } from '@/lib/api'
 import { mockDelay } from '@/lib/mock'
 
 export type Exercise = { name: string; sets: number; weightKg: number }
@@ -61,4 +62,54 @@ export function useCompleteSet() {
 
 export function isFinished(w: WorkoutSession) {
   return w.current >= w.exercises.length
+}
+
+// Import del CSV di Liftin' (GYM-003): il file va al backend, che lo legge
+// e calcola anteprima e unione. Il client non interpreta il CSV.
+export const MAX_CSV_BYTES = 5 * 1024 * 1024
+
+export type ImportSummary = {
+  newSessions: number
+  updatedSessions: number
+  unchangedSessions: number
+  deletedSessions: number
+  newSets: number
+  updatedSets: number
+  skippedRows: number
+  from: string
+  to: string
+}
+
+function csvForm(file: File) {
+  const form = new FormData()
+  form.append('file', file)
+  return form
+}
+
+export function previewImport(file: File) {
+  return api.post<ImportSummary>('/workout/import/preview', csvForm(file))
+}
+
+export function applyImport(file: File) {
+  return api.post<ImportSummary>('/workout/import', csvForm(file))
+}
+
+export function useImportPreview() {
+  return useMutation({ mutationFn: previewImport })
+}
+
+// Dopo l'import widget e pagina si rileggono senza ricaricare.
+export function useImportWorkouts() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: applyImport,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['workout'] }),
+  })
+}
+
+// Controllo del file prima dell'invio: il resto lo verifica il server.
+export function csvFileError(file: File) {
+  if (!/\.csv$/i.test(file.name)) return 'Serve un file .csv esportato da Liftin’.'
+  if (file.size > MAX_CSV_BYTES) return 'Il file supera i 5 MB.'
+  return null
 }
