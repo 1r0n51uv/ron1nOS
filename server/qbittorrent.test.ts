@@ -51,6 +51,22 @@ describe('createQbtClient', () => {
     expect(fetch.mock.calls[3][1]?.headers).toMatchObject({ Cookie: 'SID=nuovo' })
   })
 
+  it('accetta il login di qBittorrent 5 (204 senza corpo)', async () => {
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValueOnce(
+        new Response(null, { status: 204, headers: { 'Set-Cookie': 'SID=cinque; HttpOnly; path=/' } }),
+      )
+      .mockResolvedValueOnce(Response.json([]))
+    await expect(client(fetch).torrents()).resolves.toEqual([])
+    expect(fetch.mock.calls[1][1]?.headers).toMatchObject({ Cookie: 'SID=cinque' })
+  })
+
+  it('segnala un login senza cookie SID come credenziali rifiutate', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(new Response(null, { status: 204 }))
+    await expect(client(fetch).torrents()).rejects.toBeInstanceOf(QbtAuthError)
+  })
+
   it('segnala credenziali rifiutate', async () => {
     const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(new Response('Fails.'))
     await expect(client(fetch).torrents()).rejects.toBeInstanceOf(QbtAuthError)

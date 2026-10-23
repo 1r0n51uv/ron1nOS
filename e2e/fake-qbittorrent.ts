@@ -222,7 +222,8 @@ createServer(async (req, res) => {
   if (url.pathname === '/api/v2/auth/login' && req.method === 'POST') {
     const form = new URLSearchParams(await readBody(req))
     if (form.get('username') === 'admin' && form.get('password') === state.password) {
-      res.writeHead(200, { 'Set-Cookie': `SID=${SID}; HttpOnly; path=/` }).end('Ok.')
+      // Come qBittorrent 5: 204 senza corpo.
+      res.writeHead(204, { 'Set-Cookie': `SID=${SID}; HttpOnly; path=/` }).end()
     } else {
       res.writeHead(200).end('Fails.')
     }

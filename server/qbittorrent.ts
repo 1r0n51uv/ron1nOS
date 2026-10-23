@@ -85,9 +85,11 @@ export function createQbtClient({
     const body = await res.text()
     if (res.status === 403) throw new QbtAuthError('IP bloccato da qBittorrent dopo troppi login falliti')
     if (!res.ok) throw new QbtUnreachableError(`login: HTTP ${res.status}`)
-    if (body.trim() !== 'Ok.') throw new QbtAuthError('credenziali di qBittorrent rifiutate')
+    // Fino alla 4.x il login riuscito risponde 200 "Ok.", dalla 5 risponde 204
+    // senza corpo: conta il cookie SID. Credenziali errate: 200 "Fails.".
     const cookie = res.headers.getSetCookie().find((c) => c.startsWith('SID='))
-    sid = cookie ? cookie.slice(4).split(';')[0] : ''
+    if (!cookie || body.trim() === 'Fails.') throw new QbtAuthError('credenziali di qBittorrent rifiutate')
+    sid = cookie.slice(4).split(';')[0]
   }
 
   async function ensureLogin() {
