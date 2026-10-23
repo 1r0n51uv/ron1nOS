@@ -1,10 +1,13 @@
 import { Outlet } from 'react-router'
 
 import { NavRail } from '@/components/ron1n'
+import { usePreferences } from '@/preferences/data'
 import { railItems } from './nav'
 
 // Layout desktop: NavRail a sinistra, contenuto a destra, filigrana 浪人 dietro.
 export function AppShell() {
+  // Le preferenze (SET-002) si caricano all'avvio, per tutte le pagine.
+  usePreferences()
   return (
     <div className="relative min-h-screen min-w-[1024px] overflow-x-clip">
       <div

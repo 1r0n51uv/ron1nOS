@@ -42,17 +42,17 @@ Accettazione:
 
 #### SET-002 · Preferenze sul server
 
-Stato: pianificato (#137)
+Stato: in corso (#137)
 
 Accettazione:
 
-- [ ] Tabella `preferences` (migrazione nuova) con un documento unico:
+- [x] Tabella `preferences` (migrazione nuova) con un documento unico:
       aspetto, moduli spenti, ordine della navigazione, formati.
-- [ ] `GET /api/v1/preferences` e `PATCH /api/v1/preferences`, validate
+- [x] `GET /api/v1/preferences` e `PATCH /api/v1/preferences`, validate
       con zod nel backend, in `api/openapi.yaml`.
-- [ ] Il frontend le carica all'avvio con React Query; finché non
+- [x] Il frontend le carica all'avvio con React Query; finché non
       arrivano usa i valori predefiniti, senza sfarfallio di tema.
-- [ ] Senza database valgono i predefiniti e la pagina avvisa che le
+- [x] Senza database valgono i predefiniti e la pagina avvisa che le
       modifiche non si salvano.
 
 ### Sezioni
