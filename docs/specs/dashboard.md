@@ -121,7 +121,7 @@ Annulla` per 8 secondi.
 
 #### DASH-005 · Opzioni del widget
 
-Stato: in corso (#143)
+Stato: fatto (#168)
 
 Accettazione:
 
@@ -140,18 +140,19 @@ Primi widget con opzioni: `nutrition.summary` (macro mostrate),
 
 #### DASH-006 · Testata riducibile
 
-Stato: pianificato (#144)
+Stato: in corso (#144)
 
 La testata è il blocco in alto con data, saluto, frase di stato e pill
 dell'homelab.
 
 Accettazione:
 
-- [ ] Tre forme: `completa` (come oggi), `una riga` (data · frase di
+- [x] Tre forme: `completa` (come oggi), `una riga` (data · frase di
       stato · pill, senza saluto grande) e `nascosta`.
-- [ ] Si cambia dal menu `⋯` della testata e dalle impostazioni (SET-004);
-      si salva con il layout.
-- [ ] Con la testata nascosta `Aggiungi widget` resta raggiungibile in
+- [x] Si cambia dal menu `⋯` della testata e dalle impostazioni (SET-004);
+      si salva con il layout. La voce nelle impostazioni arriva con
+      SET-004.
+- [x] Con la testata nascosta `Aggiungi widget` resta raggiungibile in
       alto a destra.
 
 ### Salvataggio
