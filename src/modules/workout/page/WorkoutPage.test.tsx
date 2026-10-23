@@ -88,10 +88,29 @@ const RECORDS: RecentRecord[] = [
   },
 ]
 
+const GROUPS = {
+  groups: ['petto', 'gambe', null],
+  weeks: [
+    ...Array.from({ length: 11 }, (_, i) => ({
+      monday: `2026-08-${String(3 + i).padStart(2, '0')}`,
+      groups: [],
+    })),
+    {
+      monday: '2026-10-19',
+      groups: [
+        { group: 'petto', volumeKg: 480, sets: 1 },
+        { group: 'gambe', volumeKg: 270, sets: 2 },
+        { group: null, volumeKg: 100, sets: 1 },
+      ],
+    },
+  ],
+}
+
 function mockApi(summary: WorkoutSummary, exercises: ExerciseRow[] | Error = EXERCISES) {
   vi.mocked(api.get).mockImplementation(async (path: string) => {
     if (path === '/workout/summary') return summary
     if (path === '/workout/records') return { records: RECORDS }
+    if (path === '/workout/muscle-groups') return GROUPS
     if (path === '/workout/exercises?sort=sets&limit=6') {
       if (exercises instanceof Error) throw exercises
       return { exercises }
@@ -162,6 +181,21 @@ describe('WorkoutPage', () => {
       'SquatPiù ripetizioni a 60 kg · 10giovedì 15 ottobre',
     ])
     expect(links[0]).toHaveAttribute('href', '/allenamenti/sessioni/s1')
+  })
+
+  it('mostra il volume per gruppo con la legenda e passa alle serie (GYM-012)', async () => {
+    mockApi(SUMMARY)
+    renderWithProviders(<WorkoutPage />)
+    const groups = await screen.findByRole('region', { name: 'Gruppi muscolari' })
+    expect(within(groups).getByRole('img', { name: /questa settimana 850 kg$/ })).toBeInTheDocument()
+    const legend = within(groups).getByRole('list', { name: 'Legenda' })
+    expect(
+      within(legend)
+        .getAllByRole('listitem')
+        .map((l) => l.textContent),
+    ).toEqual(['Petto', 'Gambe', 'Non assegnato'])
+    fireEvent.click(within(groups).getByRole('radio', { name: 'Serie' }))
+    expect(within(groups).getByRole('img', { name: /questa settimana 4 serie$/ })).toBeInTheDocument()
   })
 
   it('se gli esercizi non arrivano lo dice solo nella loro sezione', async () => {

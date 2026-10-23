@@ -12,12 +12,13 @@ import { period, streak, workouts } from '../format'
 import { ImportDialog } from '../import/ImportDialog'
 import { WeekBars } from '../WeekBars'
 import { ExerciseDashboard } from './ExerciseDashboard'
+import { GroupVolume } from './GroupVolume'
 import { RecentRecords } from './RecentRecords'
 import { SessionHistory } from './SessionHistory'
 
 // Pagina /allenamenti (GYM-002): costanza (GYM-013), esercizi più
-// allenati (GYM-007), nuovi record (GYM-010), storico (GYM-004) e import
-// del CSV (GYM-003). Il volume per gruppo arriva con GYM-012.
+// allenati (GYM-007), nuovi record (GYM-010) accanto al volume per gruppo
+// (GYM-012), storico (GYM-004) e import del CSV (GYM-003).
 export function WorkoutPage() {
   const [last, setLast] = useState<ImportSummary | null>(null)
   const { data, error } = useWorkoutSummary()
@@ -67,6 +68,7 @@ export function WorkoutPage() {
           <ExerciseDashboard />
           <div className="grid grid-cols-2 gap-4">
             <RecentRecords today={data.today} />
+            <GroupVolume />
           </div>
           <section aria-label="Allenamenti per settimana">
             <WidgetCard title="Allenamenti per settimana" meta="ultime 26 settimane">

@@ -313,3 +313,16 @@ export function useRecords() {
     queryFn: () => api.get<{ records: RecentRecord[] }>('/workout/records').then((r) => r.records),
   })
 }
+
+// Volume per gruppo muscolare (GYM-012): ultime 12 settimane.
+export type GroupWeek = {
+  monday: string
+  groups: { group: string | null; volumeKg: number; sets: number }[]
+}
+
+export function useGroupVolume() {
+  return useQuery({
+    queryKey: ['workout', 'muscle-groups'],
+    queryFn: () => api.get<{ groups: (string | null)[]; weeks: GroupWeek[] }>('/workout/muscle-groups'),
+  })
+}

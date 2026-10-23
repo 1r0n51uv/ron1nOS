@@ -25,6 +25,7 @@ import {
   proposeExerciseGroup,
   setExerciseGroup,
 } from './groups.ts'
+import { DEFAULT_WEEKS, groupVolume } from './muscles.ts'
 import { recentRecords } from './records.ts'
 import { decodeCursor, listRoutines, listSessions } from './sessions.ts'
 import { getSummary } from './summary.ts'
@@ -45,6 +46,7 @@ const RecordsQuery = z.object({
   days: z.coerce.number().int().min(1).max(3650).default(30),
   limit: z.coerce.number().int().min(1).max(50).default(3),
 })
+const WeeksQuery = z.object({ weeks: z.coerce.number().int().min(1).max(52).default(DEFAULT_WEEKS) })
 const ExercisesQuery = z.object({
   q: z.string().max(100).optional(),
   sort: z.enum(['recent', 'sets']).optional(),
@@ -161,6 +163,12 @@ export function workoutRoutes({ database, catalog, now = () => new Date() }: Wor
   app.get('/records', async (c) => {
     const { days, limit } = check(RecordsQuery, c.req.query())
     return c.json({ records: await recentRecords(c.get('db'), catalog, { days, limit, now: now() }) })
+  })
+
+  // Volume e serie per gruppo muscolare, settimana per settimana (GYM-012).
+  app.get('/muscle-groups', async (c) => {
+    const { weeks } = check(WeeksQuery, c.req.query())
+    return c.json(await groupVolume(c.get('db'), { weeks, now: now() }))
   })
 
   // Anteprima dell'import (GYM-003): stessi conti dell'import, nessuna scrittura.
