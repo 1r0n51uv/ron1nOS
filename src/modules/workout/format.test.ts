@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { dayWithYear, period, streak, weeklyAverage, workouts } from './format'
+import { dayWithYear, duration, period, streak, weeklyAverage, workoutDay, workouts } from './format'
 
 describe('format', () => {
   it('giorni e periodi', () => {
@@ -19,5 +19,18 @@ describe('format', () => {
   it('media per settimana', () => {
     expect(weeklyAverage([{ count: 3 }, { count: 2 }, { count: 2 }])).toBe(2.3)
     expect(weeklyAverage([])).toBe(0)
+  })
+})
+
+describe('workoutDay e duration', () => {
+  it('oggi, ieri o data estesa', () => {
+    expect(workoutDay('2026-10-22', '2026-10-22')).toBe('oggi')
+    expect(workoutDay('2026-10-21', '2026-10-22')).toBe('ieri')
+    expect(workoutDay('2026-10-20', '2026-10-22')).toBe('martedì 20 ottobre')
+  })
+
+  it('minuti e ore', () => {
+    expect(duration(2700)).toBe('45 min')
+    expect(duration(3900)).toBe('1 h 05 min')
   })
 })

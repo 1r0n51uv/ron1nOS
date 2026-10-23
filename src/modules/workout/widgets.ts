@@ -5,7 +5,7 @@ export const widgets: WidgetModuleDef[] = [
   {
     id: 'workout.summary',
     title: 'Allenamento',
-    description: "L'allenamento in corso o l'ultimo fatto.",
+    description: "L'ultimo allenamento, la settimana e i giorni di fila.",
     component: WorkoutWidget,
   },
 ]

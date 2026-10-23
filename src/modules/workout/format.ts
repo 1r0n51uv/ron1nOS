@@ -26,3 +26,23 @@ export function weeklyAverage(weeks: { count: number }[]) {
   if (!weeks.length) return 0
   return Math.round((weeks.reduce((s, w) => s + w.count, 0) / weeks.length) * 10) / 10
 }
+
+// Il giorno di un allenamento: "oggi", "ieri" o "martedì 20 ottobre".
+export function workoutDay(day: string, today: string) {
+  const diff = Math.round((Date.parse(`${today}T12:00:00Z`) - Date.parse(`${day}T12:00:00Z`)) / 86_400_000)
+  if (diff === 0) return 'oggi'
+  if (diff === 1) return 'ieri'
+  return new Date(`${day}T12:00:00Z`).toLocaleDateString('it-IT', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'UTC',
+  })
+}
+
+// Durata di un allenamento: "45 min", "1 h 05 min".
+export function duration(seconds: number) {
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 60) return `${minutes} min`
+  return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')} min`
+}
