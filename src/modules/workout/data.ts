@@ -214,11 +214,14 @@ export type ExerciseRow = {
   trend: number[]
 }
 
-export function useExercises(params: { q?: string; sort?: 'recent' | 'sets'; limit?: number } = {}) {
+export function useExercises(
+  params: { q?: string; sort?: 'recent' | 'sets'; limit?: number; incomplete?: boolean } = {},
+) {
   const search = new URLSearchParams()
   if (params.q) search.set('q', params.q)
   if (params.sort) search.set('sort', params.sort)
   if (params.limit) search.set('limit', String(params.limit))
+  if (params.incomplete) search.set('incomplete', 'true')
   const qs = search.toString()
   return useQuery({
     queryKey: ['workout', 'exercises', params],
@@ -226,6 +229,8 @@ export function useExercises(params: { q?: string; sort?: 'recent' | 'sets'; lim
       api
         .get<{ exercises: ExerciseRow[] }>(`/workout/exercises${qs ? `?${qs}` : ''}`)
         .then((r) => r.exercises),
+    // Mentre si scrive resta l'elenco di prima.
+    placeholderData: keepPreviousData,
   })
 }
 

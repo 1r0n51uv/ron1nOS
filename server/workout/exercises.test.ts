@@ -117,8 +117,24 @@ describe('GET /exercises', () => {
     expect(stacco!.trend).toEqual([103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114])
   })
 
+  it('incomplete=true dà quelli senza gruppo o senza immagine', async () => {
+    await session('2026-10-01', {
+      Squat: [{ kg: 80, reps: 5 }],
+      'Panca piana': [{ kg: 60, reps: 8 }],
+      'Esercizio mio': [{ kg: 10, reps: 10 }],
+    })
+    await db.query(
+      `insert into workout_exercises (exercise_key, muscle_group) values ('squat', 'gambe'), ('esercizio mio', 'altro')`,
+    )
+    const { body } = await get('/exercises?incomplete=true')
+    // Squat ha gruppo e immagine; Panca piana non ha gruppo, Esercizio mio
+    // non ha immagine.
+    expect(body.exercises.map((e) => e.name).sort()).toEqual(['Esercizio mio', 'Panca piana'])
+  })
+
   it('parametri sbagliati rispondono 400', async () => {
     expect((await get('/exercises?sort=nome')).status).toBe(400)
     expect((await get('/exercises?limit=0')).status).toBe(400)
+    expect((await get('/exercises?incomplete=si')).status).toBe(400)
   })
 })

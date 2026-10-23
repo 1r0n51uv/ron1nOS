@@ -56,7 +56,12 @@ const bestDuration = (sets: SetLike[]) =>
 export async function listExercises(
   db: Queryable,
   catalog: Catalog | undefined,
-  { q, sort = 'recent', limit }: { q?: string; sort?: ExerciseSort; limit?: number } = {},
+  {
+    q,
+    sort = 'recent',
+    limit,
+    incomplete = false,
+  }: { q?: string; sort?: ExerciseSort; limit?: number; incomplete?: boolean } = {},
 ): Promise<ExerciseRow[]> {
   const needle = q ? normalizeExercise(q) : ''
   // Le serie in ordine di sessione, così l'ultima riga di ogni esercizio
@@ -111,11 +116,15 @@ export async function listExercises(
       ? b.sets - a.sets || b.lastDay.localeCompare(a.lastDay) || a.key.localeCompare(b.key)
       : b.lastDay.localeCompare(a.lastDay) || a.key.localeCompare(b.key),
   )
-  const page = limit ? exercises.slice(0, limit) : exercises
+  // `Da completare` (GYM-009): senza gruppo o senza immagine. Serve
+  // l'immagine di tutti per sapere quali mancano.
   const images = await exerciseImages(
     db,
     catalog,
-    page.map((e) => e.key),
+    exercises.map((e) => e.key),
   )
-  return page.map((e) => ({ ...e, image: images.get(e.key) ?? null }))
+  const out = exercises
+    .map((e) => ({ ...e, image: images.get(e.key) ?? null }))
+    .filter((e) => !incomplete || !e.group || !e.image)
+  return limit ? out.slice(0, limit) : out
 }

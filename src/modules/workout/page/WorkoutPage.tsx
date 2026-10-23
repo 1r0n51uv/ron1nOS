@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 
 import { AlertRow, WidgetCard } from '@/components/ron1n'
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
@@ -32,9 +33,18 @@ export function WorkoutPage() {
             </div>
           ) : null}
         </div>
-        <ImportDialog onImported={setLast}>
-          <Button>Importa CSV</Button>
-        </ImportDialog>
+        <div className="flex items-center gap-3">
+          {data?.last ? (
+            <Button variant="glass" asChild>
+              <Link to="/allenamenti/esercizi" className="no-underline">
+                Tutti gli esercizi
+              </Link>
+            </Button>
+          ) : null}
+          <ImportDialog onImported={setLast}>
+            <Button>Importa CSV</Button>
+          </ImportDialog>
+        </div>
       </div>
 
       {last ? (
