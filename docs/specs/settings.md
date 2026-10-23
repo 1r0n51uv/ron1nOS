@@ -156,7 +156,7 @@ Accettazione:
 
 #### SET-010 · Formati
 
-Stato: in corso (#153)
+Stato: fatto (#192)
 
 Accettazione:
 
@@ -173,7 +173,7 @@ sull'ora di Roma, come nel backend che li calcola. I campi da compilare
 
 #### SET-011 · Backup della configurazione
 
-Stato: pianificato (#154)
+Stato: in corso (#154)
 
 Accettazione:
 
