@@ -13,6 +13,11 @@ vi.mock('@/lib/api', async (importOriginal) => ({
   api: { get: vi.fn(), put: vi.fn() },
 }))
 
+vi.mock('@/modules/nutrition/dates', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  todayRome: () => '2026-10-23',
+}))
+
 const point = (day: string, best1RMKg: number, volumeKg: number) => ({
   sessionId: `s-${day}`,
   day,
@@ -44,6 +49,15 @@ const PANCA: ExerciseDetail = {
         { warmup: false, weightKg: 72.5, reps: 3, durationSeconds: null },
       ],
     },
+  ],
+  records: [
+    { kind: 'reps', value: 8, weightKg: 60, day: '2026-09-01', sessionId: 's-2026-09-01' },
+    { kind: 'e1rm', value: 81.67, weightKg: null, day: '2026-10-01', sessionId: 's-2026-10-01' },
+    { kind: 'weight', value: 72.5, weightKg: null, day: '2026-10-20', sessionId: 's-2026-10-20' },
+    { kind: 'reps', value: 5, weightKg: 70, day: '2026-10-01', sessionId: 's-2026-10-01' },
+    { kind: 'reps', value: 3, weightKg: 72.5, day: '2026-10-20', sessionId: 's-2026-10-20' },
+    { kind: 'reps', value: 10, weightKg: 40, day: '2026-08-01', sessionId: 's-2026-08-01' },
+    { kind: 'volume', value: 630, weightKg: null, day: '2026-10-01', sessionId: 's-2026-10-01' },
   ],
 }
 
@@ -100,6 +114,23 @@ describe('ExercisePage', () => {
     expect(link).toHaveTextContent('80 kg')
   })
 
+  it('i record con la data, le ripetizioni sui 3 pesi più alti (GYM-010)', async () => {
+    render()
+    const records = await screen.findByRole('region', { name: 'Record' })
+    expect(
+      within(records)
+        .getAllByRole('link')
+        .map((l) => l.textContent),
+    ).toEqual([
+      '1RM stimato · 82 kggiovedì 1 ottobre',
+      'Peso più alto · 72,5 kgmartedì 20 ottobre',
+      'Volume in una sessione · 630 kggiovedì 1 ottobre',
+      'Più ripetizioni a 72,5 kg · 3martedì 20 ottobre',
+      'Più ripetizioni a 70 kg · 5giovedì 1 ottobre',
+      'Più ripetizioni a 60 kg · 8martedì 1 settembre',
+    ])
+  })
+
   it('per un esercizio a tempo durate al posto dei kg', async () => {
     render({
       ...PANCA,
@@ -111,6 +142,7 @@ describe('ExercisePage', () => {
       bestDurationSeconds: 90,
       points: [{ ...point('2026-10-01', 0, 0), bestDurationSeconds: 60, totalDurationSeconds: 150 }],
       recent: [],
+      records: [],
     })
     expect(await screen.findByText('Non assegnato')).toBeInTheDocument()
     expect(screen.getByText('1:30')).toBeInTheDocument()

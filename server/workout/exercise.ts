@@ -8,6 +8,8 @@ import type { ExerciseImage } from './images.ts'
 import { exerciseImages } from './images.ts'
 import type { SetLike } from './math.ts'
 import { bestEstimated1RM, isTimed, volume, workingSets } from './math.ts'
+import type { PersonalRecord } from './records.ts'
+import { exerciseSessions, personalRecords } from './records.ts'
 
 export const RANGES = { '3m': 91, '6m': 182, '1y': 365, all: null } as const
 export type ExerciseRange = keyof typeof RANGES
@@ -38,6 +40,8 @@ export type ExerciseDetail = {
     bestDurationSeconds: number
     totalDurationSeconds: number
   }[]
+  // I record di oggi (GYM-010), uno per tipo e, per reps, uno per peso.
+  records: PersonalRecord[]
   // Dalla più recente.
   recent: { sessionId: string; day: string; best1RMKg: number | null; sets: SetOut[] }[]
 }
@@ -110,6 +114,7 @@ export async function getExercise(
     }
   })
 
+  const history = (await exerciseSessions(db, key)).get(key)?.sessions ?? []
   const days = RANGES[range]
   const from = days === null ? null : addDays(todayIn(now), -days)
   const images = await exerciseImages(db, catalog, [key])
@@ -126,6 +131,7 @@ export async function getExercise(
     sessions: ids.length,
     range,
     points: sessions.filter((s) => from === null || s.day >= from).map(({ sets: _sets, ...point }) => point),
+    records: personalRecords(history, timed).current,
     recent: sessions
       .slice(-RECENT_SESSIONS)
       .reverse()

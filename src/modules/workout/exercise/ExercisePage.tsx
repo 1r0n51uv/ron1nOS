@@ -9,7 +9,7 @@ import { num } from '@/lib/format'
 import { todayRome } from '@/modules/nutrition/dates'
 import type { ExerciseDetail, ExerciseRange } from '../data'
 import { useExercise } from '../data'
-import { clock, groupLabel, setLabel, workoutDay } from '../format'
+import { clock, groupLabel, recordLabel, setLabel, workoutDay } from '../format'
 import { ExercisePhoto } from '../images/ExercisePhoto'
 import { GroupDialog } from './GroupDialog'
 import { LineChart } from './LineChart'
@@ -82,6 +82,44 @@ function Header({ exercise }: { exercise: ExerciseDetail }) {
   )
 }
 
+const ORDER = ['e1rm', 'weight', 'volume', 'duration', 'reps']
+
+// I record dell'esercizio (GYM-010), ognuno con la data. Delle ripetizioni
+// a un dato peso si mostrano i 3 pesi più alti.
+function Records({ exercise }: { exercise: ExerciseDetail }) {
+  const today = todayRome()
+  const reps = exercise.records
+    .filter((r) => r.kind === 'reps')
+    .sort((a, b) => (b.weightKg ?? 0) - (a.weightKg ?? 0))
+    .slice(0, 3)
+  const rows = [
+    ...exercise.records
+      .filter((r) => r.kind !== 'reps')
+      .sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind)),
+    ...reps,
+  ]
+  if (!rows.length) return null
+  return (
+    <section aria-label="Record">
+      <WidgetCard title="Record">
+        <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
+          {rows.map((r) => (
+            <li key={`${r.kind}-${r.weightKg ?? ''}`}>
+              <Link
+                to={`/allenamenti/sessioni/${r.sessionId}`}
+                className="flex min-h-10 items-center justify-between gap-4 rounded-[12px] px-2 text-sm text-ink no-underline hover:bg-glass-hover"
+              >
+                <span className="font-mono text-[13px]">{recordLabel(r)}</span>
+                <span className="text-xs text-ink-muted">{workoutDay(r.day, today)}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </WidgetCard>
+    </section>
+  )
+}
+
 function Recent({ exercise }: { exercise: ExerciseDetail }) {
   const today = todayRome()
   return (
@@ -92,7 +130,7 @@ function Recent({ exercise }: { exercise: ExerciseDetail }) {
             <li key={r.sessionId}>
               <Link
                 to={`/allenamenti/sessioni/${r.sessionId}`}
-                className="grid min-h-11 grid-cols-[200px_1fr_90px] items-center gap-4 rounded-[12px] px-2 text-sm text-ink no-underline hover:bg-glass-hover"
+                className="grid min-h-11 grid-cols-[130px_1fr_70px] items-center gap-4 rounded-[12px] px-2 text-sm text-ink no-underline hover:bg-glass-hover"
               >
                 <span className="text-ink-muted">{workoutDay(r.day, today)}</span>
                 <span className="truncate font-mono text-[13px]">
@@ -160,7 +198,10 @@ export function ExercisePage() {
               />
             </WidgetCard>
           </section>
-          <Recent exercise={data} />
+          <div className="grid grid-cols-2 gap-4">
+            <Recent exercise={data} />
+            <Records exercise={data} />
+          </div>
         </>
       )}
     </>

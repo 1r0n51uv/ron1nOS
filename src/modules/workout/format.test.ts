@@ -6,6 +6,7 @@ import {
   duration,
   exerciseBest,
   groupLabel,
+  recordLabel,
   period,
   setLabel,
   startTime,
@@ -78,5 +79,17 @@ describe('groupLabel e clock', () => {
   it('durata come minuti e secondi', () => {
     expect(clock(90)).toBe('1:30')
     expect(clock(725)).toBe('12:05')
+  })
+})
+
+describe('recordLabel', () => {
+  it('un testo per tipo di record', () => {
+    expect(recordLabel({ kind: 'e1rm', value: 81.67, weightKg: null })).toBe('1RM stimato · 82 kg')
+    expect(recordLabel({ kind: 'weight', value: 72.5, weightKg: null })).toBe('Peso più alto · 72,5 kg')
+    expect(recordLabel({ kind: 'volume', value: 630.4, weightKg: null })).toBe(
+      'Volume in una sessione · 630 kg',
+    )
+    expect(recordLabel({ kind: 'reps', value: 8, weightKg: 60 })).toBe('Più ripetizioni a 60 kg · 8')
+    expect(recordLabel({ kind: 'duration', value: 95, weightKg: null })).toBe('Durata più lunga · 1:35')
   })
 })

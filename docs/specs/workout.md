@@ -191,16 +191,19 @@ Accettazione:
 
 #### GYM-010 · Record personali
 
-Stato: pianificato (#132) · Origine: nuovo
+Stato: fatto (#132) · Origine: nuovo
 
 Accettazione:
 
-- [ ] Per esercizio: miglior 1RM stimato, peso più alto, più ripetizioni a
+- [x] Per esercizio: miglior 1RM stimato, peso più alto, più ripetizioni a
       un dato peso, volume più alto in una sessione; per gli esercizi a
-      tempo, durata più lunga. Ognuno con la data.
-- [ ] Nella pagina, al massimo 3 record degli ultimi 30 giorni, dal più
-      recente, con la miniatura dell'esercizio.
-- [ ] Riscaldamento e serie a 0 kg esclusi, come nelle altre metriche.
+      tempo, durata più lunga. Ognuno con la data. Sono nella pagina
+      dell'esercizio; delle ripetizioni si mostrano i 3 pesi più alti.
+- [x] Nella pagina, al massimo 3 record degli ultimi 30 giorni, dal più
+      recente, con la miniatura dell'esercizio. Un record nuovo batte uno
+      precedente: la prima volta di un esercizio o di un peso non conta, e
+      una sessione dà una sola voce per esercizio.
+- [x] Riscaldamento e serie a 0 kg esclusi, come nelle altre metriche.
 
 ### Gruppi muscolari
 
