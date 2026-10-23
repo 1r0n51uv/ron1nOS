@@ -97,7 +97,7 @@ test.describe('griglia libera (DASH-003)', () => {
   })
 })
 
-test.describe('modifica sempre attiva (DASH-004)', () => {
+test.describe('modifica dei widget (DASH-004)', () => {
   test.afterEach(() => sql('delete from dashboard_layouts'))
 
   const two = {
@@ -117,6 +117,7 @@ test.describe('modifica sempre attiva (DASH-004)', () => {
   test('si trascina dalla maniglia, si ridimensiona dall’angolo e si salva', async ({ page }) => {
     await page.request.put('/api/v1/dashboard/layouts/desktop', { data: two })
     await page.goto('/')
+    await page.getByRole('button', { name: 'Modifica' }).click()
     const notes = page.locator('[data-widget="notes.summary"]')
     await notes.hover()
     const handle = page.getByRole('button', { name: 'Sposta il widget Nota fissata' })
@@ -154,6 +155,7 @@ test.describe('modifica sempre attiva (DASH-004)', () => {
   test('Rimuovi toglie il widget e Annulla lo rimette', async ({ page }) => {
     await page.request.put('/api/v1/dashboard/layouts/desktop', { data: two })
     await page.goto('/')
+    await page.getByRole('button', { name: 'Modifica' }).click()
     await page.locator('[data-widget="weight.summary"]').hover()
     await page.getByRole('button', { name: 'Altre azioni sul widget Peso' }).click()
     await page.getByRole('menuitem', { name: 'Rimuovi' }).click()
@@ -168,6 +170,7 @@ test.describe('modifica sempre attiva (DASH-004)', () => {
   test('da tastiera si sposta e si rimuove; dal catalogo si aggiunge', async ({ page }) => {
     await page.request.put('/api/v1/dashboard/layouts/desktop', { data: two })
     await page.goto('/')
+    await page.getByRole('button', { name: 'Modifica' }).click()
     const handle = page.getByRole('button', { name: 'Sposta il widget Peso' })
     await handle.focus()
     await page.keyboard.press('ArrowRight')
@@ -189,6 +192,36 @@ test.describe('modifica sempre attiva (DASH-004)', () => {
   })
 })
 
+test.describe('modalità modifica (DASH-009)', () => {
+  test.afterEach(() => sql('delete from dashboard_layouts'))
+
+  test('i comandi compaiono solo dopo Modifica e spariscono con Fine', async ({ page }) => {
+    await page.request.put('/api/v1/dashboard/layouts/desktop', {
+      data: { header: 'full', items: [{ id: 'notes.summary', x: 0, y: 0, w: 8, h: 7 }] },
+    })
+    await page.goto('/')
+    const notes = page.locator('[data-widget="notes.summary"]')
+    await notes.hover()
+    await expect(page.getByRole('button', { name: 'Sposta il widget Nota fissata' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Aggiungi widget' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Forma della testata' })).toHaveCount(0)
+
+    await page.getByRole('button', { name: 'Modifica' }).click()
+    // Sempre visibili, senza passare con il mouse.
+    await page.mouse.move(0, 0)
+    await expect(page.getByRole('button', { name: 'Sposta il widget Nota fissata' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Altre azioni sul widget Nota fissata' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Aggiungi widget' })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Fine' }).click()
+    await expect(page.getByRole('button', { name: 'Sposta il widget Nota fissata' })).toHaveCount(0)
+    await page.getByRole('button', { name: 'Modifica' }).click()
+    await page.reload()
+    await expect(page.getByRole('button', { name: 'Modifica' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Sposta il widget Nota fissata' })).toHaveCount(0)
+  })
+})
+
 test.describe('opzioni del widget (DASH-005)', () => {
   test.afterEach(() => sql('delete from dashboard_layouts'))
 
@@ -203,6 +236,7 @@ test.describe('opzioni del widget (DASH-005)', () => {
       },
     })
     await page.goto('/')
+    await page.getByRole('button', { name: 'Modifica' }).click()
     const weight = page.locator('[data-widget="weight.summary"]')
     await expect(weight.getByRole('img', { name: /Peso da/ })).toBeVisible()
     await weight.hover()
@@ -237,8 +271,9 @@ test.describe('opzioni del widget (DASH-005)', () => {
 test.describe('testata riducibile (DASH-006)', () => {
   test.afterEach(() => sql('delete from dashboard_layouts'))
 
-  test('completa, su una riga o nascosta; Aggiungi widget resta in alto', async ({ page }) => {
+  test('completa, su una riga o nascosta; Modifica resta in alto', async ({ page }) => {
     await page.goto('/')
+    await page.getByRole('button', { name: 'Modifica' }).click()
     const greeting = page.getByRole('heading', { level: 1, name: /^Buon/ })
     await expect(greeting).toBeVisible()
 
@@ -265,7 +300,7 @@ test.describe('testata riducibile (DASH-006)', () => {
       })
       .toBe('hidden')
     await page.reload()
-    await expect(page.getByRole('button', { name: 'Aggiungi widget' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Modifica' })).toBeVisible()
     await expect(greeting).toHaveCount(0)
   })
 })
@@ -311,6 +346,7 @@ test.describe('primi widget del catalogo (DASH-002)', () => {
     test(`${title} si aggiunge dal catalogo e compare in griglia`, async ({ page }) => {
       await page.request.put('/api/v1/dashboard/layouts/desktop', { data: { header: 'full', items: [] } })
       await page.goto('/')
+      await page.getByRole('button', { name: 'Modifica' }).click()
       await page.getByRole('button', { name: 'Aggiungi widget' }).click()
       const dialog = page.getByRole('dialog', { name: 'Aggiungi widget' })
       await dialog.getByRole('article', { name: title }).getByRole('button', { name: 'Aggiungi' }).click()
