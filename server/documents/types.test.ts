@@ -8,7 +8,7 @@ import { testDb } from '../testing/db.ts'
 import { fakeQbt } from '../testing/fake-qbt.ts'
 import { createVault } from './crypto.ts'
 import type { DocumentType } from './types.ts'
-import { checkFields } from './types.ts'
+import { checkFields, retype } from './types.ts'
 
 let db: Awaited<ReturnType<typeof testDb>>
 let passwordHash: string
@@ -115,5 +115,32 @@ describe('database (DOC-015)', () => {
     expect(columns).toContain('documents.envelope')
     expect(columns).toContain('document_files.ciphertext')
     expect(columns.some((c) => /fields|notes|content|data$/.test(c))).toBe(false)
+  })
+})
+
+describe('cambio di tipo (DOC-003)', () => {
+  const a = {
+    fields: [
+      { key: 'number', label: 'Numero', kind: 'code' as const, copyable: true },
+      { key: 'place', label: 'Luogo', kind: 'text' as const, copyable: true },
+    ],
+  }
+  const b = { fields: [{ key: 'number', label: 'Numero', kind: 'code' as const, copyable: true }] }
+
+  it('i valori che il nuovo tipo non ha diventano campi liberi con la loro etichetta', () => {
+    expect(retype({ number: '1', place: 'Roma' }, a, b)).toEqual({
+      fields: { number: '1' },
+      moved: [{ label: 'Luogo', value: 'Roma' }],
+    })
+  })
+
+  it('senza tipo tutto diventa libero; una chiave sconosciuta tiene la chiave come etichetta', () => {
+    expect(retype({ number: '1', boh: 'x' }, a, null)).toEqual({
+      fields: {},
+      moved: [
+        { label: 'Numero', value: '1' },
+        { label: 'boh', value: 'x' },
+      ],
+    })
   })
 })

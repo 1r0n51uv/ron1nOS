@@ -75,7 +75,7 @@ Accettazione:
 
 #### DOC-003 · Tipi di documento
 
-Stato: in corso (#104)
+Stato: fatto (#104)
 
 Ogni tipo ha un nome, un'icona e un elenco di campi. I tipi stanno nel
 database e si gestiscono dalla UI (DOC-016); questi sono già pronti alla
@@ -120,7 +120,7 @@ Accettazione:
 
 #### DOC-005 · Creare e modificare un documento
 
-Stato: pianificato (#106)
+Stato: in corso (#106)
 
 Accettazione:
 
@@ -140,7 +140,7 @@ Accettazione:
 
 #### DOC-006 · Campi liberi
 
-Stato: pianificato (#107)
+Stato: in corso (#107)
 
 Su ogni documento si possono aggiungere coppie etichetta/valore, oltre ai
 campi del tipo. Per i file con info sono gli unici campi.
@@ -154,7 +154,7 @@ Accettazione:
 
 #### DOC-007 · Titolare
 
-Stato: pianificato (#108)
+Stato: in corso (#108)
 
 Ogni documento ha un titolare, per tenere anche quelli dei familiari.
 
@@ -168,7 +168,7 @@ Accettazione:
 
 #### DOC-008 · Documenti in evidenza
 
-Stato: pianificato (#109)
+Stato: in corso (#109)
 
 Accettazione:
 
@@ -207,7 +207,7 @@ Accettazione:
 
 #### DOC-011 · Allegati
 
-Stato: pianificato (#112)
+Stato: in corso (#112)
 
 Accettazione:
 
@@ -224,7 +224,7 @@ Accettazione:
 
 #### DOC-012 · Scaricare gli allegati
 
-Stato: pianificato (#113)
+Stato: in corso (#113)
 
 Accettazione:
 
@@ -247,7 +247,7 @@ Accettazione:
 
 #### DOC-014 · Eliminare
 
-Stato: pianificato (#115)
+Stato: in corso (#115)
 
 Accettazione:
 
