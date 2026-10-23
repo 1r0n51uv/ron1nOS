@@ -2,7 +2,7 @@
 import { randomBytes } from 'node:crypto'
 
 import sharp from 'sharp'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { createApp } from '../app.ts'
 import { hashPassword } from '../auth/password.ts'
@@ -279,5 +279,92 @@ describe('allegati (DOC-011, DOC-012, DOC-014)', () => {
     expect(res.status).toBe(400)
     const missing = await upload('00000000-0000-4000-8000-000000000000', Buffer.from('x'), 'x.txt')
     expect(missing.status).toBe(404)
+  })
+})
+
+describe('tipi personalizzati (DOC-016)', () => {
+  afterEach(async () => {
+    await db.query('delete from documents')
+    await db.query('delete from document_types where key is null')
+  })
+
+  it('crea un tipo con chiavi generate dalle etichette', async () => {
+    const res = await post('/types', {
+      name: 'Polizza',
+      icon: 'card',
+      fields: [
+        { label: 'Compagnia', kind: 'text', copyable: true },
+        { label: 'Numero polizza', kind: 'code', copyable: true },
+        { label: 'Numero  polizza', kind: 'code', copyable: true },
+        { label: 'Decorrenza', kind: 'date', copyable: false },
+      ],
+    })
+    expect(res.status).toBe(201)
+    expect(res.body).toMatchObject({ name: 'Polizza', icon: 'card', preset: false, key: null, documents: 0 })
+    expect(res.body.fields.map((f: { key: string }) => f.key)).toEqual([
+      'compagnia',
+      'numero_polizza',
+      'numero_polizza_2',
+      'decorrenza',
+    ])
+    expect((await get('/types')).body.at(-1).name).toBe('Polizza')
+    expect((await post('/types', { name: 'x', icon: 'razzo' })).status).toBe(400)
+    expect((await post('/types', { name: ' ' })).status).toBe(400)
+  })
+
+  it('campo tolto o non più data: i valori diventano campi liberi', async () => {
+    const { body: type } = await post('/types', {
+      name: 'Polizza',
+      fields: [
+        { label: 'Compagnia', kind: 'text', copyable: true },
+        { label: 'Targa', kind: 'code', copyable: true },
+        { label: 'Rinnovo', kind: 'text', copyable: true },
+      ],
+    })
+    const { body: doc } = await post('/documents', {
+      typeId: type.id,
+      title: 'Polizza auto',
+      fields: { compagnia: 'Allianz', targa: 'AB123CD', rinnovo: 'a marzo' },
+    })
+    const res = await patch(`/types/${type.id}`, {
+      name: 'Assicurazione',
+      fields: [
+        { key: 'compagnia', label: 'Compagnia assicurativa', kind: 'text', copyable: true },
+        { key: 'rinnovo', label: 'Rinnovo', kind: 'date', copyable: true },
+        { label: 'Massimale', kind: 'text', copyable: true },
+      ],
+    })
+    expect(res.status).toBe(200)
+    expect(res.body.fields.map((f: { key: string }) => f.key)).toEqual(['compagnia', 'rinnovo', 'massimale'])
+    const after = (await get(`/documents/${doc.id}`)).body
+    expect(after.fields).toEqual({ compagnia: 'Allianz' })
+    expect(after.extra).toEqual([
+      { label: 'Targa', value: 'AB123CD' },
+      { label: 'Rinnovo', value: 'a marzo' },
+    ])
+    expect(
+      (
+        await patch(`/types/${type.id}`, {
+          fields: [{ key: 'boh', label: 'x', kind: 'text', copyable: true }],
+        })
+      ).status,
+    ).toBe(400)
+  })
+
+  it('si modifica anche un tipo già pronto', async () => {
+    const res = await patch(`/types/${passport}`, { name: 'Passaporto italiano' })
+    expect(res.body).toMatchObject({ name: 'Passaporto italiano', key: 'passport', preset: true })
+    await patch(`/types/${passport}`, { name: 'Passaporto' })
+  })
+
+  it('si elimina solo se nessun documento lo usa', async () => {
+    const { body: type } = await post('/types', { name: 'Busta paga' })
+    const { body: doc } = await post('/documents', { typeId: type.id, title: 'Ottobre' })
+    const res = await call('DELETE', `/types/${type.id}`)
+    expect(res.status).toBe(409)
+    expect(res.body).toEqual({ error: 'type_in_use', message: 'Usato da 1 documento' })
+    await call('DELETE', `/documents/${doc.id}`)
+    expect((await call('DELETE', `/types/${type.id}`)).status).toBe(204)
+    expect((await call('DELETE', `/types/${type.id}`)).status).toBe(404)
   })
 })

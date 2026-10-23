@@ -256,7 +256,7 @@ Accettazione:
 
 #### DOC-016 · Tipi personalizzati
 
-Stato: pianificato (#116)
+Stato: fatto (#116)
 
 Dalle impostazioni del modulo si configurano i tipi.
 

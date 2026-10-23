@@ -108,3 +108,44 @@ test('il widget mostra fissati e scadenze; la stella fissa dalla pagina (DOC-001
   await widget.getByRole('link', { name: 'Polizza auto' }).click()
   await expect(page.getByRole('heading', { name: 'Polizza auto', level: 1 })).toBeVisible()
 })
+
+test('tipo personalizzato: si crea, si usa e un campo tolto diventa campo libero (DOC-016)', async ({
+  page,
+  request,
+}) => {
+  await sql('delete from document_types where key is null')
+  await page.goto('/documenti')
+  await page.getByRole('link', { name: 'Tipi' }).click()
+  await expect(page.getByRole('heading', { name: 'Tipi di documento', level: 1 })).toBeVisible()
+  await page.getByRole('button', { name: 'Nuovo tipo' }).click()
+  await expect(page.getByRole('region', { name: 'Nuovo tipo' })).toBeVisible()
+  await page.getByLabel('Nome', { exact: true }).fill('Polizza')
+  await page.getByLabel('Etichetta del campo 1').fill('Targa')
+  await page.getByLabel('Tipo del campo Targa').selectOption('code')
+  await page.getByRole('button', { name: 'Salva' }).click()
+  const nav = page.getByRole('navigation', { name: 'Tipi' })
+  await expect(nav.getByRole('button', { name: /Polizza/ })).toHaveAttribute('aria-current', 'true')
+
+  const types = (await (await request.get('/api/v1/documents/types')).json()) as {
+    id: string
+    name: string
+  }[]
+  const polizza = types.find((t) => t.name === 'Polizza')!
+  const created = await request.post('/api/v1/documents/documents', {
+    data: { typeId: polizza.id, title: 'Polizza auto', fields: { targa: 'AB123CD' } },
+  })
+  const doc = (await created.json()) as { id: string }
+
+  await page.reload()
+  await expect(page.getByText(/Usato da 1 documento/)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Elimina tipo' })).toBeDisabled()
+  await page.getByRole('button', { name: 'Togli Targa' }).click()
+  await page.getByRole('button', { name: 'Salva' }).click()
+  await expect(page.getByRole('button', { name: 'Togli Targa' })).toHaveCount(0)
+
+  await page.goto(`/documenti/${doc.id}`)
+  await expect(page.getByRole('button', { name: 'Copia Targa' })).toBeVisible()
+  await expect(page.getByText('AB123CD')).toBeVisible()
+  await sql('delete from documents')
+  await sql('delete from document_types where key is null')
+})

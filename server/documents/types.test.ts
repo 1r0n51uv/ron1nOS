@@ -8,7 +8,7 @@ import { testDb } from '../testing/db.ts'
 import { fakeQbt } from '../testing/fake-qbt.ts'
 import { createVault } from './crypto.ts'
 import type { DocumentType } from './types.ts'
-import { checkFields, retype } from './types.ts'
+import { checkFields, keyFor, reshape, retype } from './types.ts'
 
 let db: Awaited<ReturnType<typeof testDb>>
 let passwordHash: string
@@ -142,5 +142,28 @@ describe('cambio di tipo (DOC-003)', () => {
         { label: 'boh', value: 'x' },
       ],
     })
+  })
+})
+
+describe('tipi personalizzati (DOC-016)', () => {
+  it('chiavi dalle etichette, senza accenti e senza doppioni', () => {
+    const taken = new Set(['numero'])
+    expect(keyFor('Numero', taken)).toBe('numero_2')
+    expect(keyFor('Città di rilascio', taken)).toBe('citta_di_rilascio')
+    expect(keyFor('2° intestatario', taken)).toBe('f_2_intestatario')
+    expect(keyFor('***', taken)).toBe('campo')
+  })
+
+  it('reshape: tolti e date non valide diventano liberi', () => {
+    const before = [
+      { key: 'a', label: 'A', kind: 'text' as const, copyable: true },
+      { key: 'd', label: 'D', kind: 'text' as const, copyable: true },
+    ]
+    const after = [{ key: 'd', label: 'D', kind: 'date' as const, copyable: true }]
+    expect(reshape({ a: '1', d: '2027-01-01' }, before, after)).toEqual({
+      fields: { d: '2027-01-01' },
+      moved: [{ label: 'A', value: '1' }],
+    })
+    expect(reshape({ d: 'marzo' }, before, after).moved).toEqual([{ label: 'D', value: 'marzo' }])
   })
 })

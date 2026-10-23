@@ -8,7 +8,7 @@ import { z } from 'zod'
 import type { Database, Db, Queryable } from '../db.ts'
 import { DatabaseUnavailableError } from '../db.ts'
 import { isDay } from '../nutrition/dates.ts'
-import { check, InvalidRequestError, NotFoundError, readJson } from '../nutrition/http.ts'
+import { check, ConflictError, InvalidRequestError, NotFoundError, readJson } from '../nutrition/http.ts'
 import type { Vault } from './crypto.ts'
 import type { FileLabel } from './files.ts'
 import {
@@ -32,7 +32,19 @@ import {
   updateDocument,
 } from './store.ts'
 import type { DocumentType } from './types.ts'
-import { checkFields, getType, listTypes, retype } from './types.ts'
+import {
+  checkFields,
+  deleteType,
+  FieldInput,
+  getType,
+  insertType,
+  listTypes,
+  reshape,
+  resolveFields,
+  retype,
+  saveType,
+  TYPE_ICONS,
+} from './types.ts'
 
 export type DocumentsDeps = {
   database: Database
@@ -91,6 +103,13 @@ const PatchBody = z.object({
   extra: Extra.optional(),
   notes: Notes.optional(),
 })
+
+const TypeBody = z.object({
+  name: z.string().trim().min(1).max(60),
+  icon: z.enum(TYPE_ICONS).default('file'),
+  fields: z.array(FieldInput).max(40).default([]),
+})
+const TypePatch = TypeBody.partial()
 
 const Label = z.enum(LABELS)
 const FilePatch = z.object({ label: Label.optional(), position: z.int().min(0).optional() })
@@ -167,6 +186,72 @@ export function documentsRoutes({ database, vault, authEnabled, now = () => new 
   }
 
   routes.get('/types', async (c) => c.json(await listTypes(ready().db)))
+
+  const typeId = (raw: string) => {
+    if (!Id.safeParse(raw).success) throw new NotFoundError('Tipo non trovato')
+    return raw
+  }
+
+  const fieldsOf = (current: DocumentType['fields'], input: FieldInput[]) => {
+    const result = resolveFields(current, input)
+    if (!result.ok) throw new InvalidRequestError(result.message)
+    return result.fields
+  }
+
+  // Tipi personalizzati (DOC-016).
+  routes.post('/types', async (c) => {
+    const { db } = ready()
+    const body = await readJson(c, TypeBody)
+    const id = await insertType(db, { ...body, fields: fieldsOf([], body.fields) })
+    return c.json(await getType(db, id), 201)
+  })
+
+  // Un campo tolto, o una data che non è più valida, non perde i valori:
+  // sui documenti del tipo diventano campi liberi.
+  routes.patch('/types/:id', async (c) => {
+    const { db, vault: v } = ready()
+    const body = await readJson(c, TypePatch)
+    const id = typeId(c.req.param('id'))
+    const type = await db.tx(async (tx) => {
+      const current = await getType(tx, id)
+      if (!current) throw new NotFoundError('Tipo non trovato')
+      const fields = body.fields ? fieldsOf(current.fields, body.fields) : current.fields
+      await saveType(tx, id, { name: body.name ?? current.name, icon: body.icon ?? current.icon, fields })
+      const { rows } = await tx.query<{ id: string }>(
+        'select id from documents where type_id = $1 for update',
+        [id],
+      )
+      for (const { id: docId } of rows) {
+        const doc = await readDocument(tx, v, docId)
+        if (!doc) continue
+        const next = reshape(doc.fields, current.fields, fields)
+        if (!next.moved.length) continue
+        await updateDocument(tx, v, doc.id, {
+          ...doc,
+          pinned: doc.pinnedAt !== null,
+          fields: next.fields,
+          extra: [...doc.extra, ...next.moved],
+        })
+      }
+      return getType(tx, id)
+    })
+    return c.json(type)
+  })
+
+  // Solo se nessun documento lo usa: altrimenti 409 con quanti lo usano.
+  routes.delete('/types/:id', async (c) => {
+    const { db } = ready()
+    const type = await getType(db, typeId(c.req.param('id')))
+    if (!type) throw new NotFoundError('Tipo non trovato')
+    if (type.documents > 0) {
+      throw new ConflictError(
+        'type_in_use',
+        type.documents === 1 ? 'Usato da 1 documento' : `Usato da ${type.documents} documenti`,
+      )
+    }
+    await deleteType(db, type.id)
+    return c.body(null, 204)
+  })
 
   routes.get('/holders', async (c) => c.json(await listHolders(ready().db)))
 

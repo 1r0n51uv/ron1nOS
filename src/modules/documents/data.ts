@@ -87,6 +87,15 @@ export type DocumentInput = {
   notes: string
 }
 
+// Tipi personalizzati (DOC-016): i campi nuovi arrivano senza chiave.
+export const TYPE_ICONS = ['id-card', 'passport', 'car', 'health', 'file', 'card', 'person'] as const
+export type TypeIcon = (typeof TYPE_ICONS)[number]
+export type TypeInput = {
+  name: string
+  icon: string
+  fields: (Omit<TypeField, 'key'> & { key?: string })[]
+}
+
 export type DocumentFilter = { q?: string; type?: string; holder?: string }
 
 const query = (filter: DocumentFilter) => {
@@ -145,6 +154,9 @@ function uploadFile(documentId: string, file: File, label: FileLabel, onProgress
 
 export const documentsSource = {
   types: () => api.get<DocumentType[]>(`${BASE}/types`),
+  createType: (input: TypeInput) => api.post<DocumentType>(`${BASE}/types`, input),
+  updateType: (id: string, input: TypeInput) => api.patch<DocumentType>(`${BASE}/types/${id}`, input),
+  removeType: (id: string) => api.delete<void>(`${BASE}/types/${id}`),
   holders: () => api.get<string[]>(`${BASE}/holders`),
   list: (filter: DocumentFilter) => api.get<DocumentSummary[]>(`${BASE}/documents${query(filter)}`),
   get: (id: string) => api.get<Document>(`${BASE}/documents/${id}`),
@@ -162,6 +174,20 @@ const KEY = ['documents']
 
 export function useDocumentTypes() {
   return useQuery({ queryKey: [...KEY, 'types'], queryFn: () => documentsSource.types() })
+}
+
+export function useSaveType() {
+  const invalidate = useInvalidate()
+  return useMutation({
+    mutationFn: ({ id, ...input }: TypeInput & { id?: string }) =>
+      id ? documentsSource.updateType(id, input) : documentsSource.createType(input),
+    onSuccess: invalidate,
+  })
+}
+
+export function useDeleteType() {
+  const invalidate = useInvalidate()
+  return useMutation({ mutationFn: (id: string) => documentsSource.removeType(id), onSuccess: invalidate })
 }
 
 export function useHolders() {
