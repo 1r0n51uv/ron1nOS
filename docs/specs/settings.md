@@ -173,7 +173,7 @@ sull'ora di Roma, come nel backend che li calcola. I campi da compilare
 
 #### SET-011 · Backup della configurazione
 
-Stato: in corso (#154)
+Stato: fatto (#193)
 
 Accettazione:
 
@@ -186,7 +186,7 @@ Accettazione:
 
 #### SET-012 · Informazioni
 
-Stato: pianificato (#155)
+Stato: in corso (#155)
 
 Accettazione:
 
