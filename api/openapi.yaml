@@ -1672,6 +1672,79 @@ paths:
               schema: { $ref: "#/components/schemas/WorkoutImportSummary" }
         "400": { $ref: "#/components/responses/LiftinInvalid" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /workout/catalog:
+    get:
+      summary: Cerca nel catalogo delle immagini degli esercizi (GYM-014)
+      description: >
+        free-exercise-db (Unlicense), nomi in inglese. Ogni parola cercata
+        deve iniziare una parola del nome; al massimo 60 risultati in ordine
+        alfabetico. Il backend tiene una copia del catalogo nel volume.
+      operationId: searchWorkoutCatalog
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 100 } }
+      responses:
+        "200":
+          description: Esercizi del catalogo.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [exercises]
+                properties:
+                  exercises:
+                    type: array
+                    items: { $ref: "#/components/schemas/CatalogExercise" }
+        "503": { $ref: "#/components/responses/CatalogUnavailable" }
+  /workout/catalog/images/{id}/{file}:
+    get:
+      summary: Foto di un esercizio del catalogo (GYM-014)
+      description: Servita dalla copia nel volume; non cambia mai per lo stesso id.
+      operationId: getWorkoutCatalogImage
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: file, in: path, required: true, schema: { type: string, pattern: "^\\d\\.jpg$" } }
+      responses:
+        "200":
+          description: La foto.
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/CatalogUnavailable" }
+  /workout/exercises/{name}/image:
+    put:
+      summary: Sceglie a mano l'immagine di un esercizio (GYM-014)
+      description: >
+        Vale per il nome normalizzato (minuscole, spazi compressi), quindi
+        per tutto lo storico, e sopravvive ai re-import. `catalogId` null
+        torna all'abbinamento automatico: dizionario dei nomi italiani, poi
+        un nome inglese uguale a uno del catalogo.
+      operationId: setWorkoutExerciseImage
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string, maxLength: 200 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [catalogId]
+              properties:
+                catalogId: { type: [string, "null"] }
+      responses:
+        "200":
+          description: L'immagine ora in uso.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [name, image]
+                properties:
+                  name: { type: string, description: nome normalizzato }
+                  image: { $ref: "#/components/schemas/ExerciseImage" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
 components:
   securitySchemes:
     session:
@@ -1699,6 +1772,11 @@ components:
             properties:
               file: { type: string, format: binary }
   responses:
+    CatalogUnavailable:
+      description: "`catalog_unavailable`: la copia del catalogo non c'è e non si riesce a scaricarla."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
     LiftinInvalid:
       description: >
         `invalid_request`: file assente, vuoto, oltre i 5 MB, senza le colonne
@@ -1779,7 +1857,6 @@ components:
         skippedRows: { type: integer, description: righe senza data valida o esercizio }
         from: { type: string, format: date, description: primo giorno nel file }
         to: { type: string, format: date, description: ultimo giorno nel file }
-
     DocumentExpiry:
       type: [object, "null"]
       description: >

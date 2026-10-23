@@ -32,6 +32,8 @@ import { QbtAuthError, QbtUnreachableError } from './qbittorrent.ts'
 import { ConflictError, InvalidRequestError, NotFoundError, YazioUnavailableError } from './nutrition/http.ts'
 import type { NutritionDeps } from './nutrition/routes.ts'
 import { nutritionRoutes } from './nutrition/routes.ts'
+import type { Catalog } from './workout/catalog.ts'
+import { CatalogUnavailableError } from './workout/catalog.ts'
 import { workoutRoutes } from './workout/routes.ts'
 import { InvalidTorrentError, MAX_TORRENT_BYTES, parseTorrent } from './torrentfile.ts'
 
@@ -53,6 +55,8 @@ type Deps = {
   nutrition?: Omit<NutritionDeps, 'database'>
   // Login della dashboard (docs/specs/auth.md); senza, l'API resta aperta.
   auth?: Omit<AuthDeps, 'database'>
+  // Modulo Allenamento: catalogo delle immagini degli esercizi.
+  workout?: { catalog?: Catalog }
   // Modulo Documenti: la chiave di DOCUMENTS_KEY; senza, il modulo è spento.
   documents?: Omit<DocumentsDeps, 'database' | 'authEnabled'>
 }
@@ -68,6 +72,7 @@ export function createApp({
   database = { status: () => 'disabled' },
   nutrition = {},
   auth: authDeps = {},
+  workout = {},
   documents = {},
 }: Deps) {
   const app = new Hono()
@@ -161,7 +166,7 @@ export function createApp({
   app.route('/api/v1/documents', documentsRoutes({ ...documents, database, authEnabled: auth.enabled }))
 
   // Modulo Allenamento (docs/specs/workout.md): CSV di Liftin' in Postgres.
-  app.route('/api/v1/workout', workoutRoutes({ database }))
+  app.route('/api/v1/workout', workoutRoutes({ ...workout, database }))
 
   app.all('/api/*', (c) => c.json<ApiError>({ error: 'not_found', message: 'Rotta non trovata' }, 404))
 
@@ -199,6 +204,12 @@ export function createApp({
     }
     if (err instanceof ConflictError) {
       return c.json<ApiError>({ error: err.code, message: err.message }, 409)
+    }
+    if (err instanceof CatalogUnavailableError) {
+      return c.json<ApiError>(
+        { error: 'catalog_unavailable', message: 'Catalogo delle immagini non disponibile' },
+        503,
+      )
     }
     if (err instanceof YazioUnavailableError) {
       return c.json<ApiError>({ error: 'yazio_unreachable', message: 'YAZIO non raggiungibile' }, 503)

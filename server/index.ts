@@ -12,6 +12,7 @@ import { hasPending } from './nutrition/diarywrite.ts'
 import { FLUSH_STEPS, SYNC_STEPS } from './nutrition/fromyazio.ts'
 import { createSyncRunner } from './nutrition/yazio.ts'
 import { createQbtClient } from './qbittorrent.ts'
+import { createCatalog } from './workout/catalog.ts'
 import { createYazioClient } from './yazio/client.ts'
 import { dbTokenStore } from './yazio/tokens.ts'
 
@@ -46,6 +47,11 @@ const sync = createSyncRunner({
   hasPending,
 })
 
+// Catalogo delle immagini degli esercizi: si scarica in background al primo
+// avvio, senza fermare il resto del backend.
+const catalog = createCatalog(config.workoutCatalog)
+void catalog.ready()
+
 const qbt = createQbtClient(config.qbt)
 const drafts = createDraftService({ qbt, metadataWaitMs: config.metadataWaitMs })
 const app = createApp({
@@ -56,6 +62,7 @@ const app = createApp({
   database,
   nutrition: { external: createExternalSearch(config.foods), sync },
   auth: config.auth,
+  workout: { catalog },
   documents: { vault: documentsKey ? createVault(documentsKey) : undefined },
 })
 

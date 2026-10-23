@@ -1,0 +1,111 @@
+// Abbinamenti già pronti fra i nomi italiani più comuni degli esercizi e
+// il catalogo free-exercise-db (GYM-014). La chiave è il nome normalizzato
+// (normalizeExercise); per gli altri nomi l'immagine si sceglie a mano.
+import { normalizeExercise } from './math.ts'
+
+const ENTRIES: [string[], string][] = [
+  // Petto
+  [
+    ['panca piana', 'panca piana bilanciere', 'distensioni su panca piana'],
+    'Barbell_Bench_Press_-_Medium_Grip',
+  ],
+  [['panca inclinata', 'panca inclinata bilanciere'], 'Barbell_Incline_Bench_Press_-_Medium_Grip'],
+  [['panca declinata'], 'Decline_Barbell_Bench_Press'],
+  [['panca piana manubri', 'distensioni con manubri'], 'Dumbbell_Bench_Press'],
+  [
+    ['panca inclinata manubri', 'spinte manubri inclinata', 'spinte inclinata manubri'],
+    'Incline_Dumbbell_Press',
+  ],
+  [['croci', 'croci manubri', 'croci con manubri', 'croci su panca piana'], 'Dumbbell_Flyes'],
+  [['croci inclinata', 'croci su panca inclinata'], 'Incline_Dumbbell_Flyes'],
+  [['croci ai cavi', 'croci al cavo', 'cable crossover'], 'Cable_Crossover'],
+  [['pectoral machine', 'pec deck', 'butterfly'], 'Butterfly'],
+  [['chest press'], 'Machine_Bench_Press'],
+  [['piegamenti', 'piegamenti sulle braccia', 'flessioni', 'push up'], 'Pushups'],
+  [['dip', 'dips', 'parallele'], 'Dips_-_Chest_Version'],
+  [['pullover', 'pullover manubrio'], 'Bent-Arm_Dumbbell_Pullover'],
+  // Schiena
+  [['stacco', 'stacco da terra', 'stacchi', 'deadlift'], 'Barbell_Deadlift'],
+  [['stacco rumeno', 'romanian deadlift'], 'Romanian_Deadlift'],
+  [['stacco sumo'], 'Sumo_Deadlift'],
+  [['stacco a gambe tese'], 'Stiff-Legged_Barbell_Deadlift'],
+  [['rematore', 'rematore bilanciere', 'rematore con bilanciere'], 'Bent_Over_Barbell_Row'],
+  [['rematore manubrio', 'rematore con manubrio', 'rematore un braccio'], 'One-Arm_Dumbbell_Row'],
+  [['rematore t bar', 't bar'], 'T-Bar_Row_with_Handle'],
+  [['pulley', 'pulley basso', 'rematore al cavo', 'seated row'], 'Seated_Cable_Rows'],
+  [['lat machine', 'lat machine avanti', 'lat pulldown'], 'Wide-Grip_Lat_Pulldown'],
+  [['lat machine presa stretta'], 'Close-Grip_Front_Lat_Pulldown'],
+  [['trazioni', 'trazioni alla sbarra', 'pull up', 'pullup'], 'Pullups'],
+  [['trazioni presa inversa', 'chin up'], 'Chin-Up'],
+  [['hyperextension', 'iperestensioni'], 'Hyperextensions_Back_Extensions'],
+  [['good morning'], 'Good_Morning'],
+  [['face pull'], 'Face_Pull'],
+  [['scrollate', 'scrollate bilanciere', 'shrug'], 'Barbell_Shrug'],
+  [['scrollate manubri'], 'Dumbbell_Shrug'],
+  // Spalle
+  [['military press', 'lento avanti', 'military press in piedi'], 'Standing_Military_Press'],
+  [['military press seduto', 'lento avanti seduto'], 'Seated_Barbell_Military_Press'],
+  [
+    ['shoulder press', 'lento manubri', 'spinte manubri', 'shoulder press manubri'],
+    'Dumbbell_Shoulder_Press',
+  ],
+  [['shoulder press macchina'], 'Machine_Shoulder_Military_Press'],
+  [['arnold press'], 'Arnold_Dumbbell_Press'],
+  [['alzate laterali', 'alzate laterali manubri', 'lateral raise'], 'Side_Lateral_Raise'],
+  [['alzate laterali al cavo', 'alzate laterali cavo'], 'Cable_Seated_Lateral_Raise'],
+  [['alzate frontali', 'front raise'], 'Front_Dumbbell_Raise'],
+  [['alzate posteriori', 'alzate a 90', 'reverse fly'], 'Dumbbell_Lying_Rear_Lateral_Raise'],
+  [['tirate al mento', 'upright row'], 'Upright_Barbell_Row'],
+  // Bicipiti
+  [['curl', 'curl bilanciere', 'curl con bilanciere'], 'Barbell_Curl'],
+  [['curl manubri', 'curl con manubri', 'curl alternato'], 'Dumbbell_Alternate_Bicep_Curl'],
+  [['curl a martello', 'hammer curl', 'curl martello'], 'Hammer_Curls'],
+  [['curl panca scott', 'panca scott', 'preacher curl'], 'Preacher_Curl'],
+  [['curl concentrato'], 'Concentration_Curls'],
+  [['curl su panca inclinata', 'curl inclinato'], 'Incline_Dumbbell_Curl'],
+  [['curl al cavo', 'curl ai cavi'], 'Standing_Biceps_Cable_Curl'],
+  [['curl bilanciere ez', 'curl ez'], 'EZ-Bar_Curl'],
+  // Tricipiti
+  [['french press', 'french press bilanciere', 'skull crusher'], 'EZ-Bar_Skullcrusher'],
+  [
+    ['push down', 'pushdown', 'push-down al cavo', 'push down al cavo', 'tricipiti al cavo'],
+    'Triceps_Pushdown',
+  ],
+  [['push down corda', 'pushdown corda'], 'Triceps_Pushdown_-_Rope_Attachment'],
+  [['estensioni sopra la testa', 'french press manubrio', 'overhead extension'], 'Overhead_Triceps'],
+  [['kickback', 'kick back'], 'Tricep_Dumbbell_Kickback'],
+  [['dip tricipiti', 'dip alla panca', 'dips alla panca'], 'Bench_Dips'],
+  [['panca presa stretta', 'panca stretta'], 'Close-Grip_Barbell_Bench_Press'],
+  // Gambe e glutei
+  [['squat', 'squat bilanciere', 'back squat'], 'Barbell_Squat'],
+  [['front squat', 'squat frontale'], 'Front_Barbell_Squat'],
+  [['hack squat'], 'Hack_Squat'],
+  [['goblet squat'], 'Goblet_Squat'],
+  [['pressa', 'leg press', 'pressa 45'], 'Leg_Press'],
+  [['affondi', 'affondi manubri', 'lunges'], 'Dumbbell_Lunges'],
+  [['affondi bilanciere'], 'Barbell_Lunge'],
+  [['affondi camminati', 'walking lunges'], 'Barbell_Walking_Lunge'],
+  [['bulgarian split squat', 'split squat', 'squat bulgaro'], 'Split_Squat_with_Dumbbells'],
+  [['leg extension', 'leg extension macchina'], 'Leg_Extensions'],
+  [['leg curl', 'leg curl sdraiato'], 'Lying_Leg_Curls'],
+  [['leg curl seduto'], 'Seated_Leg_Curl'],
+  [['calf', 'calf raise', 'polpacci', 'calf in piedi'], 'Standing_Calf_Raises'],
+  [['calf seduto', 'calf raise seduto'], 'Seated_Calf_Raise'],
+  [['hip thrust', 'hip thrust bilanciere'], 'Barbell_Hip_Thrust'],
+  [['ponte glutei', 'glute bridge'], 'Barbell_Glute_Bridge'],
+  [['slanci', 'slanci ai cavi', 'kickback glutei'], 'One-Legged_Cable_Kickback'],
+  [['abductor', 'abduttori', 'abductor machine'], 'Thigh_Abductor'],
+  [['adductor', 'adduttori', 'adductor machine'], 'Thigh_Adductor'],
+  // Addome
+  [['plank', 'plank frontale'], 'Plank'],
+  [['crunch', 'crunch a terra'], 'Crunches'],
+  [['crunch al cavo', 'crunch ai cavi'], 'Cable_Crunch'],
+  [['crunch inverso', 'reverse crunch'], 'Reverse_Crunch'],
+  [['russian twist'], 'Russian_Twist'],
+  [['leg raise', 'sollevamento gambe', 'leg raise alla sbarra', 'hanging leg raise'], 'Hanging_Leg_Raise'],
+  [['ab wheel', 'ruota addominale'], 'Ab_Roller'],
+]
+
+export const DICTIONARY: ReadonlyMap<string, string> = new Map(
+  ENTRIES.flatMap(([names, id]) => names.map((n) => [normalizeExercise(n), id] as const)),
+)

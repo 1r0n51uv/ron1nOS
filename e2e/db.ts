@@ -2,10 +2,16 @@
 // modulo Nutrizione parte con le tabelle vuote; le sessioni del login
 // restano, così il cookie del setup vale per tutta la suite, e i tipi di
 // documento già pronti pure.
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 import pg from 'pg'
 
 export const E2E_DATABASE_URL =
   process.env.E2E_DATABASE_URL ?? 'postgres://ron1nos:ron1nos@localhost:5432/ron1nos'
+
+// Copia del catalogo delle immagini degli esercizi del backend sotto test.
+export const E2E_CATALOG_DIR = join(tmpdir(), 'ron1nos-e2e-catalog')
 
 export async function resetNutrition() {
   const client = new pg.Client({ connectionString: E2E_DATABASE_URL })

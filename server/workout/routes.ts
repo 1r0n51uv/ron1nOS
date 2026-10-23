@@ -3,14 +3,26 @@
 import { Hono } from 'hono'
 import type { Context } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
+import { z } from 'zod'
 
 import type { Database, Db } from '../db.ts'
 import { DatabaseUnavailableError } from '../db.ts'
-import { InvalidRequestError } from '../nutrition/http.ts'
+import { check, InvalidRequestError, NotFoundError, readJson } from '../nutrition/http.ts'
+import type { Catalog } from './catalog.ts'
+import { CatalogUnavailableError } from './catalog.ts'
+import { exerciseImages, imageUrl, setExerciseImage } from './images.ts'
 import { importLiftin } from './import.ts'
 import { LiftinError, parseLiftin } from './liftin.ts'
+import { normalizeExercise } from './math.ts'
 
-type WorkoutDeps = { database: Database }
+type WorkoutDeps = {
+  database: Database
+  // Catalogo delle immagini (GYM-014); senza, le sue rotte rispondono 503.
+  catalog?: Catalog
+}
+
+const ImageInput = z.object({ catalogId: z.string().min(1).max(200).nullable() })
+const ExerciseName = z.string().trim().min(1).max(200)
 
 // Il CSV completo di Liftin' resta sotto i 5 MB anche dopo anni.
 export const MAX_CSV_BYTES = 5 * 1024 * 1024
@@ -35,8 +47,35 @@ async function readCsv(c: Context) {
   return parseLiftin(await file.text())
 }
 
-export function workoutRoutes({ database }: WorkoutDeps) {
+export function workoutRoutes({ database, catalog }: WorkoutDeps) {
   const app = new Hono<{ Variables: { db: Db } }>()
+
+  async function readyCatalog() {
+    if (!catalog || !(await catalog.ready())) throw new CatalogUnavailableError('catalogo non pronto')
+    return catalog
+  }
+
+  // Le rotte del catalogo vengono prima del controllo del database: le foto
+  // si servono anche con Postgres fermo.
+
+  // Ricerca nel catalogo per il dialog Scegli immagine (GYM-014), nomi in inglese.
+  app.get('/catalog', async (c) => {
+    const ready = await readyCatalog()
+    const q = (c.req.query('q') ?? '').slice(0, 100)
+    return c.json({ exercises: ready.search(q).map((e) => ({ ...e, url: imageUrl(e.id) })) })
+  })
+
+  // La foto, dalla copia nel volume. Non cambia mai per lo stesso id.
+  app.get('/catalog/images/:id/:file', async (c) => {
+    const ready = await readyCatalog()
+    const n = /^(\d)\.jpg$/.exec(c.req.param('file'))?.[1]
+    const image = n === undefined ? null : await ready.image(c.req.param('id'), Number(n))
+    if (!image) throw new NotFoundError('Immagine non trovata')
+    return c.body(new Uint8Array(image), 200, {
+      'Content-Type': 'image/jpeg',
+      'Cache-Control': 'private, max-age=31536000, immutable',
+    })
+  })
 
   // Senza Postgres il modulo risponde 503; il resto della dashboard no.
   app.use('*', async (c, next) => {
@@ -59,6 +98,20 @@ export function workoutRoutes({ database }: WorkoutDeps) {
       return importLiftin(tx, parsed, { apply: true })
     })
     return c.json(summary)
+  })
+
+  // L'immagine scelta a mano per un esercizio (GYM-014); null torna
+  // all'abbinamento automatico. Vale per tutte le sessioni con quel nome.
+  app.put('/exercises/:name/image', async (c) => {
+    const key = normalizeExercise(check(ExerciseName, c.req.param('name')))
+    const { catalogId } = await readJson(c, ImageInput)
+    if (catalogId !== null && !(await readyCatalog()).get(catalogId)) {
+      throw new NotFoundError('Immagine non trovata nel catalogo')
+    }
+    const db = c.get('db')
+    await setExerciseImage(db, key, catalogId)
+    const images = await exerciseImages(db, catalog, [key])
+    return c.json({ name: key, image: images.get(key) ?? null })
   })
 
   return app

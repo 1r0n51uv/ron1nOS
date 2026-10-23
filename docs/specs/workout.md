@@ -239,7 +239,7 @@ Accettazione:
 
 #### GYM-014 · Immagine di un esercizio
 
-Stato: pianificato (#120) · Origine: nuovo
+Stato: fatto (#120) · Origine: nuovo
 
 Ogni esercizio ha una foto, presa da
 [free-exercise-db](https://github.com/yuhonas/free-exercise-db): 876
@@ -248,18 +248,18 @@ principali e attrezzatura.
 
 Accettazione:
 
-- [ ] Il backend tiene una copia del catalogo (JSON e foto) in un volume
+- [x] Il backend tiene una copia del catalogo (JSON e foto) in un volume
       del server, scaricata al primo avvio e aggiornabile; le pagine non
       caricano immagini da GitHub.
-- [ ] I nomi italiani più comuni (panca piana, squat, stacco, rematore,
+- [x] I nomi italiani più comuni (panca piana, squat, stacco, rematore,
       military press, lat machine, plank…) hanno un abbinamento già pronto
       in un dizionario nel codice.
-- [ ] Per gli altri, `Scegli immagine` apre un dialog con ricerca nel
+- [x] Per gli altri, `Scegli immagine` apre un dialog con ricerca nel
       catalogo (nomi in inglese) e una griglia di foto; la scelta vale per
       tutto lo storico di quel nome e sopravvive ai re-import.
-- [ ] Senza immagine la card mostra un riquadro neutro con l'icona della
+- [x] Senza immagine la card mostra un riquadro neutro con l'icona della
       palestra e l'etichetta `Scegli immagine`.
-- [ ] Le foto si mostrano in bianco e nero e scurite, con il testo sopra su
+- [x] Le foto si mostrano in bianco e nero e scurite, con il testo sopra su
       una sfumatura scura.
 
 ### Costanza
