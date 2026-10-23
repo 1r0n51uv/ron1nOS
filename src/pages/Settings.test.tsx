@@ -25,6 +25,7 @@ describe('impostazioni a sezioni (SET-001)', () => {
     vi.spyOn(source, 'getPreferences').mockResolvedValue({
       ...DEFAULT_PREFERENCES,
       updatedAt: null,
+      backgroundImage: null,
       stored: true,
     })
   })

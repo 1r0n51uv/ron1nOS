@@ -24,7 +24,7 @@ in "Decisioni".
 
 #### SET-001 · Pagina a sezioni
 
-Stato: in corso (#146)
+Stato: fatto (#176)
 
 Accettazione:
 
@@ -37,7 +37,7 @@ Accettazione:
 - [x] Le impostazioni dei singoli moduli (oggi Nutrizione: YAZIO, alimenti
       non abbinati, obiettivi, alimenti, integratori) stanno sotto
       `Moduli`, una pagina per modulo: `/impostazioni/moduli/nutrizione`.
-- [ ] Ogni modifica si salva da sola, senza pulsante `Salva`; un errore si
+- [x] Ogni modifica si salva da sola, senza pulsante `Salva`; un errore si
       mostra accanto al campo.
 
 #### SET-002 · Preferenze sul server
@@ -59,23 +59,23 @@ Accettazione:
 
 #### SET-003 · Aspetto
 
-Stato: pianificato (#147)
+Stato: in corso (#147)
 
 Resta il tema scuro con il solo rosso del marchio; si personalizzano
 sfondo, vetro e densità.
 
 Accettazione:
 
-- [ ] Sfondo: una delle sfumature già pronte (la predefinita è quella di
+- [x] Sfondo: una delle sfumature già pronte (la predefinita è quella di
       oggi) o un'immagine caricata. L'immagine si salva sul backend
       (`PUT /api/v1/preferences/background`, massimo 5 MB, JPEG/PNG/WebP)
       e viene scurita quanto basta per tenere leggibile il testo.
-- [ ] Vetro: `leggero`, `medio` (oggi), `intenso`; cambia sfocatura e
+- [x] Vetro: `leggero`, `medio` (oggi), `intenso`; cambia sfocatura e
       trasparenza delle utility `glass-panel`, `glass-chip`, `glass-bar`
       tramite variabili CSS, senza toccare i componenti.
-- [ ] Densità: `comoda` (oggi) o `compatta`, che riduce spaziature e
+- [x] Densità: `comoda` (oggi) o `compatta`, che riduce spaziature e
       padding di card e griglia.
-- [ ] Ogni scelta si vede subito in un'anteprima nella sezione e poi in
+- [x] Ogni scelta si vede subito in un'anteprima nella sezione e poi in
       tutta l'interfaccia.
 
 #### SET-004 · Dashboard

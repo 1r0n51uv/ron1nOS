@@ -4,6 +4,7 @@ import {
   addWidget,
   clampSize,
   columnUnit,
+  rowUnit,
   firstFree,
   gridRows,
   moveBy,
@@ -61,6 +62,9 @@ describe('modifica della griglia (DASH-004)', () => {
   it('traduce i pixel in colonne con lo spazio compreso', () => {
     // 24 colonne da 24px più 23 spazi da 16px: 944px.
     expect(columnUnit(24 * 24 + 23 * 16)).toBe(40)
+    // Densità compatta: spazio da 12px.
+    expect(columnUnit(24 * 24 + 23 * 12, 12)).toBe(36)
+    expect(rowUnit(12)).toBe(36)
   })
 
   it('sposta di colonne e righe, spingendo chi viene coperto', () => {

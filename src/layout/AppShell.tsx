@@ -1,13 +1,19 @@
+import { useEffect } from 'react'
 import { Outlet } from 'react-router'
 
 import { NavRail } from '@/components/ron1n'
+import { applyAppearance } from '@/preferences/appearance'
 import { usePreferences } from '@/preferences/data'
 import { railItems } from './nav'
 
 // Layout desktop: NavRail a sinistra, contenuto a destra, filigrana 浪人 dietro.
 export function AppShell() {
-  // Le preferenze (SET-002) si caricano all'avvio, per tutte le pagine.
-  usePreferences()
+  // Le preferenze (SET-002) si caricano all'avvio, per tutte le pagine, e
+  // l'aspetto (SET-003) segue ogni cambio.
+  const prefs = usePreferences().data
+  useEffect(() => {
+    if (prefs) applyAppearance(prefs)
+  }, [prefs])
   return (
     <div className="relative min-h-screen min-w-[1024px] overflow-x-clip">
       <div
@@ -19,7 +25,7 @@ export function AppShell() {
 
       <div className="relative flex gap-5 p-5">
         <NavRail items={railItems} />
-        <main className="flex min-w-0 flex-1 flex-col gap-7 px-2 pt-3 pb-6">
+        <main className="flex min-w-0 flex-1 flex-col gap-(--page-gap) px-2 pt-3 pb-6">
           <Outlet />
         </main>
       </div>

@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import { columnUnit, GAP_PX, GRID_COLUMNS, gridRows, moveBy, resizeBy, ROW_PX, ROW_UNIT_PX } from './grid'
+import { columnUnit, GAP_PX, GRID_COLUMNS, gridRows, moveBy, resizeBy, ROW_PX, rowUnit } from './grid'
 import type { LayoutItem } from './layout'
 import { readingOrder } from './layout'
 import type { WidgetDef } from './types'
@@ -65,11 +65,14 @@ export function DashboardGrid({
     if (!onChange || event.button !== 0) return
     event.preventDefault()
     const start = { x: event.clientX, y: event.clientY }
-    const col = columnUnit(grid.current?.clientWidth ?? 0)
+    // Lo spazio vero tra le celle, che cambia con la densità (SET-003).
+    const gap = grid.current ? parseFloat(getComputedStyle(grid.current).columnGap) || GAP_PX : GAP_PX
+    const col = columnUnit(grid.current?.clientWidth ?? 0, gap)
+    const row = rowUnit(gap)
     let latest = items
     const move = (e: PointerEvent) => {
       const dx = Math.round((e.clientX - start.x) / col)
-      const dy = Math.round((e.clientY - start.y) / ROW_UNIT_PX)
+      const dy = Math.round((e.clientY - start.y) / row)
       latest = gesture === 'move' ? moveBy(items, widget.id, dx, dy) : resizeBy(items, widget, dx, dy)
       setDraft({ id: widget.id, items: latest })
     }
@@ -104,7 +107,7 @@ export function DashboardGrid({
   const style: CSSProperties = {
     gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))`,
     gridTemplateRows: `repeat(${gridRows(placed.map((p) => p.item))}, ${ROW_PX}px)`,
-    gap: GAP_PX,
+    gap: `var(--grid-gap, ${GAP_PX}px)`,
   }
   return (
     <div ref={grid} className="grid" style={style} data-testid="dashboard-grid">

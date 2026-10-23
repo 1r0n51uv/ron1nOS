@@ -11,6 +11,7 @@ const saved: PreferencesResponse = {
   ...DEFAULT_PREFERENCES,
   appearance: { ...DEFAULT_PREFERENCES.appearance, density: 'compact' },
   updatedAt: '2026-10-23T06:00:00.000Z',
+  backgroundImage: null,
   stored: true,
 }
 

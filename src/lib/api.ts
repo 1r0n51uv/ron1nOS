@@ -56,8 +56,9 @@ export const api = {
   put: <T>(path: string, body: unknown) =>
     send<T>(path, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      ...(body instanceof FormData
+        ? { body }
+        : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
     }),
   delete: <T>(path: string) => send<T>(path, { method: 'DELETE' }),
 }

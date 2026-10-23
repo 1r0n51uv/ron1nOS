@@ -8,6 +8,8 @@ import type { WidgetDef } from './types'
 
 export { GRID_COLUMNS }
 export const ROW_PX = 24
+// Spazio comodo; con la densità compatta (SET-003) è la variabile CSS
+// --grid-gap a deciderlo, e i calcoli lo ricevono come parametro.
 export const GAP_PX = 16
 
 type Rect = Pick<LayoutItem, 'x' | 'y' | 'w' | 'h'>
@@ -62,10 +64,12 @@ export function firstFree(items: Rect[], w: number, h: number) {
 
 // Una cella della griglia in pixel, spazio compreso: serve a tradurre un
 // trascinamento in colonne e righe.
-export const ROW_UNIT_PX = ROW_PX + GAP_PX
+export function rowUnit(gap = GAP_PX) {
+  return ROW_PX + gap
+}
 
-export function columnUnit(gridWidth: number) {
-  return (gridWidth - GAP_PX * (GRID_COLUMNS - 1)) / GRID_COLUMNS + GAP_PX
+export function columnUnit(gridWidth: number, gap = GAP_PX) {
+  return (gridWidth - gap * (GRID_COLUMNS - 1)) / GRID_COLUMNS + gap
 }
 
 // Dimensioni tenute tra la minima e la massima del widget (DASH-001).
