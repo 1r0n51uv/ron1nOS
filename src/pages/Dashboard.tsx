@@ -5,7 +5,6 @@ import { summarize, useContainers } from '@/modules/containers/data'
 import type { SlotId } from '@/modules/nutrition/data'
 import { useDay } from '@/modules/nutrition/data'
 import { todayRome } from '@/modules/nutrition/dates'
-import { isFinished, useWorkout } from '@/modules/workout/data'
 import { DashboardGrid } from '@/widgets/DashboardGrid'
 import { useDashboardLayout } from '@/widgets/layout'
 import { availableWidgets } from '@/widgets/registry'
@@ -22,7 +21,6 @@ const MEAL_ARTICLE: Record<SlotId, string> = {
 function useSummary(now: Date) {
   const containers = useContainers().data
   const nutrition = useDay(todayRome(now)).data
-  const workout = useWorkout().data
 
   const parts: string[] = []
   if (containers) {
@@ -38,10 +36,6 @@ function useSummary(now: Date) {
 
   const todo: string[] = []
   if (nutrition?.nextSlot) todo.push(MEAL_ARTICLE[nutrition.nextSlot])
-  if (workout && !isFinished(workout)) {
-    const ratio = workout.current / workout.exercises.length
-    todo.push(ratio === 0 ? "l'allenamento" : ratio < 0.75 ? 'metà allenamento' : "la fine dell'allenamento")
-  }
   if (todo.length) parts.push(`Ti manca ${todo.join(' e ')}.`)
 
   return parts.join(' ')

@@ -30,24 +30,24 @@ Apple Salute, progressione suggerita, import dallo storico di pkm.
 
 #### GYM-001 · Widget Allenamento
 
-Stato: pianificato (#122) · Origine: pkm, cambia
+Stato: fatto (#122) · Origine: pkm, cambia
 
 Il widget in dashboard sostituisce il mock della sessione in corso con
 l'ultimo allenamento e la settimana.
 
 Accettazione:
 
-- [ ] Una foto dell'ultimo allenamento: l'immagine (GYM-014) del suo primo
+- [x] Una foto dell'ultimo allenamento: l'immagine (GYM-014) del suo primo
       esercizio, con sopra il nome della routine, il giorno (`oggi`, `ieri`
       o data estesa) e la durata.
-- [ ] Sotto, solo due numeri: allenamenti questa settimana e giorni di
+- [x] Sotto, solo due numeri: allenamenti questa settimana e giorni di
       fila (GYM-013), in `font-mono`, e un piccolo grafico a barre degli
       allenamenti per settimana sulle ultime 12 settimane, con la settimana
       corrente in rosso.
-- [ ] Senza dati mostra `Nessun allenamento · importa il CSV di Liftin'`
+- [x] Senza dati mostra `Nessun allenamento · importa il CSV di Liftin'`
       con il link alla pagina.
-- [ ] Il link `Dettagli` apre la pagina Allenamenti (GYM-002).
-- [ ] Durante il primo caricamento mostra lo skeleton.
+- [x] Il link `Dettagli` apre la pagina Allenamenti (GYM-002).
+- [x] Durante il primo caricamento mostra lo skeleton.
 
 #### GYM-002 · Pagina Allenamenti
 
