@@ -51,7 +51,7 @@ Accettazione:
 
 #### DASH-002 · Primi widget del catalogo
 
-Stato: pianificato (#145)
+Stato: in corso (#145)
 
 Gli otto widget di oggi restano, con lo stesso id del loro modulo
 (`<modulo>.summary`), e alcuni moduli ne aggiungono di più piccoli. I
@@ -71,9 +71,11 @@ specifica.
 
 Accettazione:
 
-- [ ] Ogni widget nuovo legge dallo stesso hook del modulo, senza rotte
+- [x] Ogni widget nuovo legge dallo stesso hook del modulo, senza rotte
       nuove.
-- [ ] Ogni widget ha uno scenario e2e che lo aggiunge e lo vede in
+- [x] Il layout predefinito resta fatto dai soli `summary` (DASH-008); i
+      widget nuovi si aggiungono dal catalogo.
+- [x] Ogni widget ha uno scenario e2e che lo aggiunge e lo vede in
       griglia.
 
 ### Disposizione

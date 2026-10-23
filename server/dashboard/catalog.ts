@@ -48,7 +48,8 @@ const size = (min: [number, number], def: [number, number], max: [number, number
   max: { w: max[0], h: max[1] },
 })
 
-// L'ordine è quello della dashboard predefinita di oggi.
+// Prima i `summary` nell'ordine della dashboard predefinita, poi i widget
+// più piccoli (DASH-002), che si aggiungono dal catalogo.
 export const WIDGET_CATALOG: readonly CatalogEntry[] = [
   {
     id: 'nutrition.summary',
@@ -88,7 +89,37 @@ export const WIDGET_CATALOG: readonly CatalogEntry[] = [
   },
   { id: 'notes.summary', module: 'notes', size: size([6, 5], [8, 7], [16, 12]), variants: [] },
   { id: 'documents.summary', module: 'documents', size: size([6, 6], [8, 8], [16, 14]), variants: [] },
+  { id: 'nutrition.calories', module: 'nutrition', size: size([4, 6], [6, 7], [8, 9]), variants: [] },
+  { id: 'nutrition.next-meal', module: 'nutrition', size: size([6, 4], [8, 4], [12, 6]), variants: [] },
+  { id: 'nutrition.supplements', module: 'nutrition', size: size([6, 4], [8, 4], [12, 6]), variants: [] },
+  {
+    id: 'server.metric',
+    module: 'server',
+    size: size([4, 4], [6, 4], [12, 8]),
+    variants: ['detailed', 'compact'],
+    options: [
+      {
+        key: 'metric',
+        label: 'Risorsa',
+        type: 'choice',
+        choices: [
+          { value: 'cpu', label: 'CPU' },
+          { value: 'ram', label: 'RAM' },
+          { value: 'disk', label: 'Disco' },
+          { value: 'net', label: 'Rete' },
+        ],
+        default: 'cpu',
+      },
+    ],
+  },
+  { id: 'downloads.speed', module: 'downloads', size: size([4, 4], [6, 4], [10, 6]), variants: [] },
+  { id: 'containers.status', module: 'containers', size: size([4, 4], [6, 4], [10, 6]), variants: [] },
 ]
+
+// Il layout predefinito (DASH-008) ha solo i `summary`, come la dashboard di oggi.
+export function isStarter(entry: CatalogEntry) {
+  return entry.id.endsWith('.summary')
+}
 
 export function catalogEntry(id: string) {
   return WIDGET_CATALOG.find((w) => w.id === id)

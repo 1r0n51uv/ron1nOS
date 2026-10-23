@@ -64,10 +64,12 @@ describe('validazione del layout (DASH-007)', () => {
 })
 
 describe('layout predefinito (DASH-008)', () => {
-  it('sul desktop mette tutti i widget del catalogo in ordine, tre per riga', () => {
+  it('sul desktop mette i summary del catalogo in ordine, tre per riga', () => {
     const { header, items } = defaultLayout('desktop')
     expect(header).toBe('full')
-    expect(items.map((i) => i.id)).toEqual(WIDGET_CATALOG.map((w) => w.id))
+    expect(items.map((i) => i.id)).toEqual(
+      WIDGET_CATALOG.filter((w) => w.id.endsWith('.summary')).map((w) => w.id),
+    )
     expect(items.slice(0, 3).map((i) => [i.x, i.y])).toEqual([
       [0, 0],
       [8, 0],

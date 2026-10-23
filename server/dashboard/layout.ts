@@ -5,7 +5,7 @@
 import { z } from 'zod'
 
 import type { Queryable } from '../db.ts'
-import { catalogEntry, GRID_COLUMNS, optionsError, WIDGET_CATALOG } from './catalog.ts'
+import { catalogEntry, GRID_COLUMNS, isStarter, optionsError, WIDGET_CATALOG } from './catalog.ts'
 
 export const DEVICES = ['desktop', 'iphone'] as const
 export type Device = (typeof DEVICES)[number]
@@ -74,7 +74,7 @@ export function defaultLayout(device: Device): Layout {
   let x = 0
   let y = 0
   let rowHeight = 0
-  for (const entry of WIDGET_CATALOG) {
+  for (const entry of WIDGET_CATALOG.filter(isStarter)) {
     const w = device === 'iphone' ? entry.size.max.w : entry.size.default.w
     const { h } = entry.size.default
     if (x + w > GRID_COLUMNS || device === 'iphone') {

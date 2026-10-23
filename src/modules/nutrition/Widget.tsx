@@ -5,9 +5,9 @@ import { useNow } from '@/hooks/useNow'
 import { ApiError } from '@/lib/api'
 import { num } from '@/lib/format'
 import type { WidgetProps } from '@/widgets/types'
-import type { Day } from './data'
 import { SLOT_LABELS, useDay } from './data'
 import { todayRome } from './dates'
+import { plannedLine } from './format'
 
 const MACROS = [
   { key: 'protein', label: 'Proteine' },
@@ -16,15 +16,6 @@ const MACROS = [
 ] as const
 
 const pct = (value: number, max: number) => (max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0)
-
-// Cosa c'è nel prossimo pasto: la ricetta o gli alimenti pianificati.
-function plannedLine(day: Day) {
-  const slot = day.slots.find((s) => s.slot === day.nextSlot)
-  const planned = slot?.state === 'planned' ? slot.planned : null
-  if (!planned) return 'Niente pianificato'
-  const what = planned.recipeName ?? planned.items.map((i) => i.name).join(', ')
-  return `${what} · ${num(planned.kcal)} kcal`
-}
 
 // Widget della dashboard (NUT-001): la giornata di oggi.
 // Le macro mostrate si scelgono nelle opzioni (DASH-005); senza, tutte.
