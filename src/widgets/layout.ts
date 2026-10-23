@@ -23,6 +23,13 @@ export type DashboardLayout = {
   items: LayoutItem[]
 }
 
+// Forme della testata (DASH-006), dal menu della dashboard e in Impostazioni.
+export const HEADER_FORMS: [DashboardLayout['header'], string][] = [
+  ['full', 'Completa'],
+  ['line', 'Una riga'],
+  ['hidden', 'Nascosta'],
+]
+
 export type LayoutResponse = DashboardLayout & {
   device: Device
   updatedAt: string | null
@@ -74,20 +81,43 @@ export function useDashboardLayout(device: Device = 'desktop') {
     },
   })
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  // Il cambio non ancora inviato, da salvare comunque se si cambia pagina.
+  const unsaved = useRef<DashboardLayout | null>(null)
   const { mutate } = save
 
-  const flush = useCallback((layout: DashboardLayout) => mutate(layout), [mutate])
+  const flush = useCallback(
+    (layout: DashboardLayout) => {
+      unsaved.current = null
+      mutate(layout)
+    },
+    [mutate],
+  )
 
   const setLayout = useCallback(
     (layout: DashboardLayout) => {
       setPending(layout)
+      unsaved.current = layout
       clearTimeout(timer.current)
       timer.current = setTimeout(() => flush(layout), SAVE_DELAY_MS)
     },
     [flush],
   )
 
-  useEffect(() => () => clearTimeout(timer.current), [])
+  useEffect(
+    () => () => {
+      clearTimeout(timer.current)
+      const layout = unsaved.current
+      if (!layout) return
+      // La pagina se ne va prima del salvataggio: la cache prende subito il
+      // layout nuovo e il salvataggio parte lo stesso.
+      queryClient.setQueryData<LayoutResponse>(key(device), (old) => (old ? { ...old, ...layout } : old))
+      void source.putLayout(device, layout).then(
+        (saved) => queryClient.setQueryData(key(device), saved),
+        () => undefined,
+      )
+    },
+    [queryClient, device],
+  )
 
   const layout = pending ?? query.data
   return {
@@ -102,6 +132,7 @@ export function useDashboardLayout(device: Device = 'desktop') {
     // Un salvataggio in attesa non deve riscrivere il layout appena ripristinato.
     reset: () => {
       clearTimeout(timer.current)
+      unsaved.current = null
       return restore.mutateAsync()
     },
     resetting: restore.isPending,

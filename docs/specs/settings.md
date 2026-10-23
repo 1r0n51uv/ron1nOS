@@ -59,7 +59,7 @@ Accettazione:
 
 #### SET-003 · Aspetto
 
-Stato: in corso (#147)
+Stato: fatto (#179)
 
 Resta il tema scuro con il solo rosso del marchio; si personalizzano
 sfondo, vetro e densità.
@@ -80,14 +80,14 @@ Accettazione:
 
 #### SET-004 · Dashboard
 
-Stato: pianificato (#148)
+Stato: in corso (#148)
 
 Accettazione:
 
-- [ ] Forma della testata: completa, una riga, nascosta (DASH-006).
-- [ ] Elenco dei widget presenti, con `Rimuovi` e `Opzioni` (le stesse
+- [x] Forma della testata: completa, una riga, nascosta (DASH-006).
+- [x] Elenco dei widget presenti, con `Rimuovi` e `Opzioni` (le stesse
       del menu sul widget, DASH-005).
-- [ ] `Ripristina layout predefinito` con conferma (DASH-008).
+- [x] `Ripristina layout predefinito` con conferma (DASH-008).
 
 #### SET-005 · Moduli
 
