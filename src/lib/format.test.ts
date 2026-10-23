@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { bytes, clock, fileSize, greeting, num, rate, signed, uptime } from './format'
+import { bytes, clock, eyebrowShortDate, fileSize, greeting, num, rate, signed, uptime } from './format'
 
 describe('num', () => {
   // In it-IT il punto delle migliaia compare da cinque cifre (1234 resta 1234).
@@ -77,4 +77,10 @@ describe('fileSize', () => {
     [7_900_002_000, '7,9 GB'],
     [12_500_000, '13 MB'],
   ])('%d → %s', (v, text) => expect(fileSize(v)).toBe(text))
+})
+
+describe('eyebrowShortDate', () => {
+  it('giorno e mese abbreviati, in maiuscolo', () => {
+    expect(eyebrowShortDate(new Date(2026, 9, 22, 23, 10))).toBe('GIO 22 OTT')
+  })
 })

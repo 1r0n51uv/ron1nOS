@@ -233,3 +233,39 @@ test.describe('opzioni del widget (DASH-005)', () => {
       ])
   })
 })
+
+test.describe('testata riducibile (DASH-006)', () => {
+  test.afterEach(() => sql('delete from dashboard_layouts'))
+
+  test('completa, su una riga o nascosta; Aggiungi widget resta in alto', async ({ page }) => {
+    await page.goto('/')
+    const greeting = page.getByRole('heading', { level: 1, name: /^Buon/ })
+    await expect(greeting).toBeVisible()
+
+    await page.getByRole('button', { name: 'Forma della testata' }).click()
+    await page.getByRole('menuitemradio', { name: 'Una riga' }).click()
+    await expect(greeting).toHaveCount(0)
+    const line = page.getByTestId('dashboard-header-line')
+    await expect(line.getByText(/^[A-Z]{3} \d{1,2} [A-Z]{3} · \d{2}:\d{2}$/)).toBeVisible()
+    await expect(line.getByText(/attivi$/)).toBeVisible()
+
+    await page.getByRole('button', { name: 'Forma della testata' }).click()
+    await expect(page.getByRole('menuitemradio', { name: 'Una riga' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+    await page.getByRole('menuitemradio', { name: 'Nascosta' }).click()
+    await expect(line).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Aggiungi widget' })).toBeVisible()
+
+    await expect
+      .poll(async () => {
+        const res = await page.request.get('/api/v1/dashboard/layouts/desktop')
+        return ((await res.json()) as { header: string }).header
+      })
+      .toBe('hidden')
+    await page.reload()
+    await expect(page.getByRole('button', { name: 'Aggiungi widget' })).toBeVisible()
+    await expect(greeting).toHaveCount(0)
+  })
+})
