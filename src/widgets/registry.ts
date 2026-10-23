@@ -37,3 +37,15 @@ export function availableWidgets(disabled: readonly ModuleId[] = []) {
 export function findWidget(id: string) {
   return registry.find((w) => w.id === id)
 }
+
+// Nomi dei moduli nel catalogo di `Aggiungi widget`.
+export const MODULE_LABELS: Record<ModuleId, string> = {
+  nutrition: 'Nutrizione',
+  workout: 'Allenamento',
+  weight: 'Peso',
+  home: 'Casa',
+  server: 'Server',
+  containers: 'Container',
+  downloads: 'Download',
+  notes: 'Note',
+}
