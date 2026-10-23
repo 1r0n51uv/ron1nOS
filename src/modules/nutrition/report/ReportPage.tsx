@@ -8,8 +8,10 @@ import { Progress } from '@/components/ui/progress'
 import { ApiError } from '@/lib/api'
 import { num, shortDay, signed } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { useFormats } from '@/preferences/data'
 import type { Report, ReportDays } from '../data'
 import { useReport } from '../data'
+import { energyText } from '../format'
 
 const PERIODS: ReportDays[] = [30, 90]
 const TOLERANCE = 150
@@ -73,17 +75,23 @@ export function ReportPage() {
 
 function ReportBody({ report: r }: { report: Report }) {
   const { adherence, weight } = r
+  const fmt = useFormats()
+  const w = (kg: number) => num(fmt.weight(kg), 1)
   return (
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-4 gap-3.5">
         <Stat label="Media">
-          <Metric size="md" value={r.averageKcal === null ? '—' : num(r.averageKcal)} unit="kcal" />
+          <Metric
+            size="md"
+            value={r.averageKcal === null ? '—' : num(fmt.energy(r.averageKcal))}
+            unit={fmt.energyUnit}
+          />
         </Stat>
         <Stat label="Tendenza">
           <Metric
             size="md"
-            value={r.trendKcalPerWeek === null ? '—' : signed(r.trendKcalPerWeek, 0)}
-            unit="kcal/sett."
+            value={r.trendKcalPerWeek === null ? '—' : signed(fmt.energy(r.trendKcalPerWeek), 0)}
+            unit={`${fmt.energyUnit}/sett.`}
           />
         </Stat>
         <Stat label={`Aderenza ±${TOLERANCE}`}>
@@ -97,9 +105,11 @@ function ReportBody({ report: r }: { report: Report }) {
         <Stat label="Peso">
           <Metric
             size="md"
-            value={weight.last === null ? '—' : num(weight.last, 1)}
-            unit="kg"
-            delta={weight.delta === null ? undefined : `${signed(weight.delta, 1)} kg`}
+            value={weight.last === null ? '—' : w(weight.last)}
+            unit={fmt.weightUnit}
+            delta={
+              weight.delta === null ? undefined : `${signed(fmt.weight(weight.delta), 1)} ${fmt.weightUnit}`
+            }
           />
         </Stat>
       </div>
@@ -134,7 +144,7 @@ function ReportBody({ report: r }: { report: Report }) {
           title="Peso"
           meta={
             weight.first !== null && weight.last !== null && weight.points.length >= 2
-              ? `da YAZIO · ${num(weight.first, 1)} → ${num(weight.last, 1)} kg`
+              ? `da YAZIO · ${w(weight.first)} → ${w(weight.last)} ${fmt.weightUnit}`
               : undefined
           }
         >
@@ -142,7 +152,7 @@ function ReportBody({ report: r }: { report: Report }) {
             <Sparkline
               points={weight.points.map((p) => p.kg)}
               height={120}
-              ariaLabel={`Peso da ${num(weight.first!, 1)} a ${num(weight.last!, 1)} kg in ${r.days} giorni`}
+              ariaLabel={`Peso da ${w(weight.first!)} a ${w(weight.last!)} ${fmt.weightUnit} in ${r.days} giorni`}
             />
           ) : (
             <span className="text-[13px] text-ink-muted">
@@ -167,11 +177,12 @@ function Stat({ label, children }: { label: string; children: ReactNode }) {
 // Kcal al giorno con l'obiettivo di quel giorno; più chiari i giorni fuori
 // tolleranza.
 function KcalChart({ report: r }: { report: Report }) {
+  const fmt = useFormats()
   const top = Math.max(1, ...r.series.map((d) => Math.max(d.kcal, d.goalKcal ?? 0))) * 1.1
   const h = (v: number) => `${(v / top) * 100}%`
   const labels = [0, 1, 2, 3].map((i) => r.series[Math.round((i * (r.series.length - 1)) / 3)].date)
   const goals = r.series.map((d) => d.goalKcal).filter((g) => g !== null)
-  const goalText = goals.length ? `, obiettivo intorno a ${num(goals.at(-1)!)} kcal` : ''
+  const goalText = goals.length ? `, obiettivo intorno a ${energyText(goals.at(-1)!, fmt)}` : ''
 
   return (
     <section aria-label="Kcal al giorno">

@@ -3,6 +3,7 @@ import { WidgetSkeleton } from '@/components/WidgetSkeleton'
 import { Button } from '@/components/ui/button'
 import { ApiError } from '@/lib/api'
 import { num, shortDay } from '@/lib/format'
+import { useFormats } from '@/preferences/data'
 import type { YazioLink } from '../data'
 import { useSetYazioSync, useSyncYazio, useYazio } from '../data'
 import { goalLine, whenLine } from '../format'
@@ -23,6 +24,7 @@ export function YazioPanel() {
   const { data, error } = useYazio()
   const toggle = useSetYazioSync()
   const sync = useSyncYazio()
+  const { timeZone } = useFormats()
 
   if (!data && error) {
     return (
@@ -44,7 +46,7 @@ export function YazioPanel() {
           <div className="flex min-h-8 items-center justify-between gap-4 text-sm">
             <span>Ultima sincronizzazione</span>
             <span className="font-mono text-[13px] text-ink-muted">
-              {data.lastSyncAt ? whenLine(data.lastSyncAt) : 'mai'}
+              {data.lastSyncAt ? whenLine(data.lastSyncAt, undefined, timeZone) : 'mai'}
             </span>
           </div>
           {data.configured ? (

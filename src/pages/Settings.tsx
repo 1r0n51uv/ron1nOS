@@ -11,6 +11,7 @@ import { SupplementsPanel } from '@/modules/nutrition/settings/SupplementsPanel'
 import { UnmatchedPanel } from '@/modules/nutrition/settings/UnmatchedPanel'
 import { YazioPanel } from '@/modules/nutrition/settings/YazioPanel'
 import { AppearanceSection } from '@/preferences/AppearanceSection'
+import { FormatsSection } from '@/preferences/FormatsSection'
 import { StorageNotice } from '@/preferences/StorageNotice'
 import { ModulesSection } from '@/preferences/ModulesSection'
 import { NavigationSection } from '@/preferences/NavigationSection'
@@ -74,6 +75,8 @@ export function SettingsSection() {
         <ModulesSection />
       ) : found.id === 'navigazione' ? (
         <NavigationSection />
+      ) : found.id === 'formati' ? (
+        <FormatsSection />
       ) : found.id === 'integrazioni' ? (
         <IntegrationsSection />
       ) : found.id === 'account' ? (

@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { AlertRow, Sparkline, WidgetCard } from '@/components/ron1n'
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
 import { ApiError } from '@/lib/api'
+import { useFormats } from '@/preferences/data'
 import type { ExerciseRow } from '../data'
 import { exercisePath, useExercises } from '../data'
 import { exerciseBest } from '../format'
@@ -11,6 +12,7 @@ import { ExercisePhoto } from '../images/ExercisePhoto'
 export const TOP_EXERCISES = 6
 
 function Card({ exercise }: { exercise: ExerciseRow }) {
+  const fmt = useFormats()
   const label = exercise.timed ? 'durata migliore' : '1RM stimato'
   return (
     <li className="min-w-0">
@@ -22,7 +24,7 @@ function Card({ exercise }: { exercise: ExerciseRow }) {
         <div className="truncate px-1 text-[13px] font-medium">{exercise.name}</div>
         <div className="flex items-end justify-between gap-2 px-1">
           <div>
-            <div className="font-mono text-base leading-5 font-semibold">{exerciseBest(exercise)}</div>
+            <div className="font-mono text-base leading-5 font-semibold">{exerciseBest(exercise, fmt)}</div>
             <div className="text-[11px] text-ink-muted">{label}</div>
           </div>
           {exercise.trend.length > 1 ? (

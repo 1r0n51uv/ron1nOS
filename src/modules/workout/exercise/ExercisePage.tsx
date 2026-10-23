@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button'
 import { ApiError } from '@/lib/api'
 import { num } from '@/lib/format'
 import { todayRome } from '@/modules/nutrition/dates'
+import { useFormats } from '@/preferences/data'
+import type { FormatTools } from '@/preferences/formats'
 import type { ExerciseDetail, ExerciseRange } from '../data'
 import { useExercise } from '../data'
-import { clock, groupLabel, recordLabel, setLabel, workoutDay } from '../format'
+import { clock, groupLabel, mass, massTotal, recordLabel, setLabel, workoutDay } from '../format'
 import { ExercisePhoto } from '../images/ExercisePhoto'
 import { GroupDialog } from './GroupDialog'
 import { LineChart } from './LineChart'
@@ -24,12 +26,12 @@ const RANGES = [
   { value: 'all', label: 'Tutto' },
 ] as const
 
-const kg = (v: number) => `${num(Math.round(v))} kg`
-// Un peso sollevato resta com'è: 92,5 kg.
-const lifted = (v: number) => `${num(v, v % 1 ? 1 : 0)} kg`
+// Un peso sollevato resta com'è: 92,5 kg; i totali si arrotondano.
+const lifted = (v: number, fmt: FormatTools) => `${mass(v, fmt)} ${fmt.weightUnit}`
 
 // Per gli esercizi a tempo le stesse due viste diventano durate.
-function metrics(timed: boolean) {
+function metrics(timed: boolean, fmt: FormatTools) {
+  const kg = (v: number) => massTotal(v, fmt)
   return timed
     ? {
         best: { label: 'Durata migliore', value: (p: Point) => p.bestDurationSeconds, format: clock },
@@ -44,6 +46,7 @@ function metrics(timed: boolean) {
 type Point = ExerciseDetail['points'][number]
 
 function Header({ exercise }: { exercise: ExerciseDetail }) {
+  const fmt = useFormats()
   const numbers = exercise.timed
     ? [
         {
@@ -53,8 +56,8 @@ function Header({ exercise }: { exercise: ExerciseDetail }) {
         { label: 'sessioni', value: num(exercise.sessions) },
       ]
     : [
-        { label: '1RM stimato', value: exercise.best1RMKg ? kg(exercise.best1RMKg) : '–' },
-        { label: 'peso più alto', value: exercise.heaviestKg ? lifted(exercise.heaviestKg) : '–' },
+        { label: '1RM stimato', value: exercise.best1RMKg ? massTotal(exercise.best1RMKg, fmt) : '–' },
+        { label: 'peso più alto', value: exercise.heaviestKg ? lifted(exercise.heaviestKg, fmt) : '–' },
         { label: 'sessioni', value: num(exercise.sessions) },
       ]
   return (
@@ -87,6 +90,7 @@ const ORDER = ['e1rm', 'weight', 'volume', 'duration', 'reps']
 // I record dell'esercizio (GYM-010), ognuno con la data. Delle ripetizioni
 // a un dato peso si mostrano i 3 pesi più alti.
 function Records({ exercise }: { exercise: ExerciseDetail }) {
+  const fmt = useFormats()
   const today = todayRome()
   const reps = exercise.records
     .filter((r) => r.kind === 'reps')
@@ -109,7 +113,7 @@ function Records({ exercise }: { exercise: ExerciseDetail }) {
                 to={`/allenamenti/sessioni/${r.sessionId}`}
                 className="flex min-h-10 items-center justify-between gap-4 rounded-[12px] px-2 text-sm text-ink no-underline hover:bg-glass-hover"
               >
-                <span className="font-mono text-[13px]">{recordLabel(r)}</span>
+                <span className="font-mono text-[13px]">{recordLabel(r, fmt)}</span>
                 <span className="text-xs text-ink-muted">{workoutDay(r.day, today)}</span>
               </Link>
             </li>
@@ -121,6 +125,7 @@ function Records({ exercise }: { exercise: ExerciseDetail }) {
 }
 
 function Recent({ exercise }: { exercise: ExerciseDetail }) {
+  const fmt = useFormats()
   const today = todayRome()
   return (
     <section aria-label="Ultime volte">
@@ -136,10 +141,10 @@ function Recent({ exercise }: { exercise: ExerciseDetail }) {
                 <span className="truncate font-mono text-[13px]">
                   {r.sets
                     .filter((s) => !s.warmup)
-                    .map(setLabel)
+                    .map((s) => setLabel(s, fmt))
                     .join(' · ')}
                 </span>
-                <span className="text-right font-mono">{r.best1RMKg ? kg(r.best1RMKg) : ''}</span>
+                <span className="text-right font-mono">{r.best1RMKg ? massTotal(r.best1RMKg, fmt) : ''}</span>
               </Link>
             </li>
           ))}
@@ -157,6 +162,7 @@ export function ExercisePage() {
   const [range, setRange] = useState<ExerciseRange>('6m')
   const [metric, setMetric] = useState<Metric>('best')
   const { data, error } = useExercise(name, range)
+  const fmt = useFormats()
 
   return (
     <>
@@ -179,8 +185,8 @@ export function ExercisePage() {
                 <RadioChips
                   label="Grafico"
                   options={[
-                    { value: 'best', label: metrics(data.timed).best.label },
-                    { value: 'total', label: metrics(data.timed).total.label },
+                    { value: 'best', label: metrics(data.timed, fmt).best.label },
+                    { value: 'total', label: metrics(data.timed, fmt).total.label },
                   ]}
                   value={metric}
                   onChange={setMetric}
@@ -188,12 +194,12 @@ export function ExercisePage() {
                 <RadioChips label="Periodo" options={RANGES} value={range} onChange={setRange} />
               </div>
               <LineChart
-                label={metrics(data.timed)[metric].label}
-                format={metrics(data.timed)[metric].format}
+                label={metrics(data.timed, fmt)[metric].label}
+                format={metrics(data.timed, fmt)[metric].format}
                 points={data.points.map((p) => ({
                   sessionId: p.sessionId,
                   day: p.day,
-                  value: metrics(data.timed)[metric].value(p),
+                  value: metrics(data.timed, fmt)[metric].value(p),
                 }))}
               />
             </WidgetCard>

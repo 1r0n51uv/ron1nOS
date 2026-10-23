@@ -6,6 +6,8 @@ import {
   duration,
   exerciseBest,
   groupLabel,
+  mass,
+  massTotal,
   recordLabel,
   period,
   setLabel,
@@ -15,6 +17,7 @@ import {
   workoutDay,
   workouts,
 } from './format'
+import { makeFormats } from '@/preferences/formats'
 
 describe('format', () => {
   it('giorni e periodi', () => {
@@ -91,5 +94,21 @@ describe('recordLabel', () => {
     )
     expect(recordLabel({ kind: 'reps', value: 8, weightKg: 60 })).toBe('Più ripetizioni a 60 kg · 8')
     expect(recordLabel({ kind: 'duration', value: 95, weightKg: null })).toBe('Durata più lunga · 1:35')
+  })
+})
+
+describe('unità e fuso scelti (SET-010)', () => {
+  const lb = makeFormats({ timeZone: 'America/New_York', weightUnit: 'lb', energyUnit: 'kcal' })
+
+  it('carichi e 1RM in libbre', () => {
+    expect(setLabel({ weightKg: 100, reps: 5, durationSeconds: null }, lb)).toBe('220,5 × 5')
+    expect(exerciseBest({ best1RMKg: 100, bestDurationSeconds: null }, lb)).toBe('220 lb')
+    expect(massTotal(1000, lb)).toBe('2205 lb')
+    expect(mass(20)).toBe('20')
+    expect(recordLabel({ kind: 'reps', value: 8, weightKg: 60 }, lb)).toBe('Più ripetizioni a 132,3 lb · 8')
+  })
+
+  it('ora nel fuso scelto', () => {
+    expect(startTime('2026-10-20T16:00:00Z', lb.timeZone)).toBe('12:00')
   })
 })

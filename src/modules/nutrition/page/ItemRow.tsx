@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ApiError } from '@/lib/api'
 import { num } from '@/lib/format'
+import { useFormats } from '@/preferences/data'
+import { energyText } from '../format'
 import type { MealItem } from '../data'
 import { useRemoveItem, useSetGrams } from '../data'
 import { parseGrams } from '../log/meal'
@@ -19,6 +21,7 @@ const SYNC_LABELS: Record<Exclude<MealItem['sync'], 'local'>, string> = {
 // Una riga di un pasto mangiato (NUT-007): i grammi si cambiano sul posto,
 // la riga si toglie con ×.
 export function ItemRow({ item }: { item: MealItem }) {
+  const fmt = useFormats()
   const [editing, setEditing] = useState(false)
   const [grams, setGrams] = useState('')
   const save = useSetGrams()
@@ -87,7 +90,7 @@ export function ItemRow({ item }: { item: MealItem }) {
             {num(item.grams)} g
           </button>
         )}
-        <span className="w-[72px] text-right font-mono text-[13px]">{num(item.kcal)} kcal</span>
+        <span className="w-[72px] text-right font-mono text-[13px]">{energyText(item.kcal, fmt)}</span>
         <Button
           variant="ghost"
           size="icon"

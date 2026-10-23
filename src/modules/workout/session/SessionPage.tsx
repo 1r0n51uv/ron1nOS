@@ -15,12 +15,12 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { ApiError } from '@/lib/api'
-import { num } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { useFormats } from '@/preferences/data'
 import { todayRome } from '@/modules/nutrition/dates'
 import type { SessionDetail } from '../data'
 import { useDeleteSession, useSession } from '../data'
-import { duration, setLabel, startTime, workoutDay } from '../format'
+import { duration, massTotal, setLabel, startTime, workoutDay } from '../format'
 import { ExercisePhoto } from '../images/ExercisePhoto'
 
 const message = (err: unknown) =>
@@ -28,6 +28,7 @@ const message = (err: unknown) =>
 
 // Volume per esercizio in barre orizzontali, il più pesante in rosso.
 function VolumeBars({ exercises }: { exercises: SessionDetail['exercises'] }) {
+  const fmt = useFormats()
   const lifted = exercises.filter((e) => e.volumeKg > 0)
   const top = Math.max(1, ...lifted.map((e) => e.volumeKg))
   if (!lifted.length) return null
@@ -44,7 +45,7 @@ function VolumeBars({ exercises }: { exercises: SessionDetail['exercises'] }) {
                   style={{ width: `${(e.volumeKg / top) * 100}%` }}
                 />
               </span>
-              <span className="text-right font-mono">{num(e.volumeKg)} kg</span>
+              <span className="text-right font-mono">{massTotal(e.volumeKg, fmt)}</span>
             </li>
           ))}
         </ul>
@@ -54,6 +55,7 @@ function VolumeBars({ exercises }: { exercises: SessionDetail['exercises'] }) {
 }
 
 function ExerciseCard({ exercise: e }: { exercise: SessionDetail['exercises'][number] }) {
+  const fmt = useFormats()
   return (
     <li aria-label={e.name} className="flex flex-col gap-2.5 rounded-[18px] p-2.5 glass-panel">
       <ExercisePhoto name={e.name} image={e.image} className="h-[110px]">
@@ -76,7 +78,7 @@ function ExerciseCard({ exercise: e }: { exercise: SessionDetail['exercises'][nu
               s.warmup ? 'border-dashed border-ink/30 text-ink-muted' : 'border-glass-border',
             )}
           >
-            {setLabel(s)}
+            {setLabel(s, fmt)}
           </li>
         ))}
       </ul>
@@ -129,6 +131,7 @@ function DeleteSession({ session }: { session: SessionDetail }) {
 export function SessionPage() {
   const { id = '' } = useParams()
   const { data, error } = useSession(id)
+  const fmt = useFormats()
 
   return (
     <>
@@ -149,9 +152,9 @@ export function SessionPage() {
               </h1>
               <div className="font-mono text-sm text-ink-muted">
                 {[
-                  `${workoutDay(data.day, todayRome())} · ${startTime(data.startedAt)}`,
+                  `${workoutDay(data.day, todayRome())} · ${startTime(data.startedAt, fmt.timeZone)}`,
                   data.durationSeconds ? duration(data.durationSeconds) : null,
-                  `${num(data.volumeKg)} kg`,
+                  massTotal(data.volumeKg, fmt),
                 ]
                   .filter(Boolean)
                   .join(' · ')}
