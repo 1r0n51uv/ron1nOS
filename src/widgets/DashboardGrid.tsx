@@ -28,8 +28,9 @@ const ARROWS: Record<string, [number, number]> = {
 // La griglia libera della dashboard (DASH-003): ogni widget occupa il suo
 // rettangolo x, y, w, h; gli spazi vuoti restano. Nel DOM i widget sono in
 // ordine di lettura, così tastiera e lettori di schermo seguono lo schermo.
-// Con `onChange` la griglia si modifica sempre (DASH-004): maniglia, angolo
-// e menu compaiono al passaggio del mouse o con il fuoco.
+// Con `onChange` la griglia è in modalità modifica (DASH-004, DASH-009):
+// maniglia, angolo e menu di ogni widget sono sempre visibili. Senza, i
+// widget sono solo da usare.
 export function DashboardGrid({
   items,
   widgets,
@@ -119,7 +120,7 @@ export function DashboardGrid({
           className={cn(
             'group/widget relative flex min-h-0 min-w-0 rounded-panel',
             onChange &&
-              'outline-offset-4 focus-within:outline focus-within:outline-brand-line hover:outline hover:outline-brand-line data-[dragging]:outline data-[dragging]:outline-brand-line',
+              'outline-1 outline-offset-4 outline-glass-border outline-dashed focus-within:outline-brand-line focus-within:outline-solid hover:outline-brand-line hover:outline-solid data-[dragging]:outline-brand-line data-[dragging]:outline-solid',
           )}
           style={{ gridColumn: `${item.x + 1} / span ${item.w}`, gridRow: `${item.y + 1} / span ${item.h}` }}
         >
@@ -151,10 +152,6 @@ export function DashboardGrid({
   )
 }
 
-// Visibili al passaggio del mouse, con il fuoco dentro il widget o a menu aperto.
-const reveal =
-  'opacity-0 transition-opacity group-hover/widget:opacity-100 group-focus-within/widget:opacity-100 group-data-[dragging]/widget:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100'
-
 function WidgetControls({
   widget,
   onPointerDown,
@@ -180,7 +177,6 @@ function WidgetControls({
         onKeyDown={onKeyDown}
         className={cn(
           'absolute -top-3.5 left-1/2 z-10 flex h-6 w-11 -translate-x-1/2 cursor-grab touch-none items-center justify-center rounded-full text-ink glass-chip active:cursor-grabbing',
-          reveal,
         )}
       >
         <svg width="18" height="10" viewBox="0 0 18 10" aria-hidden="true">
@@ -196,7 +192,6 @@ function WidgetControls({
           aria-label={`Altre azioni sul widget ${widget.title}`}
           className={cn(
             'absolute -top-3.5 right-6 z-10 flex h-6 w-9 cursor-pointer items-center justify-center rounded-full text-ink glass-chip',
-            reveal,
           )}
         >
           <svg width="16" height="4" viewBox="0 0 16 4" aria-hidden="true">
@@ -221,7 +216,6 @@ function WidgetControls({
         onPointerDown={(e) => onPointerDown(e, 'resize')}
         className={cn(
           'absolute -right-1.5 -bottom-1.5 z-10 size-[22px] cursor-nwse-resize touch-none border-0 bg-transparent p-0 text-brand-text',
-          reveal,
         )}
       >
         <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">

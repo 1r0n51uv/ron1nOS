@@ -19,8 +19,8 @@ Non fa, per ora: più dashboard a schede, widget duplicati con
 impostazioni diverse, titoli o colori personalizzati per widget, layout
 mobile del web (vale la regola desktop di `CLAUDE.md`).
 
-**Stato del documento: approvato il 2026-10-22, requisiti pianificati.** Le scelte sono in fondo,
-in "Decisioni".
+**Stato del documento: approvato il 2026-10-22, aggiornato il
+2026-10-23 con DASH-009.** Le scelte sono in fondo, in "Decisioni".
 
 ## Requisiti
 
@@ -95,12 +95,12 @@ Accettazione:
 - [x] La griglia è larga quanto l'area dei contenuti (minimo 1024px); la
       sua altezza cresce con il widget più in basso.
 
-#### DASH-004 · Modifica sempre attiva
+#### DASH-004 · Spostare, ridimensionare, togliere
 
 Stato: fatto (#165)
 
-Non c'è una modalità modifica da aprire e chiudere: la dashboard si
-cambia mentre la si usa.
+Nata come modifica sempre attiva; dal 2026-10-23 tutto questo vale solo
+in modalità modifica (DASH-009).
 
 Accettazione:
 
@@ -157,6 +157,30 @@ Accettazione:
 - [x] Con la testata nascosta `Aggiungi widget` resta raggiungibile in
       alto a destra.
 
+#### DASH-009 · Modalità modifica
+
+Stato: in corso (#196)
+
+Richiesta del proprietario il 2026-10-23: la dashboard non si cambia
+mentre la si usa, ma solo dopo aver premuto un pulsante.
+
+Accettazione:
+
+- [ ] Nella testata c'è il pulsante `Modifica`; premuto, la dashboard
+      entra in modalità modifica e il pulsante diventa `Fine`, che la
+      chiude. Con la testata nascosta il pulsante resta in alto a
+      destra.
+- [ ] Fuori dalla modalità modifica i widget sono solo da usare: niente
+      maniglia, angolo, menu `⋯` né contorno al passaggio del mouse, e
+      le scorciatoie da tastiera di DASH-004 non ci sono.
+- [ ] In modalità modifica maniglia, angolo e menu `⋯` di ogni widget
+      sono sempre visibili, senza passaggio del mouse; compaiono
+      `Aggiungi widget` e il menu della forma della testata (DASH-006).
+- [ ] Le modifiche si salvano da sole come oggi (DASH-007): `Fine` non
+      salva, chiude soltanto.
+- [ ] La modalità non si ricorda: ricaricando o tornando alla dashboard
+      si riparte fuori dalla modifica.
+
 ### Salvataggio
 
 #### DASH-007 · Layout sul server
@@ -202,7 +226,8 @@ Prese il 2026-10-22 dal proprietario, con le schede di scelta.
 
 1. **Catalogo.** Più widget per modulo (es. anello delle calorie,
    prossimo pasto separati), non copie dello stesso widget.
-2. **Modifica.** Sempre attiva, senza pulsante `Personalizza`.
+2. **Modifica.** Solo dopo aver premuto `Modifica` (DASH-009, cambiata il
+   2026-10-23); prima era sempre attiva.
 3. **Disposizione.** Posizione libera e ridimensionabile su griglia fine,
    con spazi vuoti possibili.
 4. **Aspetto del widget.** Dimensione, variante compatta o dettagliata e
@@ -219,8 +244,9 @@ Scelte fatte nella stesura, da confermare con i mockup:
   da backend e web, invece di ripeterle nel `widgets.ts` di ogni modulo
   (DASH-001, 2026-10-23).
 
-- Con la modifica sempre attiva, il trascinamento parte solo dalla
-  maniglia e la rimozione ha `Annulla`, per evitare modifiche per sbaglio.
+- Il trascinamento parte solo dalla maniglia e la rimozione ha
+  `Annulla`, per evitare modifiche per sbaglio; restano anche con la
+  modalità modifica.
 - Griglia di 24 colonne × 24px, abbastanza fine per una posizione libera
   ma con allineamenti puliti. Due widget non si sovrappongono mai.
 - Primi widget nuovi della tabella DASH-002: si possono cambiare dopo i

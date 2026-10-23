@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { StatusPill } from '@/components/ron1n'
+import { Button } from '@/components/ui/button'
 import { useNow } from '@/hooks/useNow'
 import {
   DropdownMenu,
@@ -91,7 +92,7 @@ function HeaderMenu({ value, onChange }: { value: HeaderForm; onChange: (form: H
 
 // Il layout salvato (o quello predefinito) con i widget disponibili: quelli
 // dei moduli spenti restano nel layout ma non si vedono. Ogni modifica si
-// salva da sola (DASH-004); dopo `Rimuovi` resta `Annulla` per 8 secondi.
+// salva da sola (DASH-007); dopo `Rimuovi` resta `Annulla` per 8 secondi.
 function useWidgets() {
   const disabled = useDisabledModules()
   const { layout, setLayout, stored, saveFailed, retry } = useDashboardLayout()
@@ -138,6 +139,8 @@ export function Dashboard() {
   const containers = useContainers().data
   const status = containers && summarize(containers)
   const tone = status?.down.length ? 'alert' : 'ok'
+  // Modalità modifica (DASH-009): si apre con `Modifica`, non si ricorda.
+  const [editing, setEditing] = useState(false)
 
   const actions = (
     <div className="ml-auto flex items-center gap-3">
@@ -151,12 +154,19 @@ export function Dashboard() {
           {status.running}/{status.total} attivi
         </StatusPill>
       ) : null}
-      <AddWidgetDialog
-        widgets={widgets}
-        present={new Set(items.map((i) => i.id))}
-        onAdd={(widget) => setItems(addWidget(items, widget))}
-      />
-      <HeaderMenu value={header} onChange={setHeader} />
+      {editing ? (
+        <>
+          <AddWidgetDialog
+            widgets={widgets}
+            present={new Set(items.map((i) => i.id))}
+            onAdd={(widget) => setItems(addWidget(items, widget))}
+          />
+          <HeaderMenu value={header} onChange={setHeader} />
+        </>
+      ) : null}
+      <Button variant={editing ? 'default' : 'glass'} onClick={() => setEditing(!editing)}>
+        {editing ? 'Fine' : 'Modifica'}
+      </Button>
     </div>
   )
 
@@ -211,7 +221,17 @@ export function Dashboard() {
           </button>
         </p>
       ) : null}
-      <DashboardGrid items={items} widgets={widgets} onChange={setItems} onRemove={remove} />
+      {editing ? (
+        <p className="m-0 text-sm text-ink-muted">
+          Modifica · trascina dalla maniglia, ridimensiona dall’angolo, il resto dal menu ⋯
+        </p>
+      ) : null}
+      <DashboardGrid
+        items={items}
+        widgets={widgets}
+        onChange={editing ? setItems : undefined}
+        onRemove={editing ? remove : undefined}
+      />
       {removed ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center">
           <div
