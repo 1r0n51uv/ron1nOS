@@ -117,33 +117,33 @@ Accettazione:
 
 #### GYM-005 · Dettaglio di una sessione
 
-Stato: pianificato (#125) · Origine: pkm
+Stato: fatto (#125) · Origine: pkm
 
 Accettazione:
 
-- [ ] In testata routine, giorno e ora, durata e volume della sessione.
-- [ ] Sotto, un grafico a barre orizzontali del volume per esercizio, con
+- [x] In testata routine, giorno e ora, durata e volume della sessione.
+- [x] Sotto, un grafico a barre orizzontali del volume per esercizio, con
       l'esercizio più pesante in rosso.
-- [ ] Una card per esercizio, nell'ordine del CSV, con l'immagine
+- [x] Una card per esercizio, nell'ordine del CSV, con l'immagine
       (GYM-014) e le serie come `peso × reps` (o durata); niente colonne di
       1RM o percezione.
-- [ ] Le serie di riscaldamento sono tratteggiate e non entrano nei totali.
-- [ ] Un record personale stabilito in quella sessione è segnato sulla
+- [x] Le serie di riscaldamento sono tratteggiate e non entrano nei totali.
+- [x] Un record personale stabilito in quella sessione è segnato sulla
       card (GYM-010).
-- [ ] I dati sono in sola lettura.
+- [x] I dati sono in sola lettura.
 
 #### GYM-006 · Eliminare una sessione
 
-Stato: pianificato (#126) · Origine: nuovo
+Stato: fatto (#126) · Origine: nuovo
 
 Unica modifica possibile sui dati importati, per togliere una sessione
 sbagliata. Le correzioni si fanno in Liftin' e si re-importano.
 
 Accettazione:
 
-- [ ] Dal dettaglio, `Elimina sessione` con conferma.
-- [ ] La sessione sparisce da storico, grafici, record e costanza.
-- [ ] Il server ricorda giorno e routine eliminati, così un re-import non
+- [x] Dal dettaglio, `Elimina sessione` con conferma.
+- [x] La sessione sparisce da storico, grafici, record e costanza.
+- [x] Il server ricorda giorno e routine eliminati, così un re-import non
       la ripristina (GYM-003).
 
 ### Esercizi

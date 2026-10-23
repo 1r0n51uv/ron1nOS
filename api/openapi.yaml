@@ -1919,6 +1919,36 @@ paths:
                 properties:
                   routines: { type: array, items: { type: string } }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /workout/sessions/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Dettaglio di una sessione (GYM-005)
+      description: >
+        Esercizi nell'ordine del CSV con le serie. Volume senza
+        riscaldamento; `record` quando il miglior 1RM stimato della sessione
+        supera quello di tutte le sessioni precedenti (GYM-010).
+      operationId: getWorkoutSession
+      responses:
+        "200":
+          description: La sessione.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkoutSessionDetail" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    delete:
+      summary: Elimina una sessione (GYM-006)
+      description: >
+        Unica modifica sui dati importati. Il server ricorda giorno e
+        routine, così un nuovo import del CSV non la riporta.
+      operationId: deleteWorkoutSession
+      responses:
+        "204": { description: Eliminata. }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
 components:
   securitySchemes:
     session:

@@ -46,3 +46,22 @@ export function duration(seconds: number) {
   if (minutes < 60) return `${minutes} min`
   return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')} min`
 }
+
+// Una serie: "85 × 6", "85,5 × 6", oppure la durata "1:15".
+export function setLabel(s: { weightKg: number; reps: number | null; durationSeconds: number | null }) {
+  if (s.reps === null && s.durationSeconds !== null) {
+    return `${Math.floor(s.durationSeconds / 60)}:${String(s.durationSeconds % 60).padStart(2, '0')}`
+  }
+  const kg =
+    s.weightKg % 1 ? s.weightKg.toLocaleString('it-IT', { maximumFractionDigits: 2 }) : String(s.weightKg)
+  return `${kg} × ${s.reps ?? 0}`
+}
+
+// L'ora di inizio a Roma, "18:00".
+export function startTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('it-IT', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Europe/Rome',
+  })
+}
