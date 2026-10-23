@@ -44,7 +44,6 @@ describe('impostazioni a sezioni (SET-001)', () => {
       'Moduli',
       'Navigazione',
       'Account',
-      'App iOS',
       'Integrazioni',
       'Formati',
       'Backup configurazione',

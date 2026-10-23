@@ -10,7 +10,17 @@ import { z } from 'zod'
 import type { Database } from '../db.ts'
 import { createLoginLimiter, type LoginLimiter } from './limiter.ts'
 import { verifyPassword } from './password.ts'
-import { createSession, deleteAllSessions, deleteSession, purgeExpired, touchSession } from './sessions.ts'
+import {
+  createSession,
+  deleteAllSessions,
+  deleteOtherSessions,
+  deleteSession,
+  deleteSessionById,
+  isCurrentSession,
+  listSessions,
+  purgeExpired,
+  touchSession,
+} from './sessions.ts'
 
 export const SESSION_COOKIE = 'ron1nos_session'
 
@@ -138,6 +148,30 @@ export function createAuth({
   // Il middleware ha già controllato la sessione: qui si dice solo se il
   // login è attivo.
   routes.get('/me', (c) => c.json({ enabled }))
+
+  // Sessioni attive (SET-007), la più recente prima; con il login spento
+  // l'elenco è vuoto.
+  routes.get('/sessions', async (c) => {
+    if (!enabled || !database.db) return c.json({ sessions: [] })
+    return c.json({ sessions: await listSessions(database.db, getCookie(c, SESSION_COOKIE)) })
+  })
+
+  // Chiudi le altre sessioni: resta solo questa.
+  routes.delete('/sessions/others', async (c) => {
+    const token = getCookie(c, SESSION_COOKIE)
+    if (enabled && token && database.db) await deleteOtherSessions(database.db, token)
+    return c.body(null, 204)
+  })
+
+  // Chiudi una sessione; se è questa, si esce.
+  routes.delete('/sessions/:id', async (c) => {
+    const id = c.req.param('id')
+    if (!enabled || !database.db || !(await deleteSessionById(database.db, id))) {
+      return c.json({ error: 'not_found', message: 'Sessione non trovata' }, 404)
+    }
+    if (isCurrentSession(id, getCookie(c, SESSION_COOKIE))) clearCookie(c)
+    return c.body(null, 204)
+  })
 
   // Esci ovunque: chiude tutte le sessioni, compresa questa.
   routes.delete('/sessions', async (c) => {

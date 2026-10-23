@@ -159,3 +159,66 @@ describe('sessioni (AUTH-002)', () => {
     expect(await touchSession(db, token, new Date('2026-11-19T10:00:01Z'))).toBeNull()
   })
 })
+
+describe('sessioni in Impostazioni › Account (SET-007)', () => {
+  const IPHONE =
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'
+
+  async function twoSessions(a: ReturnType<typeof app>) {
+    const mine = cookieOf(await login(a))
+    await createSession(db, IPHONE)
+    return mine
+  }
+  const list = async (a: ReturnType<typeof app>, cookie: string) =>
+    (
+      (await (await a.request('/api/v1/auth/sessions', { headers: { cookie } })).json()) as {
+        sessions: { id: string; device: string; current: boolean }[]
+      }
+    ).sessions
+
+  it('elenca le sessioni con dispositivo e quella attuale segnata, senza token', async () => {
+    const a = app()
+    const mine = await twoSessions(a)
+    const res = await a.request('/api/v1/auth/sessions', { headers: { cookie: mine } })
+    const text = await res.text()
+    expect(text).not.toContain(mine.split('=')[1])
+    const sessions = (JSON.parse(text) as { sessions: { device: string; current: boolean }[] }).sessions
+    expect(sessions).toHaveLength(2)
+    expect(sessions.filter((s) => s.current)).toHaveLength(1)
+    expect(sessions.map((s) => s.device)).toContain('Safari su iPhone')
+  })
+
+  it('Chiudi chiude una sessione, Chiudi le altre lascia solo questa', async () => {
+    const a = app()
+    const mine = await twoSessions(a)
+    await createSession(db, 'curl/8.0')
+    const [first] = (await list(a, mine)).filter((s) => !s.current)
+    const closed = await a.request(`/api/v1/auth/sessions/${first.id}`, {
+      method: 'DELETE',
+      headers: { cookie: mine },
+    })
+    expect(closed.status).toBe(204)
+    expect(await list(a, mine)).toHaveLength(2)
+    await a.request('/api/v1/auth/sessions/others', { method: 'DELETE', headers: { cookie: mine } })
+    const left = await list(a, mine)
+    expect(left).toHaveLength(1)
+    expect(left[0].current).toBe(true)
+    const missing = await a.request('/api/v1/auth/sessions/0000', {
+      method: 'DELETE',
+      headers: { cookie: mine },
+    })
+    expect(missing.status).toBe(404)
+  })
+
+  it('chiudere la sessione attuale toglie anche il cookie', async () => {
+    const a = app()
+    const mine = await twoSessions(a)
+    const current = (await list(a, mine)).find((s) => s.current)!
+    const res = await a.request(`/api/v1/auth/sessions/${current.id}`, {
+      method: 'DELETE',
+      headers: { cookie: mine },
+    })
+    expect(res.headers.get('set-cookie')).toContain(`${SESSION_COOKIE}=;`)
+    expect((await a.request('/api/v1/auth/me', { headers: { cookie: mine } })).status).toBe(401)
+  })
+})

@@ -118,16 +118,16 @@ Accettazione:
 
 #### SET-007 · Account
 
-Stato: pianificato (#151)
+Stato: in corso (#151)
 
 Raccoglie i comandi del login ([auth.md](auth.md)).
 
 Accettazione:
 
-- [ ] Sessioni attive con dispositivo, ultimo uso e `Chiudi`; `Chiudi le
+- [x] Sessioni attive con dispositivo, ultimo uso e `Chiudi`; `Chiudi le
 altre sessioni` (AUTH-002).
-- [ ] `Esci` (AUTH-001).
-- [ ] Cambio password: la password sta come hash nel `.env`
+- [x] `Esci` (AUTH-001).
+- [x] Cambio password: la password sta come hash nel `.env`
       (AUTH-002), quindi la sezione spiega come generarne una nuova con
       `npm run auth:hash` invece di offrire un campo.
 
