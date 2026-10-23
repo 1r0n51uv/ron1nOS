@@ -140,7 +140,7 @@ Primi widget con opzioni: `nutrition.summary` (macro mostrate),
 
 #### DASH-006 · Testata riducibile
 
-Stato: in corso (#144)
+Stato: fatto (#169)
 
 La testata è il blocco in alto con data, saluto, frase di stato e pill
 dell'homelab.
