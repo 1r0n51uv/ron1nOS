@@ -24,7 +24,7 @@ in "Decisioni".
 
 #### SET-001 · Pagina a sezioni
 
-Stato: in corso (#146)
+Stato: fatto (#176)
 
 Accettazione:
 
