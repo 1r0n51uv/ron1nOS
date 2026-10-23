@@ -17,7 +17,10 @@ beforeAll(async () => {
   passwordHash = await hashPassword(PASSWORD)
 })
 afterAll(() => db.drop())
-beforeEach(() => db.query('delete from auth_sessions'))
+beforeEach(async () => {
+  await db.query('delete from auth_sessions')
+  await db.query('delete from auth_tokens')
+})
 
 const app = () =>
   createApp({
@@ -123,12 +126,91 @@ describe('login (AUTH-002, AUTH-003)', () => {
   })
 })
 
+describe('token per l’app iOS (AUTH-005)', () => {
+  async function newToken(a: ReturnType<typeof app>, name = 'iPhone') {
+    const cookie = cookieOf(await login(a))
+    const res = await a.request('/api/v1/auth/tokens', {
+      method: 'POST',
+      headers: { cookie, 'content-type': 'application/json' },
+      body: JSON.stringify({ name }),
+    })
+    return { cookie, res, body: (await res.json()) as { id: string; token: string; name: string } }
+  }
+  const bearer = (token: string) => ({ authorization: `Bearer ${token}` })
+
+  it('si crea con un nome e vale come una sessione', async () => {
+    const a = app()
+    const { res, body } = await newToken(a)
+    expect(res.status).toBe(201)
+    expect(body).toMatchObject({ name: 'iPhone', lastUsedAt: null })
+    expect(body.token).toMatch(/^r1n_[A-Za-z0-9_-]{43}$/)
+    expect((await a.request('/api/v1/downloads', { headers: bearer(body.token) })).status).toBe(200)
+    expect(await (await a.request('/api/v1/auth/me', { headers: bearer(body.token) })).json()).toEqual({
+      enabled: true,
+    })
+  })
+
+  it('anche per le scritture, senza Origin', async () => {
+    const a = app()
+    const { body } = await newToken(a)
+    const res = await a.request('/api/v1/auth/tokens', {
+      method: 'POST',
+      headers: { ...bearer(body.token), 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'iPad' }),
+    })
+    expect(res.status).toBe(201)
+  })
+
+  it('nel database c’è solo l’hash, e l’elenco non mostra il token', async () => {
+    const a = app()
+    const { cookie, body } = await newToken(a)
+    const { rows } = await db.query<{ token_hash: string }>('select token_hash from auth_tokens')
+    expect(rows[0].token_hash).not.toContain(body.token)
+    await a.request('/api/v1/downloads', { headers: bearer(body.token) })
+    const list = (await (await a.request('/api/v1/auth/tokens', { headers: { cookie } })).json()) as {
+      tokens: { id: string; name: string; lastUsedAt: string | null }[]
+    }
+    expect(list.tokens).toHaveLength(1)
+    expect(list.tokens[0]).toMatchObject({ id: body.id, name: 'iPhone' })
+    expect(list.tokens[0].lastUsedAt).not.toBeNull()
+    expect(JSON.stringify(list)).not.toContain(body.token)
+  })
+
+  it('un token inventato o revocato non apre nulla', async () => {
+    const a = app()
+    const { cookie, body } = await newToken(a)
+    expect((await a.request('/api/v1/downloads', { headers: bearer('r1n_inventato') })).status).toBe(401)
+    expect((await a.request('/api/v1/downloads', { headers: bearer('altro') })).status).toBe(401)
+    const del = await a.request(`/api/v1/auth/tokens/${body.id}`, { method: 'DELETE', headers: { cookie } })
+    expect(del.status).toBe(204)
+    expect((await a.request('/api/v1/downloads', { headers: bearer(body.token) })).status).toBe(401)
+    const again = await a.request(`/api/v1/auth/tokens/${body.id}`, { method: 'DELETE', headers: { cookie } })
+    expect(again.status).toBe(404)
+  })
+
+  it('serve un nome', async () => {
+    const a = app()
+    const { res } = await newToken(a, '   ')
+    expect(res.status).toBe(400)
+  })
+
+  it('senza sessione non si creano token', async () => {
+    const res = await app().request('/api/v1/auth/tokens', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'iPhone' }),
+    })
+    expect(res.status).toBe(401)
+  })
+})
+
 describe('login spento (senza AUTH_PASSWORD_HASH)', () => {
   it('l’API resta aperta e /auth/me lo dice', async () => {
     const a = createApp({ qbt: fakeQbt() })
     expect((await a.request('/api/v1/downloads')).status).toBe(200)
     expect(await (await a.request('/api/v1/auth/me')).json()).toEqual({ enabled: false })
     expect((await login(a)).status).toBe(409)
+    expect(await (await a.request('/api/v1/auth/tokens')).json()).toEqual({ tokens: [] })
   })
 })
 

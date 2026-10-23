@@ -3,6 +3,7 @@ import { Link, Navigate, NavLink, Outlet, useParams } from 'react-router'
 
 import { AboutSection } from '@/about/AboutSection'
 import { AccountSection } from '@/auth/AccountSection'
+import { AppTokensSection } from '@/auth/AppTokensSection'
 import { IntegrationsSection } from '@/integrations/IntegrationsSection'
 import { cn } from '@/lib/utils'
 import { FoodsPanel } from '@/modules/nutrition/settings/FoodsPanel'
@@ -68,6 +69,7 @@ const BODIES: Record<SectionId, () => ReactNode> = {
   moduli: ModulesSection,
   navigazione: NavigationSection,
   account: AccountSection,
+  'app-ios': AppTokensSection,
   integrazioni: IntegrationsSection,
   formati: FormatsSection,
   backup: BackupSection,
