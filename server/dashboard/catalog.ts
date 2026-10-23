@@ -37,14 +37,14 @@ const size = (min: [number, number], def: [number, number], max: [number, number
 
 // L'ordine è quello della dashboard predefinita di oggi.
 export const WIDGET_CATALOG: readonly CatalogEntry[] = [
-  { id: 'nutrition.summary', module: 'nutrition', size: size([6, 7], [8, 9], [16, 14]), variants: [] },
+  { id: 'nutrition.summary', module: 'nutrition', size: size([6, 7], [8, 10], [16, 14]), variants: [] },
   { id: 'workout.summary', module: 'workout', size: size([6, 6], [8, 8], [16, 12]), variants: [] },
-  { id: 'weight.summary', module: 'weight', size: size([6, 5], [8, 6], [16, 10]), variants: [] },
+  { id: 'weight.summary', module: 'weight', size: size([6, 5], [8, 7], [16, 10]), variants: [] },
   { id: 'home.summary', module: 'home', size: size([6, 6], [8, 8], [16, 14]), variants: [] },
-  { id: 'server.summary', module: 'server', size: size([6, 6], [8, 8], [16, 12]), variants: [] },
+  { id: 'server.summary', module: 'server', size: size([6, 6], [8, 11], [16, 14]), variants: [] },
   { id: 'containers.summary', module: 'containers', size: size([6, 6], [8, 8], [16, 16]), variants: [] },
   { id: 'downloads.summary', module: 'downloads', size: size([6, 6], [8, 8], [16, 16]), variants: [] },
-  { id: 'notes.summary', module: 'notes', size: size([6, 5], [8, 6], [16, 12]), variants: [] },
+  { id: 'notes.summary', module: 'notes', size: size([6, 5], [8, 7], [16, 12]), variants: [] },
 ]
 
 export function catalogEntry(id: string) {
