@@ -91,7 +91,7 @@ Accettazione:
 
 #### SET-005 · Moduli
 
-Stato: in corso (#149)
+Stato: fatto (#184)
 
 Accettazione:
 
@@ -141,17 +141,17 @@ arriva l'app; fino ad allora la sezione non compare.
 
 #### SET-009 · Integrazioni
 
-Stato: pianificato (#150)
+Stato: in corso (#150)
 
 Accettazione:
 
-- [ ] Una riga per servizio esterno: Postgres, YAZIO, qBittorrent,
+- [x] Una riga per servizio esterno: Postgres, YAZIO, qBittorrent,
       Glances, Home Assistant. Per ognuno: `collegato`, `errore` (con il
       messaggio) o `non configurato`, e l'ora dell'ultimo controllo.
-- [ ] Dati da `GET /api/v1/integrations`, che non restituisce mai
+- [x] Dati da `GET /api/v1/integrations`, che non restituisce mai
       password né token.
-- [ ] `Verifica` rifà il controllo di un servizio.
-- [ ] Per un servizio non configurato, le variabili del `.env` da
+- [x] `Verifica` rifà il controllo di un servizio.
+- [x] Per un servizio non configurato, le variabili del `.env` da
       impostare.
 
 #### SET-010 · Formati
