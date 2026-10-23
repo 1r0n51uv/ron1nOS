@@ -11,6 +11,7 @@ const widgets = [
   'Container',
   'Download',
   'Nota fissata',
+  'Documenti',
 ]
 
 test('la dashboard mostra tutti i widget con i dati', async ({ page }) => {

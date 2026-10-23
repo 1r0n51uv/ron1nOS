@@ -14,6 +14,7 @@ export const MODULES = [
   'containers',
   'downloads',
   'notes',
+  'documents',
 ] as const
 
 export type ModuleId = (typeof MODULES)[number]
@@ -86,6 +87,7 @@ export const WIDGET_CATALOG: readonly CatalogEntry[] = [
     options: [{ key: 'limit', label: 'Download mostrati', type: 'count', min: 1, max: 6, default: 3 }],
   },
   { id: 'notes.summary', module: 'notes', size: size([6, 5], [8, 7], [16, 12]), variants: [] },
+  { id: 'documents.summary', module: 'documents', size: size([6, 6], [8, 8], [16, 14]), variants: [] },
 ]
 
 export function catalogEntry(id: string) {

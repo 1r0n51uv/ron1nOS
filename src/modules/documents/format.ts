@@ -67,3 +67,23 @@ export function copyAllText(doc: Pick<Document, 'type' | 'fields' | 'extra'>) {
     .map((f) => `${f.label}: ${f.kind === 'date' ? itDate(doc.fields[f.key]) : doc.fields[f.key]}`)
   return [...lines, ...doc.extra.map((e) => `${e.label}: ${e.value}`)].join('\n')
 }
+
+// Widget (DOC-001): fino a 4 fissati; sotto gli scaduti e quelli che
+// scadono entro 90 giorni, i più vicini per primi.
+export const WIDGET_PINS = 4
+export const WIDGET_HORIZON = 90
+
+export function widgetView(documents: DocumentSummary[]) {
+  const pinned = documents.filter((d) => d.pinnedAt).slice(0, WIDGET_PINS)
+  const dated = documents.filter((d) => d.expiry).sort((a, b) => a.expiry!.daysLeft - b.expiry!.daysLeft)
+  const expiring = dated.filter((d) => d.expiry!.daysLeft <= WIDGET_HORIZON)
+  const next = dated.find((d) => d.expiry!.daysLeft > WIDGET_HORIZON)
+  return { pinned, expiring, nextDays: next?.expiry?.daysLeft ?? null }
+}
+
+// `Scade tra N giorni` o `Scaduto`, per il widget.
+export function widgetExpiry(expiry: NonNullable<Expiry>) {
+  if (expiry.status === 'expired') return 'Scaduto'
+  if (expiry.daysLeft === 0) return 'Scade oggi'
+  return expiry.daysLeft === 1 ? 'Scade domani' : `Scade tra ${expiry.daysLeft} giorni`
+}

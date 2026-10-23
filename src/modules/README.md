@@ -24,3 +24,4 @@ Ogni modulo della dashboard vive nella sua cartella, con tre file:
 | containers | Docker Engine API                                                                 |
 | downloads  | qBittorrent Web API, tramite il backend (`/api/v1/downloads`)                     |
 | notes      | da decidere                                                                       |
+| documents  | Postgres cifrato, tramite il backend ([specifica](../../docs/specs/documents.md)) |
