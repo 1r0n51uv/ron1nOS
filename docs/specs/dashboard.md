@@ -95,7 +95,7 @@ Accettazione:
 
 #### DASH-004 · Modifica sempre attiva
 
-Stato: in corso (#142)
+Stato: fatto (#165)
 
 Non c'è una modalità modifica da aprire e chiudere: la dashboard si
 cambia mentre la si usa.
