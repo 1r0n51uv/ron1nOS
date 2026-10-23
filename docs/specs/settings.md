@@ -107,7 +107,7 @@ spento` con il link per riaccenderlo.
 
 #### SET-006 · Navigazione
 
-Stato: in corso (#152)
+Stato: fatto (#190)
 
 Accettazione:
 
@@ -156,7 +156,7 @@ Accettazione:
 
 #### SET-010 · Formati
 
-Stato: pianificato (#153)
+Stato: in corso (#153)
 
 Accettazione:
 
