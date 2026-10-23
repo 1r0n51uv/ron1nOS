@@ -159,26 +159,26 @@ Accettazione:
 
 #### DASH-009 · Modalità modifica
 
-Stato: in corso (#196)
+Stato: fatto (#197)
 
 Richiesta del proprietario il 2026-10-23: la dashboard non si cambia
 mentre la si usa, ma solo dopo aver premuto un pulsante.
 
 Accettazione:
 
-- [ ] Nella testata c'è il pulsante `Modifica`; premuto, la dashboard
+- [x] Nella testata c'è il pulsante `Modifica`; premuto, la dashboard
       entra in modalità modifica e il pulsante diventa `Fine`, che la
       chiude. Con la testata nascosta il pulsante resta in alto a
       destra.
-- [ ] Fuori dalla modalità modifica i widget sono solo da usare: niente
+- [x] Fuori dalla modalità modifica i widget sono solo da usare: niente
       maniglia, angolo, menu `⋯` né contorno al passaggio del mouse, e
       le scorciatoie da tastiera di DASH-004 non ci sono.
-- [ ] In modalità modifica maniglia, angolo e menu `⋯` di ogni widget
+- [x] In modalità modifica maniglia, angolo e menu `⋯` di ogni widget
       sono sempre visibili, senza passaggio del mouse; compaiono
       `Aggiungi widget` e il menu della forma della testata (DASH-006).
-- [ ] Le modifiche si salvano da sole come oggi (DASH-007): `Fine` non
+- [x] Le modifiche si salvano da sole come oggi (DASH-007): `Fine` non
       salva, chiude soltanto.
-- [ ] La modalità non si ricorda: ricaricando o tornando alla dashboard
+- [x] La modalità non si ricorda: ricaricando o tornando alla dashboard
       si riparte fuori dalla modifica.
 
 ### Salvataggio
