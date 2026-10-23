@@ -9,6 +9,7 @@ import { createAuth } from './auth/routes.ts'
 import { InvalidLayoutError } from './dashboard/layout.ts'
 import { dashboardRoutes } from './dashboard/routes.ts'
 import { BackgroundTooLargeError } from './preferences/background.ts'
+import { moduleGuard, ModuleDisabledError } from './preferences/modules.ts'
 import { preferencesRoutes } from './preferences/routes.ts'
 import type { Database } from './db.ts'
 import { DocumentFullError } from './documents/files.ts'
@@ -83,6 +84,8 @@ export function createApp({
   // Prima di tutte le rotte: senza sessione valida l'API risponde 401.
   app.use('/api/v1/*', auth.middleware)
   app.route('/api/v1/auth', auth.routes)
+  // Moduli spenti in Impostazioni (SET-005): le loro rotte non rispondono.
+  app.use('/api/v1/*', moduleGuard(database))
 
   // ok resta true anche senza database: il resto della dashboard funziona.
   app.get('/api/v1/health', (c) => c.json({ ok: true, database: database.status() }))
@@ -191,6 +194,9 @@ export function createApp({
     }
     if (err instanceof FileTooLargeError) {
       return c.json<ApiError>({ error: 'file_too_large', message: 'File oltre i 20 MB' }, 413)
+    }
+    if (err instanceof ModuleDisabledError) {
+      return c.json<ApiError>({ error: 'module_disabled', message: err.message }, 404)
     }
     if (err instanceof BackgroundTooLargeError) {
       return c.json<ApiError>({ error: 'file_too_large', message: 'Immagine oltre i 5 MB' }, 413)

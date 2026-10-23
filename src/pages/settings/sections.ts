@@ -20,4 +20,4 @@ export function findSection(id: string | undefined) {
 }
 
 // Moduli con una pagina di impostazioni: `/impostazioni/moduli/<id>`.
-export const MODULE_SETTINGS = [{ id: 'nutrizione', label: 'Nutrizione' }] as const
+export const MODULE_SETTINGS = [{ id: 'nutrizione', module: 'nutrition', label: 'Nutrizione' }] as const

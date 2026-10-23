@@ -9,7 +9,9 @@ info:
     login acceso (AUTH_PASSWORD_HASH) ogni rotta tranne `GET /health` e
     `POST /auth/login` chiede il cookie di sessione e senza risponde 401
     `unauthenticated`; le richieste che cambiano dati con un header Origin di
-    un altro host rispondono 403 `forbidden_origin`.
+    un altro host rispondono 403 `forbidden_origin`. Le rotte di un modulo
+    spento in Impostazioni (`/nutrition`, `/workout`, `/documents`,
+    `/downloads`, `/server`) rispondono 404 `module_disabled` (SET-005).
 servers:
   - url: /api/v1
 security:
@@ -3224,6 +3226,7 @@ components:
             - database_unavailable
             - invalid_request
             - invalid_layout
+            - module_disabled
             - goals_from_yazio
             - barcode_exists
             - food_not_custom
