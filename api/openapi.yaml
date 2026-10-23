@@ -1959,17 +1959,61 @@ paths:
                 catalogId: { type: [string, "null"] }
       responses:
         "200":
-          description: L'immagine ora in uso.
+          description: L'immagine ora in uso, con il gruppo dopo la proposta.
           content:
             application/json:
               schema:
                 type: object
-                required: [name, image]
+                required: [name, image, group]
                 properties:
                   name: { type: string, description: nome normalizzato }
                   image: { $ref: "#/components/schemas/ExerciseImage" }
+                  group:
+                    description: >
+                      Se l'esercizio non aveva un gruppo, quello dei muscoli
+                      principali dell'immagine scelta (GYM-011).
+                    oneOf:
+                      - { $ref: "#/components/schemas/MuscleGroup" }
+                      - { type: "null" }
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /workout/exercises/{name}/group:
+    put:
+      summary: Assegna il gruppo muscolare di un esercizio (GYM-011)
+      description: >
+        Vale per il nome normalizzato, quindi per tutto lo storico, e
+        sopravvive ai re-import. `group` null lo toglie.
+      operationId: setWorkoutExerciseGroup
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string, maxLength: 200 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [group]
+              properties:
+                group:
+                  oneOf:
+                    - { $ref: "#/components/schemas/MuscleGroup" }
+                    - { type: "null" }
+      responses:
+        "200":
+          description: Il gruppo ora assegnato.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [name, group]
+                properties:
+                  name: { type: string, description: nome normalizzato }
+                  group:
+                    oneOf:
+                      - { $ref: "#/components/schemas/MuscleGroup" }
+                      - { type: "null" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /workout/summary:
     get:
@@ -2197,6 +2241,10 @@ components:
         skippedRows: { type: integer, description: righe senza data valida o esercizio }
         from: { type: string, format: date, description: primo giorno nel file }
         to: { type: string, format: date, description: ultimo giorno nel file }
+    MuscleGroup:
+      type: string
+      description: Gruppo muscolare dall'elenco fisso (GYM-011).
+      enum: [petto, schiena, spalle, bicipiti, tricipiti, gambe, glutei, addome, altro]
     ExerciseImage:
       type: [object, "null"]
       description: >

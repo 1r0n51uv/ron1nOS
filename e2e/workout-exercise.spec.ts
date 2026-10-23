@@ -50,3 +50,21 @@ test('la pagina di un esercizio mostra testata, grafico e ultime volte (GYM-008)
   await recent.first().click()
   await expect(page).toHaveURL(/\/allenamenti\/sessioni\/[0-9a-f-]{36}$/)
 })
+
+test('il gruppo si assegna dalla pagina e resta dopo un nuovo import (GYM-011)', async ({ page }) => {
+  const upload = () =>
+    page.request.post('/api/v1/workout/import', {
+      multipart: { file: { name: 'liftin.csv', mimeType: 'text/csv', buffer: Buffer.from(csv()) } },
+    })
+  expect((await upload()).ok()).toBe(true)
+
+  await page.goto('/allenamenti/esercizi/panca%20piana')
+  await page.getByRole('button', { name: 'Assegna il gruppo' }).click()
+  await page.getByRole('dialog', { name: 'Gruppo muscolare' }).getByRole('radio', { name: 'Petto' }).click()
+  await expect(page.getByRole('dialog')).toBeHidden()
+  await expect(page.getByRole('button', { name: 'Gruppo · Petto' })).toBeVisible()
+
+  expect((await upload()).ok()).toBe(true)
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Gruppo · Petto' })).toBeVisible()
+})

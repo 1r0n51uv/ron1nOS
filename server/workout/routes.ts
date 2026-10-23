@@ -18,6 +18,13 @@ import { deleteSession, getSession } from './detail.ts'
 import { getExercise, RANGES } from './exercise.ts'
 import type { ExerciseRange } from './exercise.ts'
 import { listExercises } from './exercises.ts'
+import {
+  exerciseGroup,
+  groupFromMuscles,
+  MUSCLE_GROUPS,
+  proposeExerciseGroup,
+  setExerciseGroup,
+} from './groups.ts'
 import { decodeCursor, listRoutines, listSessions } from './sessions.ts'
 import { getSummary } from './summary.ts'
 
@@ -29,6 +36,7 @@ type WorkoutDeps = {
 }
 
 const ImageInput = z.object({ catalogId: z.string().min(1).max(200).nullable() })
+const GroupInput = z.object({ group: z.enum(MUSCLE_GROUPS).nullable() })
 const SessionId = z.uuid()
 const ExerciseName = z.string().trim().min(1).max(200)
 const Range = z.enum(Object.keys(RANGES) as [ExerciseRange, ...ExerciseRange[]]).default('6m')
@@ -160,13 +168,24 @@ export function workoutRoutes({ database, catalog, now = () => new Date() }: Wor
   app.put('/exercises/:name/image', async (c) => {
     const key = normalizeExercise(check(ExerciseName, c.req.param('name')))
     const { catalogId } = await readJson(c, ImageInput)
-    if (catalogId !== null && !(await readyCatalog()).get(catalogId)) {
-      throw new NotFoundError('Immagine non trovata nel catalogo')
-    }
+    const entry = catalogId === null ? undefined : (await readyCatalog()).get(catalogId)
+    if (catalogId !== null && !entry) throw new NotFoundError('Immagine non trovata nel catalogo')
     const db = c.get('db')
-    await setExerciseImage(db, key, catalogId)
+    await db.tx(async (tx) => {
+      await setExerciseImage(tx, key, catalogId)
+      // Senza gruppo, si propone quello dei muscoli principali (GYM-011).
+      await proposeExerciseGroup(tx, key, entry ? groupFromMuscles(entry.primaryMuscles) : null)
+    })
     const images = await exerciseImages(db, catalog, [key])
-    return c.json({ name: key, image: images.get(key) ?? null })
+    return c.json({ name: key, image: images.get(key) ?? null, group: await exerciseGroup(db, key) })
+  })
+
+  // Il gruppo muscolare di un esercizio (GYM-011); null lo toglie.
+  app.put('/exercises/:name/group', async (c) => {
+    const key = normalizeExercise(check(ExerciseName, c.req.param('name')))
+    const { group } = await readJson(c, GroupInput)
+    await setExerciseGroup(c.get('db'), key, group)
+    return c.json({ name: key, group })
   })
 
   return app

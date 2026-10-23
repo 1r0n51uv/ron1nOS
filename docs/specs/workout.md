@@ -163,7 +163,7 @@ Accettazione:
 
 #### GYM-008 · Pagina di un esercizio
 
-Stato: in corso (#128) · Origine: pkm, cambia
+Stato: fatto (#128) · Origine: pkm, cambia
 
 Accettazione:
 
@@ -174,7 +174,7 @@ Accettazione:
 - [x] Periodo: 3 mesi, 6 mesi, 1 anno, tutto.
 - [x] Sotto il grafico le ultime 3 volte: giorno, serie e peso, 1RM, con
       link al dettaglio.
-- [ ] Il gruppo muscolare dell'esercizio, modificabile da qui (GYM-011).
+- [x] Il gruppo muscolare dell'esercizio, modificabile da qui (GYM-011).
 
 #### GYM-009 · Elenco degli esercizi
 
@@ -206,22 +206,24 @@ Accettazione:
 
 #### GYM-011 · Gruppo muscolare di un esercizio
 
-Stato: pianificato (#133) · Origine: nuovo
+Stato: in corso (#133) · Origine: nuovo
 
 Il CSV di Liftin' non porta il gruppo muscolare: lo si assegna una volta
 per esercizio e vale per tutto lo storico.
 
 Accettazione:
 
-- [ ] Elenco fisso: `Petto`, `Schiena`, `Spalle`, `Bicipiti`, `Tricipiti`,
+- [x] Elenco fisso: `Petto`, `Schiena`, `Spalle`, `Bicipiti`, `Tricipiti`,
       `Gambe`, `Glutei`, `Addome`, `Altro`.
 - [ ] Un gruppo per esercizio, assegnato dall'elenco esercizi (GYM-009) o
-      dai grafici (GYM-008).
+      dai grafici (GYM-008). Dai grafici è fatto; dall'elenco arriva con
+      GYM-009.
 - [ ] Gli esercizi senza gruppo finiscono in `Non assegnato` e compaiono
       nel filtro `Da completare` (GYM-009).
-- [ ] Quando si sceglie l'immagine (GYM-014), il gruppo viene proposto dai
-      muscoli principali del catalogo, se non è già assegnato.
-- [ ] L'assegnazione è legata al nome dell'esercizio e sopravvive ai
+- [x] Quando si sceglie l'immagine (GYM-014), il gruppo viene proposto dai
+      muscoli principali del catalogo, se non è già assegnato. La proposta
+      si salva subito e si cambia come ogni altro gruppo.
+- [x] L'assegnazione è legata al nome dell'esercizio e sopravvive ai
       re-import.
 
 #### GYM-012 · Volume per gruppo muscolare

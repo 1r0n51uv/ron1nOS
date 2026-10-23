@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router'
 
 import { AlertRow, WidgetCard } from '@/components/ron1n'
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
+import { Button } from '@/components/ui/button'
 import { ApiError } from '@/lib/api'
 import { num } from '@/lib/format'
 import { todayRome } from '@/modules/nutrition/dates'
@@ -10,6 +11,7 @@ import type { ExerciseDetail, ExerciseRange } from '../data'
 import { useExercise } from '../data'
 import { clock, groupLabel, setLabel, workoutDay } from '../format'
 import { ExercisePhoto } from '../images/ExercisePhoto'
+import { GroupDialog } from './GroupDialog'
 import { LineChart } from './LineChart'
 import { RadioChips } from './RadioChips'
 
@@ -61,14 +63,21 @@ function Header({ exercise }: { exercise: ExerciseDetail }) {
         <div className="eyebrow text-white/75">{groupLabel(exercise.group)}</div>
         <h1 className="m-0 font-display text-[28px] leading-[32px] font-bold text-white">{exercise.name}</h1>
       </ExercisePhoto>
-      <dl className="m-0 flex items-end gap-8">
-        {numbers.map((n) => (
-          <div key={n.label} className="flex flex-col-reverse">
-            <dt className="text-xs text-ink-muted">{n.label}</dt>
-            <dd className="m-0 font-mono text-[26px] leading-[30px] font-semibold">{n.value}</dd>
-          </div>
-        ))}
-      </dl>
+      <div className="flex flex-col justify-between gap-4">
+        <GroupDialog name={exercise.name} current={exercise.group}>
+          <Button variant="glass" size="sm" className="self-start">
+            {exercise.group ? `Gruppo · ${groupLabel(exercise.group)}` : 'Assegna il gruppo'}
+          </Button>
+        </GroupDialog>
+        <dl className="m-0 flex items-end gap-8">
+          {numbers.map((n) => (
+            <div key={n.label} className="flex flex-col-reverse">
+              <dt className="text-xs text-ink-muted">{n.label}</dt>
+              <dd className="m-0 font-mono text-[26px] leading-[30px] font-semibold">{n.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
     </div>
   )
 }
@@ -103,7 +112,8 @@ function Recent({ exercise }: { exercise: ExerciseDetail }) {
 }
 
 // Pagina /allenamenti/esercizi/:name (GYM-008): foto grande con tre
-// numeri, un grafico per volta nel periodo scelto e le ultime 3 volte.
+// numeri e il gruppo (GYM-011), un grafico per volta nel periodo scelto e
+// le ultime 3 volte.
 export function ExercisePage() {
   const { name = '' } = useParams()
   const [range, setRange] = useState<ExerciseRange>('6m')

@@ -87,7 +87,7 @@ export function useSetExerciseImage() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ name, catalogId }: { name: string; catalogId: string | null }) =>
-      api.put<{ name: string; image: ExerciseImage | null }>(
+      api.put<{ name: string; image: ExerciseImage | null; group: string | null }>(
         `/workout/exercises/${encodeURIComponent(name)}/image`,
         { catalogId },
       ),
@@ -268,5 +268,20 @@ export function useExercise(key: string, range: ExerciseRange) {
     queryFn: () => api.get<ExerciseDetail>(`/workout/exercises/${encodeURIComponent(key)}?range=${range}`),
     // Cambiando periodo resta il grafico di prima finché arriva il nuovo.
     placeholderData: keepPreviousData,
+  })
+}
+
+// Gruppo muscolare di un esercizio (GYM-011); null lo toglie.
+export function useSetExerciseGroup() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ name, group }: { name: string; group: string | null }) =>
+      api.put<{ name: string; group: string | null }>(
+        `/workout/exercises/${encodeURIComponent(name)}/group`,
+        {
+          group,
+        },
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['workout'] }),
   })
 }

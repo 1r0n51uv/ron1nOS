@@ -10,7 +10,7 @@ import { ExercisePage } from './ExercisePage'
 
 vi.mock('@/lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof apiModule>()),
-  api: { get: vi.fn() },
+  api: { get: vi.fn(), put: vi.fn() },
 }))
 
 const point = (day: string, best1RMKg: number, volumeKg: number) => ({
@@ -119,6 +119,28 @@ describe('ExercisePage', () => {
     expect(
       screen.getByRole('img', { name: 'Durata totale: da 2:30 a 2:30, massimo 2:30' }),
     ).toBeInTheDocument()
+  })
+
+  it('il gruppo si sceglie dal dialog e si salva per il nome (GYM-011)', async () => {
+    render()
+    vi.mocked(api.put).mockResolvedValue({ name: 'panca piana', group: 'spalle' })
+    fireEvent.click(await screen.findByRole('button', { name: 'Gruppo · Petto' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Gruppo muscolare' })
+    expect(within(dialog).getByRole('radio', { name: 'Petto' })).toHaveAttribute('aria-checked', 'true')
+    fireEvent.click(within(dialog).getByRole('radio', { name: 'Spalle' }))
+    await waitFor(() =>
+      expect(api.put).toHaveBeenCalledWith('/workout/exercises/Panca%20piana/group', { group: 'spalle' }),
+    )
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('se il gruppo non si salva il dialog resta aperto con l errore', async () => {
+    render({ ...PANCA, group: null })
+    vi.mocked(api.put).mockRejectedValue(new ApiError('internal', 'Errore del server', 500))
+    fireEvent.click(await screen.findByRole('button', { name: 'Assegna il gruppo' }))
+    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('radio', { name: 'Gambe' }))
+    expect(await screen.findByText('Gruppo non salvato.')).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
   it('un nome sconosciuto mostra l errore', async () => {
