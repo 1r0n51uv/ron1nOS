@@ -28,7 +28,7 @@ in "Decisioni".
 
 #### DASH-001 · Catalogo dei widget
 
-Stato: in corso (#138)
+Stato: fatto (#158)
 
 Ogni modulo dichiara uno o più widget in un catalogo unico, invece di un
 solo `Widget.tsx` importato a mano in `Dashboard.tsx`.
@@ -153,26 +153,26 @@ Accettazione:
 
 #### DASH-007 · Layout sul server
 
-Stato: pianificato (#139)
+Stato: in corso (#139)
 
 Accettazione:
 
-- [ ] Tabella `dashboard_layouts` (migrazione nuova): `device`
+- [x] Tabella `dashboard_layouts` (migrazione nuova): `device`
       (`desktop` o `iphone`), elenco dei widget con id, posizione,
       dimensione, variante e opzioni, forma della testata, data di
       modifica.
-- [ ] `GET /api/v1/dashboard/layouts/{device}` restituisce il layout
+- [x] `GET /api/v1/dashboard/layouts/{device}` restituisce il layout
       salvato, o quello predefinito (DASH-008) se non ce n'è.
-- [ ] `PUT /api/v1/dashboard/layouts/{device}` lo sostituisce. Il backend
+- [x] `PUT /api/v1/dashboard/layouts/{device}` lo sostituisce. Il backend
       rifiuta con `422` id sconosciuti, dimensioni fuori dai limiti,
       sovrapposizioni e opzioni non valide per quel widget.
-- [ ] Le rotte sono in `api/openapi.yaml`, con lo schema del layout.
-- [ ] La dashboard salva da sola un secondo dopo l'ultima modifica, senza
+- [x] Le rotte sono in `api/openapi.yaml`, con lo schema del layout.
+- [x] La dashboard salva da sola un secondo dopo l'ultima modifica, senza
       pulsante. Se il salvataggio fallisce compare `Layout non salvato ·
 Riprova` e il layout resta quello sullo schermo.
-- [ ] Senza database (`DATABASE_URL` assente) la dashboard mostra il
+- [x] Senza database (`DATABASE_URL` assente) la dashboard mostra il
       layout predefinito e le modifiche non si salvano, con un avviso.
-- [ ] Gli elementi di un modulo spento restano nel layout salvato, così
+- [x] Gli elementi di un modulo spento restano nel layout salvato, così
       riaccendendolo il widget torna dov'era.
 
 #### DASH-008 · Layout predefinito e ripristino

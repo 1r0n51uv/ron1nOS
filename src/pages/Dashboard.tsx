@@ -6,6 +6,7 @@ import type { SlotId } from '@/modules/nutrition/data'
 import { useDay } from '@/modules/nutrition/data'
 import { todayRome } from '@/modules/nutrition/dates'
 import { isFinished, useWorkout } from '@/modules/workout/data'
+import { readingOrder, useDashboardLayout } from '@/widgets/layout'
 import { availableWidgets } from '@/widgets/registry'
 
 const MEAL_ARTICLE: Record<SlotId, string> = {
@@ -45,7 +46,19 @@ function useSummary(now: Date) {
   return parts.join(' ')
 }
 
+// I widget del layout salvato, in ordine di lettura; finché il layout non
+// arriva, quelli del catalogo nel loro ordine.
+function useWidgets() {
+  const { layout, stored, saveFailed, retry } = useDashboardLayout()
+  const available = availableWidgets()
+  const widgets = layout
+    ? readingOrder(layout.items).flatMap((item) => available.filter((w) => w.id === item.id))
+    : available
+  return { widgets, stored, saveFailed, retry }
+}
+
 export function Dashboard() {
+  const { widgets, stored, saveFailed, retry } = useWidgets()
   const now = useNow()
   const summary = useSummary(now)
   const containers = useContainers().data
@@ -68,8 +81,25 @@ export function Dashboard() {
         ) : null}
       </div>
 
+      {!stored ? (
+        <p role="status" className="m-0 text-sm text-ink-muted">
+          Layout predefinito · senza database le modifiche non si salvano
+        </p>
+      ) : null}
+      {saveFailed ? (
+        <p role="alert" className="m-0 flex items-center gap-3 text-sm text-brand-text">
+          Layout non salvato ·
+          <button
+            type="button"
+            onClick={retry}
+            className="cursor-pointer border-0 bg-transparent p-0 text-brand-text underline"
+          >
+            Riprova
+          </button>
+        </p>
+      ) : null}
       <div className="grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5">
-        {availableWidgets().map(({ id, component: Widget }) => (
+        {widgets.map(({ id, component: Widget }) => (
           <Widget key={id} />
         ))}
       </div>
