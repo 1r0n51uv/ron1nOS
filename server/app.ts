@@ -6,6 +6,8 @@ import { bodyLimit } from 'hono/body-limit'
 
 import type { AuthDeps } from './auth/routes.ts'
 import { createAuth } from './auth/routes.ts'
+import { InvalidLayoutError } from './dashboard/layout.ts'
+import { dashboardRoutes } from './dashboard/routes.ts'
 import type { Database } from './db.ts'
 import { DocumentFullError } from './documents/files.ts'
 import type { DocumentsDeps } from './documents/routes.ts'
@@ -148,6 +150,9 @@ export function createApp({
     return c.json(await glances.stats())
   })
 
+  // Layout della dashboard (docs/specs/dashboard.md): uno per dispositivo.
+  app.route('/api/v1/dashboard', dashboardRoutes({ database }))
+
   // Modulo Nutrizione (docs/specs/nutrition.md): dati propri in Postgres.
   app.route('/api/v1/nutrition', nutritionRoutes({ ...nutrition, database }))
 
@@ -178,6 +183,9 @@ export function createApp({
         { error: 'document_full', message: 'Il documento supera i 100 MB di allegati' },
         409,
       )
+    }
+    if (err instanceof InvalidLayoutError) {
+      return c.json<ApiError>({ error: 'invalid_layout', message: err.message }, 422)
     }
     if (err instanceof InvalidRequestError) {
       return c.json<ApiError>({ error: 'invalid_request', message: err.message }, 400)

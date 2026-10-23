@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import { sql } from './db.ts'
+
 const widgets = [
   'Nutrizione',
   'Allenamento',
@@ -40,4 +42,31 @@ test('i widget compaiono nell’ordine del catalogo', async ({ page }) => {
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0)
   const titles = page.locator('main [data-slot="card-title"]')
   await expect(titles).toHaveText(widgets)
+})
+
+test.describe('layout salvato sul server (DASH-007)', () => {
+  test.afterEach(() => sql('delete from dashboard_layouts'))
+
+  test('decide quali widget compaiono e in che ordine', async ({ page }) => {
+    const res = await page.request.put('/api/v1/dashboard/layouts/desktop', {
+      data: {
+        header: 'full',
+        items: [
+          { id: 'notes.summary', x: 0, y: 0, w: 8, h: 6 },
+          { id: 'server.summary', x: 8, y: 0, w: 8, h: 8 },
+        ],
+      },
+    })
+    expect(res.status()).toBe(200)
+    await page.goto('/')
+    await expect(page.locator('main [data-slot="card-title"]')).toHaveText(['Nota fissata', 'Server'])
+  })
+
+  test('un layout che non rispetta il catalogo viene rifiutato', async ({ page }) => {
+    const res = await page.request.put('/api/v1/dashboard/layouts/desktop', {
+      data: { header: 'full', items: [{ id: 'server.summary', x: 20, y: 0, w: 8, h: 8 }] },
+    })
+    expect(res.status()).toBe(422)
+    expect((await res.json()).error).toBe('invalid_layout')
+  })
 })

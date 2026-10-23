@@ -545,6 +545,50 @@ paths:
         "401": { $ref: "#/components/responses/Unauthenticated" }
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/DocumentsUnavailable" }
+  /dashboard/layouts/{device}:
+    parameters:
+      - name: device
+        in: path
+        required: true
+        schema: { type: string, enum: [desktop, iphone] }
+    get:
+      summary: Layout della dashboard di un dispositivo
+      description: >
+        Il layout salvato, o quello predefinito se non ce n'è (DASH-008).
+        Senza database risponde comunque con il predefinito e `stored: false`.
+      operationId: getDashboardLayout
+      responses:
+        "200":
+          description: Il layout.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardLayoutResponse" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+    put:
+      summary: Sostituisce il layout della dashboard di un dispositivo
+      description: >
+        Il backend controlla il layout contro il catalogo dei widget: id noti e
+        non ripetuti, dimensioni nei limiti, dentro le 24 colonne, niente
+        sovrapposizioni, varianti e opzioni dichiarate dal widget.
+      operationId: putDashboardLayout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DashboardLayout" }
+      responses:
+        "200":
+          description: Il layout salvato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardLayoutResponse" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "422":
+          description: "`invalid_layout`: il layout non rispetta il catalogo; il messaggio dice perché."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /server/stats:
     get:
       summary: Risorse del server lette da Glances
@@ -2368,6 +2412,36 @@ components:
           description: Secondi alla fine; null se non stimabile.
         downloadSpeed: { type: number, description: byte/s }
         size: { type: number, description: Byte selezionati per il download. }
+    DashboardLayoutItem:
+      type: object
+      description: Un widget nella griglia di 24 colonne, righe da 24px.
+      required: [id, x, y, w, h]
+      properties:
+        id: { type: string, description: "Id del catalogo, `<modulo>.<nome>`." }
+        x: { type: integer, minimum: 0 }
+        y: { type: integer, minimum: 0 }
+        w: { type: integer, minimum: 1, maximum: 24 }
+        h: { type: integer, minimum: 1 }
+        variant: { type: string, enum: [compact, detailed] }
+        options: { type: object, additionalProperties: true }
+    DashboardLayout:
+      type: object
+      required: [header, items]
+      properties:
+        header: { type: string, enum: [full, line, hidden] }
+        items:
+          type: array
+          maxItems: 60
+          items: { $ref: "#/components/schemas/DashboardLayoutItem" }
+    DashboardLayoutResponse:
+      allOf:
+        - $ref: "#/components/schemas/DashboardLayout"
+        - type: object
+          required: [device, updatedAt, stored]
+          properties:
+            device: { type: string, enum: [desktop, iphone] }
+            updatedAt: { type: [string, "null"], format: date-time }
+            stored: { type: boolean, description: "false senza database: le modifiche non si salvano." }
     Error:
       type: object
       required: [error, message]
@@ -2388,6 +2462,7 @@ components:
             - glances_unreachable
             - database_unavailable
             - invalid_request
+            - invalid_layout
             - goals_from_yazio
             - barcode_exists
             - food_not_custom

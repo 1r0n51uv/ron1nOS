@@ -1,0 +1,91 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
+import { api } from '@/lib/api'
+import type { WidgetVariant } from './types'
+
+// Layout della dashboard (DASH-007): risposta di
+// GET /api/v1/dashboard/layouts/{device}, contratto in api/openapi.yaml.
+export type Device = 'desktop' | 'iphone'
+
+export type LayoutItem = {
+  id: string
+  x: number
+  y: number
+  w: number
+  h: number
+  variant?: WidgetVariant
+  options?: Record<string, unknown>
+}
+
+export type DashboardLayout = {
+  header: 'full' | 'line' | 'hidden'
+  items: LayoutItem[]
+}
+
+export type LayoutResponse = DashboardLayout & {
+  device: Device
+  updatedAt: string | null
+  // false senza database: si vede il predefinito e non si salva.
+  stored: boolean
+}
+
+export function getLayout(device: Device) {
+  return api.get<LayoutResponse>(`/dashboard/layouts/${device}`)
+}
+
+export function putLayout(device: Device, layout: DashboardLayout) {
+  return api.put<LayoutResponse>(`/dashboard/layouts/${device}`, layout)
+}
+
+// La sorgente passa da un oggetto così i test possono sostituirla.
+export const source = { getLayout, putLayout }
+
+const key = (device: Device) => ['dashboard', 'layout', device]
+
+// In ordine di lettura: dall'alto in basso, da sinistra a destra.
+export function readingOrder(items: LayoutItem[]) {
+  return [...items].sort((a, b) => a.y - b.y || a.x - b.x)
+}
+
+export const SAVE_DELAY_MS = 1000
+
+// Layout del dispositivo, modificabile: ogni cambio si vede subito e si
+// salva da solo un secondo dopo l'ultimo. Se il salvataggio fallisce il
+// layout sullo schermo resta e `retry` riprova.
+export function useDashboardLayout(device: Device = 'desktop') {
+  const queryClient = useQueryClient()
+  const query = useQuery({ queryKey: key(device), queryFn: () => source.getLayout(device) })
+  const save = useMutation({
+    mutationFn: (layout: DashboardLayout) => source.putLayout(device, layout),
+    onSuccess: (saved) => queryClient.setQueryData(key(device), saved),
+  })
+  const [pending, setPending] = useState<DashboardLayout | null>(null)
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const { mutate } = save
+
+  const flush = useCallback((layout: DashboardLayout) => mutate(layout), [mutate])
+
+  const setLayout = useCallback(
+    (layout: DashboardLayout) => {
+      setPending(layout)
+      clearTimeout(timer.current)
+      timer.current = setTimeout(() => flush(layout), SAVE_DELAY_MS)
+    },
+    [flush],
+  )
+
+  useEffect(() => () => clearTimeout(timer.current), [])
+
+  const layout = pending ?? query.data
+  return {
+    layout,
+    stored: query.data?.stored ?? true,
+    isPending: query.isPending,
+    setLayout,
+    saveFailed: save.isError,
+    retry: () => {
+      if (layout) flush(layout)
+    },
+  }
+}

@@ -3,6 +3,8 @@
 // (DASH-007), la dashboard web lo importa per sapere cosa può disporre.
 // Le dimensioni sono in unità della griglia: 24 colonne, righe da 24px.
 
+export const GRID_COLUMNS = 24
+
 export const MODULES = [
   'nutrition',
   'workout',
