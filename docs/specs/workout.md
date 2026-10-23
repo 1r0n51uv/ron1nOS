@@ -178,16 +178,16 @@ Accettazione:
 
 #### GYM-009 · Elenco degli esercizi
 
-Stato: pianificato (#130) · Origine: nuovo
+Stato: fatto (#130) · Origine: nuovo
 
 Accettazione:
 
-- [ ] Griglia di card compatte, 6 per riga, con immagine (GYM-014), nome, gruppo e ultima volta,
+- [x] Griglia di card compatte, 6 per riga, con immagine (GYM-014), nome, gruppo e ultima volta,
       dalla più recente; ricerca per nome.
-- [ ] Un filtro `Da completare` mostra gli esercizi senza gruppo o senza
+- [x] Un filtro `Da completare` mostra gli esercizi senza gruppo o senza
       immagine, con un'etichetta sulla card che dice cosa manca.
-- [ ] Un clic apre i grafici dell'esercizio (GYM-008).
-- [ ] I nomi sono quelli del CSV, senza alias né unione.
+- [x] Un clic apre i grafici dell'esercizio (GYM-008).
+- [x] I nomi sono quelli del CSV, senza alias né unione.
 
 #### GYM-010 · Record personali
 
@@ -206,7 +206,7 @@ Accettazione:
 
 #### GYM-011 · Gruppo muscolare di un esercizio
 
-Stato: in corso (#133) · Origine: nuovo
+Stato: fatto (#133) · Origine: nuovo
 
 Il CSV di Liftin' non porta il gruppo muscolare: lo si assegna una volta
 per esercizio e vale per tutto lo storico.
@@ -215,10 +215,9 @@ Accettazione:
 
 - [x] Elenco fisso: `Petto`, `Schiena`, `Spalle`, `Bicipiti`, `Tricipiti`,
       `Gambe`, `Glutei`, `Addome`, `Altro`.
-- [ ] Un gruppo per esercizio, assegnato dall'elenco esercizi (GYM-009) o
-      dai grafici (GYM-008). Dai grafici è fatto; dall'elenco arriva con
-      GYM-009.
-- [ ] Gli esercizi senza gruppo finiscono in `Non assegnato` e compaiono
+- [x] Un gruppo per esercizio, assegnato dall'elenco esercizi (GYM-009) o
+      dai grafici (GYM-008).
+- [x] Gli esercizi senza gruppo finiscono in `Non assegnato` e compaiono
       nel filtro `Da completare` (GYM-009).
 - [x] Quando si sceglie l'immagine (GYM-014), il gruppo viene proposto dai
       muscoli principali del catalogo, se non è già assegnato. La proposta

@@ -97,6 +97,10 @@ describe('WorkoutPage', () => {
       screen.getByRole('img', { name: /questa settimana 3 allenamenti, media 2,0$/ }),
     ).toBeInTheDocument()
     expect(screen.getByText('media 2,0 a settimana')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Tutti gli esercizi' })).toHaveAttribute(
+      'href',
+      '/allenamenti/esercizi',
+    )
   })
 
   it('mostra lo storico a pagine e filtra per routine', async () => {

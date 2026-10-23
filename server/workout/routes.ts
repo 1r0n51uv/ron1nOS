@@ -44,6 +44,10 @@ const ExercisesQuery = z.object({
   q: z.string().max(100).optional(),
   sort: z.enum(['recent', 'sets']).optional(),
   limit: z.coerce.number().int().min(1).max(200).optional(),
+  incomplete: z
+    .enum(['true', 'false'])
+    .transform((v) => v === 'true')
+    .optional(),
 })
 
 // Il CSV completo di Liftin' resta sotto i 5 MB anche dopo anni.
@@ -134,7 +138,8 @@ export function workoutRoutes({ database, catalog, now = () => new Date() }: Wor
   app.get('/routines', async (c) => c.json({ routines: await listRoutines(c.get('db')) }))
 
   // Esercizi (GYM-007, GYM-009): `sort=sets&limit=6` dà la dashboard,
-  // senza parametri l'elenco dall'ultima volta più recente.
+  // senza parametri l'elenco dall'ultima volta più recente,
+  // `incomplete=true` quelli senza gruppo o senza immagine.
   app.get('/exercises', async (c) => {
     const query = check(ExercisesQuery, c.req.query())
     return c.json({ exercises: await listExercises(c.get('db'), catalog, query) })

@@ -16,6 +16,7 @@ import { Dashboard } from '@/pages/Dashboard'
 import { NutritionSettings, Settings, SettingsSection } from '@/pages/Settings'
 import { WorkoutPage } from '@/modules/workout/page/WorkoutPage'
 import { ExercisePage } from '@/modules/workout/exercise/ExercisePage'
+import { ExerciseListPage } from '@/modules/workout/list/ExerciseListPage'
 import { SessionPage } from '@/modules/workout/session/SessionPage'
 import { ModuleGate } from '@/preferences/ModuleGate'
 import type { ModuleId } from '../server/dashboard/catalog.ts'
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="pasti/andamento" element={gate('nutrition', 'Pasti', <ReportPage />)} />
           <Route path="allenamenti" element={gate('workout', 'Allenamenti', <WorkoutPage />)} />
           <Route path="allenamenti/sessioni/:id" element={gate('workout', 'Allenamenti', <SessionPage />)} />
+          <Route path="allenamenti/esercizi" element={gate('workout', 'Allenamenti', <ExerciseListPage />)} />
           <Route
             path="allenamenti/esercizi/:name"
             element={gate('workout', 'Allenamenti', <ExercisePage />)}
