@@ -4,6 +4,8 @@ import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 
+import type { AboutDeps } from './about.ts'
+import { createAbout } from './about.ts'
 import type { AuthDeps } from './auth/routes.ts'
 import { createAuth } from './auth/routes.ts'
 import { InvalidLayoutError } from './dashboard/layout.ts'
@@ -64,6 +66,8 @@ type Deps = {
   workout?: { catalog?: Catalog; now?: () => Date }
   // Modulo Documenti: la chiave di DOCUMENTS_KEY; senza, il modulo è spento.
   documents?: Omit<DocumentsDeps, 'database' | 'authEnabled'>
+  // Versione dell'immagine e avvio (SET-012); di base dalle variabili d'ambiente.
+  about?: AboutDeps
 }
 
 class InvalidLinkError extends Error {}
@@ -79,6 +83,7 @@ export function createApp({
   auth: authDeps = {},
   workout = {},
   documents = {},
+  about: aboutDeps,
 }: Deps) {
   const app = new Hono()
   const auth = createAuth({ ...authDeps, database })
@@ -91,6 +96,9 @@ export function createApp({
 
   // ok resta true anche senza database: il resto della dashboard funziona.
   app.get('/api/v1/health', (c) => c.json({ ok: true, database: database.status() }))
+  // Dietro il login, a differenza di health: versione e avvio del backend.
+  const about = createAbout(aboutDeps)
+  app.get('/api/v1/about', (c) => c.json(about()))
 
   app.get('/api/v1/downloads', async (c) => {
     const [transfer, torrents] = await Promise.all([qbt.transferInfo(), qbt.torrents()])

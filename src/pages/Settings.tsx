@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, Navigate, NavLink, Outlet, useParams } from 'react-router'
 
-import { WidgetCard } from '@/components/ron1n'
+import { AboutSection } from '@/about/AboutSection'
 import { AccountSection } from '@/auth/AccountSection'
 import { IntegrationsSection } from '@/integrations/IntegrationsSection'
 import { cn } from '@/lib/utils'
@@ -17,6 +17,7 @@ import { StorageNotice } from '@/preferences/StorageNotice'
 import { ModulesSection } from '@/preferences/ModulesSection'
 import { NavigationSection } from '@/preferences/NavigationSection'
 import { DashboardPanel } from '@/widgets/DashboardPanel'
+import type { SectionId } from './settings/sections'
 import { findSection, SECTIONS } from './settings/sections'
 
 // Impostazioni (SET-001): a sinistra il menu delle sezioni, a destra una
@@ -60,35 +61,29 @@ function SectionTitle({ children }: { children: ReactNode }) {
   return <h2 className="m-0 font-display text-[22px] font-semibold">{children}</h2>
 }
 
+// Il contenuto di ogni sezione, nell'ordine del menu.
+const BODIES: Record<SectionId, () => ReactNode> = {
+  aspetto: AppearanceSection,
+  dashboard: DashboardPanel,
+  moduli: ModulesSection,
+  navigazione: NavigationSection,
+  account: AccountSection,
+  integrazioni: IntegrationsSection,
+  formati: FormatsSection,
+  backup: BackupSection,
+  informazioni: AboutSection,
+}
+
 // Una sezione dal suo indirizzo; un indirizzo sconosciuto riporta ad Aspetto.
 export function SettingsSection() {
   const { section } = useParams()
   const found = findSection(section)
   if (!found) return <Navigate to="/impostazioni/aspetto" replace />
+  const Body = BODIES[found.id]
   return (
     <>
       <SectionTitle>{found.label}</SectionTitle>
-      {found.id === 'aspetto' ? (
-        <AppearanceSection />
-      ) : found.id === 'dashboard' ? (
-        <DashboardPanel />
-      ) : found.id === 'moduli' ? (
-        <ModulesSection />
-      ) : found.id === 'navigazione' ? (
-        <NavigationSection />
-      ) : found.id === 'formati' ? (
-        <FormatsSection />
-      ) : found.id === 'backup' ? (
-        <BackupSection />
-      ) : found.id === 'integrazioni' ? (
-        <IntegrationsSection />
-      ) : found.id === 'account' ? (
-        <AccountSection />
-      ) : (
-        <WidgetCard title="In arrivo">
-          <p className="m-0 text-sm text-ink-muted">Questa sezione non ha ancora impostazioni.</p>
-        </WidgetCard>
-      )}
+      <Body />
     </>
   )
 }

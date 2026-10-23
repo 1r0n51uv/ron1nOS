@@ -190,11 +190,12 @@ Stato: in corso (#155)
 
 Accettazione:
 
-- [ ] Versione dell'immagine (commit e data della build, passati come
+- [x] Versione dell'immagine (commit e data della build, passati come
       argomenti al `Dockerfile` dalla pipeline di rilascio).
-- [ ] Stato del backend e del database (da `GET /api/v1/health`) e da
-      quanto tempo è acceso.
-- [ ] Link al repository e alla specifica.
+- [x] Stato del backend e del database (da `GET /api/v1/health`) e da
+      quanto tempo è acceso (da `GET /api/v1/about`, dietro il login come
+      la versione).
+- [x] Link al repository e alla specifica.
 
 ## Decisioni
 
