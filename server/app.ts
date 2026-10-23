@@ -8,6 +8,8 @@ import type { AuthDeps } from './auth/routes.ts'
 import { createAuth } from './auth/routes.ts'
 import { InvalidLayoutError } from './dashboard/layout.ts'
 import { dashboardRoutes } from './dashboard/routes.ts'
+import type { IntegrationId } from './integrations.ts'
+import { createIntegrations, INTEGRATIONS } from './integrations.ts'
 import { BackgroundTooLargeError } from './preferences/background.ts'
 import { moduleGuard, ModuleDisabledError } from './preferences/modules.ts'
 import { preferencesRoutes } from './preferences/routes.ts'
@@ -159,6 +161,15 @@ export function createApp({
   app.get('/api/v1/server/stats', async (c) => {
     if (!glances) throw new GlancesUnreachableError('Glances non configurato')
     return c.json(await glances.stats())
+  })
+
+  // Servizi esterni (docs/specs/settings.md, SET-009): solo stato, mai segreti.
+  const integrations = createIntegrations({ database, qbt, glances, yazio: nutrition.sync })
+  app.get('/api/v1/integrations', async (c) => c.json({ integrations: await integrations.list() }))
+  app.post('/api/v1/integrations/:id/check', async (c) => {
+    const id = c.req.param('id')
+    if (!(INTEGRATIONS as readonly string[]).includes(id)) throw new NotFoundError('Servizio sconosciuto')
+    return c.json(await integrations.verify(id as IntegrationId))
   })
 
   // Layout della dashboard (docs/specs/dashboard.md): uno per dispositivo.

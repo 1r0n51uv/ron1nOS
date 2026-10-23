@@ -3,6 +3,7 @@ import { Link, Navigate, NavLink, Outlet, useParams } from 'react-router'
 
 import { WidgetCard } from '@/components/ron1n'
 import { AccessPanel } from '@/auth/AccessPanel'
+import { IntegrationsSection } from '@/integrations/IntegrationsSection'
 import { cn } from '@/lib/utils'
 import { FoodsPanel } from '@/modules/nutrition/settings/FoodsPanel'
 import { GoalsPanel } from '@/modules/nutrition/settings/GoalsPanel'
@@ -70,6 +71,8 @@ export function SettingsSection() {
         <DashboardPanel />
       ) : found.id === 'moduli' ? (
         <ModulesSection />
+      ) : found.id === 'integrazioni' ? (
+        <IntegrationsSection />
       ) : found.id === 'account' ? (
         <AccessPanel />
       ) : (

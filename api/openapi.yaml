@@ -682,6 +682,43 @@ paths:
               schema: { $ref: "#/components/schemas/DashboardLayoutResponse" }
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /integrations:
+    get:
+      summary: Stato dei servizi esterni (SET-009)
+      description: >
+        Postgres, YAZIO, qBittorrent, Glances e Home Assistant, con l'ora
+        dell'ultimo controllo. Un controllo vale 30 secondi. Mai password,
+        token, indirizzi o errori grezzi: i messaggi sono scritti dal backend.
+      operationId: getIntegrations
+      responses:
+        "200":
+          description: I servizi, sempre nello stesso ordine.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [integrations]
+                properties:
+                  integrations:
+                    type: array
+                    items: { $ref: "#/components/schemas/Integration" }
+  /integrations/{id}/check:
+    post:
+      summary: Rifà subito il controllo di un servizio
+      description: Per YAZIO, se la sincronizzazione è accesa, fa anche un giro.
+      operationId: checkIntegration
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, enum: [postgres, yazio, qbittorrent, glances, homeassistant] }
+      responses:
+        "200":
+          description: Il servizio appena controllato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Integration" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /preferences:
     get:
       summary: Preferenze di ron1nOS
@@ -3190,6 +3227,19 @@ components:
             device: { type: string, enum: [desktop, iphone] }
             updatedAt: { type: [string, "null"], format: date-time }
             stored: { type: boolean, description: "false senza database: le modifiche non si salvano." }
+    Integration:
+      type: object
+      required: [id, name, state, message, checkedAt, env]
+      properties:
+        id: { type: string, enum: [postgres, yazio, qbittorrent, glances, homeassistant] }
+        name: { type: string }
+        state: { type: string, enum: [connected, error, not_configured] }
+        message: { type: [string, "null"], description: "Il motivo dell'errore, in italiano." }
+        checkedAt: { type: string, format: date-time }
+        env:
+          type: array
+          items: { type: string }
+          description: Le variabili del `.env` da impostare, solo per un servizio non configurato.
     PreferencesAppearance:
       type: object
       additionalProperties: false
