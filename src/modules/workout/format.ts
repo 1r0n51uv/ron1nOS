@@ -74,3 +74,25 @@ export function exerciseBest(e: { best1RMKg: number | null; bestDurationSeconds:
   }
   return e.best1RMKg === null ? '–' : `${Math.round(e.best1RMKg)} kg`
 }
+
+// Gruppi muscolari (GYM-011), nell'ordine dell'elenco fisso.
+export const MUSCLE_GROUPS = {
+  petto: 'Petto',
+  schiena: 'Schiena',
+  spalle: 'Spalle',
+  bicipiti: 'Bicipiti',
+  tricipiti: 'Tricipiti',
+  gambe: 'Gambe',
+  glutei: 'Glutei',
+  addome: 'Addome',
+  altro: 'Altro',
+} as const
+
+export function groupLabel(group: string | null) {
+  return (group && MUSCLE_GROUPS[group as keyof typeof MUSCLE_GROUPS]) || 'Non assegnato'
+}
+
+// Durata come "1:30", "12:05".
+export function clock(seconds: number) {
+  return setLabel({ weightKg: 0, reps: null, durationSeconds: seconds })
+}

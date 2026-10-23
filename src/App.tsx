@@ -14,6 +14,7 @@ import { TemplatesPage } from '@/modules/nutrition/templates/TemplatesPage'
 import { Dashboard } from '@/pages/Dashboard'
 import { NutritionSettings, Settings, SettingsSection } from '@/pages/Settings'
 import { WorkoutPage } from '@/modules/workout/page/WorkoutPage'
+import { ExercisePage } from '@/modules/workout/exercise/ExercisePage'
 import { SessionPage } from '@/modules/workout/session/SessionPage'
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="pasti/andamento" element={<ReportPage />} />
           <Route path="allenamenti" element={<WorkoutPage />} />
           <Route path="allenamenti/sessioni/:id" element={<SessionPage />} />
+          <Route path="allenamenti/esercizi/:name" element={<ExercisePage />} />
           <Route path="documenti" element={<DocumentsPage />} />
           <Route path="documenti/tipi" element={<TypesPage />} />
           <Route path="documenti/:id" element={<DocumentPage />} />

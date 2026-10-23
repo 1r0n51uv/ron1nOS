@@ -231,3 +231,42 @@ export function useExercises(params: { q?: string; sort?: 'recent' | 'sets'; lim
 
 // Indirizzo della pagina di un esercizio (GYM-008).
 export const exercisePath = (key: string) => `/allenamenti/esercizi/${encodeURIComponent(key)}`
+
+// Pagina di un esercizio (GYM-008).
+export type ExerciseRange = '3m' | '6m' | '1y' | 'all'
+
+export type ExerciseDetail = {
+  name: string
+  key: string
+  image: ExerciseImage | null
+  group: string | null
+  timed: boolean
+  best1RMKg: number | null
+  heaviestKg: number | null
+  bestDurationSeconds: number | null
+  sessions: number
+  range: ExerciseRange
+  points: {
+    sessionId: string
+    day: string
+    best1RMKg: number
+    volumeKg: number
+    bestDurationSeconds: number
+    totalDurationSeconds: number
+  }[]
+  recent: {
+    sessionId: string
+    day: string
+    best1RMKg: number | null
+    sets: { warmup: boolean; weightKg: number; reps: number | null; durationSeconds: number | null }[]
+  }[]
+}
+
+export function useExercise(key: string, range: ExerciseRange) {
+  return useQuery({
+    queryKey: ['workout', 'exercise', key, range],
+    queryFn: () => api.get<ExerciseDetail>(`/workout/exercises/${encodeURIComponent(key)}?range=${range}`),
+    // Cambiando periodo resta il grafico di prima finché arriva il nuovo.
+    placeholderData: keepPreviousData,
+  })
+}
