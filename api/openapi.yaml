@@ -1916,6 +1916,27 @@ paths:
                     items: { $ref: "#/components/schemas/WorkoutExercise" }
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /workout/exercises/{name}:
+    parameters:
+      - { name: name, in: path, required: true, schema: { type: string, maxLength: 200 } }
+    get:
+      summary: Un esercizio, con grafici e ultime volte (GYM-008)
+      description: >
+        Il nome si normalizza (minuscole, spazi compressi). I tre numeri
+        della testata sono su tutto lo storico; `points` è una voce per
+        sessione nel periodo, `recent` le ultime 3 volte dalla più recente.
+      operationId: getWorkoutExercise
+      parameters:
+        - { name: range, in: query, schema: { type: string, enum: [3m, 6m, 1y, all], default: 6m } }
+      responses:
+        "200":
+          description: L'esercizio.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkoutExerciseDetail" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /workout/exercises/{name}/image:
     put:
       summary: Sceglie a mano l'immagine di un esercizio (GYM-014)
@@ -2302,6 +2323,67 @@ components:
           type: array
           description: il migliore di ogni sessione (1RM o durata), ultime 12, dalla meno recente
           items: { type: number }
+    WorkoutExerciseDetail:
+      type: object
+      required:
+        [
+          name,
+          key,
+          image,
+          group,
+          timed,
+          best1RMKg,
+          heaviestKg,
+          bestDurationSeconds,
+          sessions,
+          range,
+          points,
+          recent,
+        ]
+      properties:
+        name: { type: string }
+        key: { type: string }
+        image: { $ref: "#/components/schemas/ExerciseImage" }
+        group: { type: [string, "null"] }
+        timed: { type: boolean }
+        best1RMKg: { type: [number, "null"], description: su tutto lo storico; null per gli esercizi a tempo }
+        heaviestKg: { type: [number, "null"], description: peso più alto in una serie valida }
+        bestDurationSeconds: { type: [integer, "null"], description: solo per gli esercizi a tempo }
+        sessions: { type: integer }
+        range: { type: string, enum: [3m, 6m, 1y, all] }
+        points:
+          type: array
+          description: una voce per sessione nel periodo, dalla meno recente
+          items:
+            type: object
+            required: [sessionId, day, best1RMKg, volumeKg, bestDurationSeconds, totalDurationSeconds]
+            properties:
+              sessionId: { type: string, format: uuid }
+              day: { type: string, format: date }
+              best1RMKg: { type: number }
+              volumeKg: { type: number }
+              bestDurationSeconds: { type: integer }
+              totalDurationSeconds: { type: integer }
+        recent:
+          type: array
+          description: le ultime 3 volte, dalla più recente
+          items:
+            type: object
+            required: [sessionId, day, best1RMKg, sets]
+            properties:
+              sessionId: { type: string, format: uuid }
+              day: { type: string, format: date }
+              best1RMKg: { type: [number, "null"] }
+              sets:
+                type: array
+                items:
+                  type: object
+                  required: [warmup, weightKg, reps, durationSeconds]
+                  properties:
+                    warmup: { type: boolean }
+                    weightKg: { type: number }
+                    reps: { type: [integer, "null"] }
+                    durationSeconds: { type: [integer, "null"] }
     DocumentExpiry:
       type: [object, "null"]
       description: >

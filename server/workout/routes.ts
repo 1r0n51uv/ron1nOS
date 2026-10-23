@@ -15,6 +15,8 @@ import { importLiftin } from './import.ts'
 import { LiftinError, parseLiftin } from './liftin.ts'
 import { normalizeExercise } from './math.ts'
 import { deleteSession, getSession } from './detail.ts'
+import { getExercise, RANGES } from './exercise.ts'
+import type { ExerciseRange } from './exercise.ts'
 import { listExercises } from './exercises.ts'
 import { decodeCursor, listRoutines, listSessions } from './sessions.ts'
 import { getSummary } from './summary.ts'
@@ -29,6 +31,7 @@ type WorkoutDeps = {
 const ImageInput = z.object({ catalogId: z.string().min(1).max(200).nullable() })
 const SessionId = z.uuid()
 const ExerciseName = z.string().trim().min(1).max(200)
+const Range = z.enum(Object.keys(RANGES) as [ExerciseRange, ...ExerciseRange[]]).default('6m')
 const ExercisesQuery = z.object({
   q: z.string().max(100).optional(),
   sort: z.enum(['recent', 'sets']).optional(),
@@ -127,6 +130,13 @@ export function workoutRoutes({ database, catalog, now = () => new Date() }: Wor
   app.get('/exercises', async (c) => {
     const query = check(ExercisesQuery, c.req.query())
     return c.json({ exercises: await listExercises(c.get('db'), catalog, query) })
+  })
+
+  // Un esercizio (GYM-008): testata, grafici nel periodo e ultime 3 volte.
+  app.get('/exercises/:name', async (c) => {
+    const key = normalizeExercise(check(ExerciseName, c.req.param('name')))
+    const range = check(Range, c.req.query('range'))
+    return c.json(await getExercise(c.get('db'), catalog, key, range, now()))
   })
 
   // Anteprima dell'import (GYM-003): stessi conti dell'import, nessuna scrittura.

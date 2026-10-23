@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import {
   dayWithYear,
+  clock,
   duration,
   exerciseBest,
+  groupLabel,
   period,
   setLabel,
   startTime,
@@ -63,5 +65,18 @@ describe('exerciseBest', () => {
     expect(exerciseBest({ best1RMKg: 75.83, bestDurationSeconds: null })).toBe('76 kg')
     expect(exerciseBest({ best1RMKg: null, bestDurationSeconds: 90 })).toBe('1:30')
     expect(exerciseBest({ best1RMKg: null, bestDurationSeconds: null })).toBe('–')
+  })
+})
+
+describe('groupLabel e clock', () => {
+  it('nome del gruppo, Non assegnato se manca', () => {
+    expect(groupLabel('petto')).toBe('Petto')
+    expect(groupLabel(null)).toBe('Non assegnato')
+    expect(groupLabel('boh')).toBe('Non assegnato')
+  })
+
+  it('durata come minuti e secondi', () => {
+    expect(clock(90)).toBe('1:30')
+    expect(clock(725)).toBe('12:05')
   })
 })

@@ -163,16 +163,16 @@ Accettazione:
 
 #### GYM-008 · Pagina di un esercizio
 
-Stato: pianificato (#128) · Origine: pkm, cambia
+Stato: in corso (#128) · Origine: pkm, cambia
 
 Accettazione:
 
-- [ ] In testata l'immagine grande dell'esercizio (GYM-014) con nome,
+- [x] In testata l'immagine grande dell'esercizio (GYM-014) con nome,
       gruppo e tre numeri: 1RM stimato, peso più alto, sessioni.
-- [ ] Un grafico per volta, con un selettore `1RM stimato` / `Volume`; per
+- [x] Un grafico per volta, con un selettore `1RM stimato` / `Volume`; per
       gli esercizi a tempo `Durata migliore` / `Durata totale`.
-- [ ] Periodo: 3 mesi, 6 mesi, 1 anno, tutto.
-- [ ] Sotto il grafico le ultime 3 volte: giorno, serie e peso, 1RM, con
+- [x] Periodo: 3 mesi, 6 mesi, 1 anno, tutto.
+- [x] Sotto il grafico le ultime 3 volte: giorno, serie e peso, 1RM, con
       link al dettaglio.
 - [ ] Il gruppo muscolare dell'esercizio, modificabile da qui (GYM-011).
 
