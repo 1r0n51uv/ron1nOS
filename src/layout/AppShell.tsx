@@ -4,7 +4,7 @@ import { Outlet } from 'react-router'
 import { NavRail } from '@/components/ron1n'
 import { applyAppearance } from '@/preferences/appearance'
 import { usePreferences } from '@/preferences/data'
-import { railItems } from './nav'
+import { visibleRailItems } from './nav'
 
 // Layout desktop: NavRail a sinistra, contenuto a destra, filigrana 浪人 dietro.
 export function AppShell() {
@@ -24,7 +24,7 @@ export function AppShell() {
       </div>
 
       <div className="relative flex gap-5 p-5">
-        <NavRail items={railItems} />
+        <NavRail items={visibleRailItems(prefs?.disabledModules ?? [])} />
         <main className="flex min-w-0 flex-1 flex-col gap-(--page-gap) px-2 pt-3 pb-6">
           <Outlet />
         </main>

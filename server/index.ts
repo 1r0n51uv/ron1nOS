@@ -11,6 +11,7 @@ import { createExternalSearch } from './nutrition/foodsearch.ts'
 import { hasPending } from './nutrition/diarywrite.ts'
 import { FLUSH_STEPS, SYNC_STEPS } from './nutrition/fromyazio.ts'
 import { createSyncRunner } from './nutrition/yazio.ts'
+import { isModuleDisabled } from './preferences/modules.ts'
 import { createQbtClient } from './qbittorrent.ts'
 import { createCatalog } from './workout/catalog.ts'
 import { createYazioClient } from './yazio/client.ts'
@@ -78,14 +79,21 @@ setInterval(sweep, 60 * 60_000).unref()
 
 // Sincronizzazione con YAZIO ogni 15 minuti (NUT-022); l'esito finisce in
 // Impostazioni, qui solo gli errori inattesi.
+// Con il modulo Nutrizione spento (SET-005) i giri si fermano.
+async function nutritionOn() {
+  if (database.status() !== 'ok' || !database.db) return null
+  return (await isModuleDisabled(database.db, 'nutrition')) ? null : database.db
+}
 function syncYazio() {
-  if (database.status() !== 'ok' || !database.db) return
-  sync.tick(database.db).catch((err: Error) => console.warn(`giro YAZIO non riuscito: ${err.message}`))
+  nutritionOn()
+    .then((db) => db && sync.tick(db))
+    .catch((err: Error) => console.warn(`giro YAZIO non riuscito: ${err.message}`))
 }
 // Le righe nuove o cambiate partono entro un minuto (NUT-023).
 function flushYazio() {
-  if (database.status() !== 'ok' || !database.db) return
-  sync.flush(database.db).catch((err: Error) => console.warn(`invio a YAZIO non riuscito: ${err.message}`))
+  nutritionOn()
+    .then((db) => db && sync.flush(db))
+    .catch((err: Error) => console.warn(`invio a YAZIO non riuscito: ${err.message}`))
 }
 if (yazio) {
   setTimeout(syncYazio, 30_000).unref()

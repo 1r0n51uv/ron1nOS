@@ -11,8 +11,9 @@ import { UnmatchedPanel } from '@/modules/nutrition/settings/UnmatchedPanel'
 import { YazioPanel } from '@/modules/nutrition/settings/YazioPanel'
 import { AppearanceSection } from '@/preferences/AppearanceSection'
 import { StorageNotice } from '@/preferences/StorageNotice'
+import { ModulesSection } from '@/preferences/ModulesSection'
 import { DashboardPanel } from '@/widgets/DashboardPanel'
-import { findSection, MODULE_SETTINGS, SECTIONS } from './settings/sections'
+import { findSection, SECTIONS } from './settings/sections'
 
 // Impostazioni (SET-001): a sinistra il menu delle sezioni, a destra una
 // sezione alla volta. Le sezioni sono rotte figlie, vedi App.tsx.
@@ -77,28 +78,6 @@ export function SettingsSection() {
         </WidgetCard>
       )}
     </>
-  )
-}
-
-function ModulesSection() {
-  return (
-    <WidgetCard title="Impostazioni dei moduli">
-      <ul className="m-0 flex list-none flex-col gap-1 p-0">
-        {MODULE_SETTINGS.map((m) => (
-          <li key={m.id}>
-            <Link
-              to={`/impostazioni/moduli/${m.id}`}
-              className="flex h-11 items-center justify-between rounded-xl px-3 text-sm text-ink no-underline hover:bg-glass-hover"
-            >
-              {m.label}
-              <span aria-hidden="true" className="text-ink-muted">
-                ›
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </WidgetCard>
   )
 }
 
