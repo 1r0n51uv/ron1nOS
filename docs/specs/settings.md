@@ -107,18 +107,18 @@ spento` con il link per riaccenderlo.
 
 #### SET-006 · Navigazione
 
-Stato: pianificato (#152)
+Stato: in corso (#152)
 
 Accettazione:
 
-- [ ] Elenco delle voci della barra laterale, riordinabile trascinando o
+- [x] Elenco delle voci della barra laterale, riordinabile trascinando o
       con le frecce.
-- [ ] Dashboard resta sempre prima e Impostazioni sempre ultima.
-- [ ] `Ripristina ordine` torna a quello predefinito.
+- [x] Dashboard resta sempre prima e Impostazioni sempre ultima.
+- [x] `Ripristina ordine` torna a quello predefinito.
 
 #### SET-007 · Account
 
-Stato: in corso (#151)
+Stato: fatto (#188)
 
 Raccoglie i comandi del login ([auth.md](auth.md)).
 
