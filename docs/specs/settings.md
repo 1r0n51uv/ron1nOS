@@ -16,7 +16,7 @@ Non fa, per ora: tema chiaro, colore di accento diverso dal rosso, lingue
 diverse dall'italiano, più utenti.
 
 **Stato del documento: approvato il 2026-10-22, requisiti fatti il
-2026-10-23 tranne SET-008, che aspetta AUTH-005.** Le scelte sono in
+2026-10-23.** Le scelte sono in
 fondo, in "Decisioni".
 
 ## Requisiti
@@ -134,11 +134,11 @@ altre sessioni` (AUTH-002).
 
 #### SET-008 · App iOS
 
-Stato: pianificato (#156)
+Stato: fatto (#206)
 
-È la sezione dei token di AUTH-005: creazione con nome, token mostrato una
-volta, elenco con ultimo uso e revoca. Si realizza con AUTH-005, quando
-arriva l'app; fino ad allora la sezione non compare.
+È la sezione dei token di AUTH-005: creazione con nome (di default
+`iPhone`), token mostrato una volta con Copia, elenco con ultimo uso e
+revoca. Con il login spento dice che l'app non ha bisogno di un token.
 
 #### SET-009 · Integrazioni
 

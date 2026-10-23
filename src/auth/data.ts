@@ -15,6 +15,9 @@ export type SessionInfo = {
   current: boolean
 }
 
+// Un token dell'app iOS in Impostazioni › App iOS (SET-008, AUTH-005).
+export type AppToken = { id: string; name: string; createdAt: string; lastUsedAt: string | null }
+
 export const authSource = {
   me: () => api.get<Me>('/auth/me'),
   sessions: () => api.get<{ sessions: SessionInfo[] }>('/auth/sessions').then((r) => r.sessions),
@@ -23,6 +26,9 @@ export const authSource = {
   login: (password: string) => api.post<Me & { expiresAt: string }>('/auth/login', { password }),
   logout: () => api.post<void>('/auth/logout'),
   logoutEverywhere: () => api.delete<void>('/auth/sessions'),
+  tokens: () => api.get<{ tokens: AppToken[] }>('/auth/tokens').then((r) => r.tokens),
+  createToken: (name: string) => api.post<AppToken & { token: string }>('/auth/tokens', { name }),
+  deleteToken: (id: string) => api.delete<void>(`/auth/tokens/${id}`),
 }
 
 export const ME_KEY = ['auth', 'me']
@@ -74,5 +80,21 @@ export function useCloseSessions() {
   return {
     one: useMutation({ mutationFn: (id: string) => authSource.closeSession(id), onSuccess: refresh }),
     others: useMutation({ mutationFn: () => authSource.closeOthers(), onSuccess: refresh }),
+  }
+}
+
+const TOKENS_KEY = ['auth', 'tokens']
+
+export function useTokens(enabled: boolean) {
+  return useQuery({ queryKey: TOKENS_KEY, queryFn: () => authSource.tokens(), enabled })
+}
+
+// Crea o revoca un token; l'elenco si rilegge dopo.
+export function useTokenActions() {
+  const client = useQueryClient()
+  const refresh = () => client.invalidateQueries({ queryKey: TOKENS_KEY })
+  return {
+    create: useMutation({ mutationFn: (name: string) => authSource.createToken(name), onSuccess: refresh }),
+    revoke: useMutation({ mutationFn: (id: string) => authSource.deleteToken(id), onSuccess: refresh }),
   }
 }

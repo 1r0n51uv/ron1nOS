@@ -68,16 +68,17 @@ Accettazione:
 
 #### AUTH-005 · Token per l'app iOS
 
-Stato: proposto, rimandato all'app iOS
+Stato: fatto (#206)
 
 Accettazione:
 
-- [ ] Dalle impostazioni si crea un token con un nome (`iPhone`), mostrato
+- [x] Dalle impostazioni si crea un token con un nome (`iPhone`), mostrato
       una volta sola; in Postgres se ne salva solo l'hash.
-- [ ] L'app lo manda come `Authorization: Bearer`; vale per tutte le
-      rotte come la sessione web.
-- [ ] Elenco dei token con ultimo uso e revoca.
-- [ ] Si realizza con l'app iOS; prima basta AUTH-001…004.
+- [x] L'app lo manda come `Authorization: Bearer`; vale per tutte le
+      rotte come la sessione web. Un token sbagliato risponde 401 senza
+      ripiegare sul cookie.
+- [x] Elenco dei token con ultimo uso (aggiornato al più una volta l'ora)
+      e revoca.
 
 ## Decisioni
 

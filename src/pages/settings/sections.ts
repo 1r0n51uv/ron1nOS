@@ -1,12 +1,12 @@
 // Sezioni delle impostazioni (SET-001), nell'ordine del menu. Ogni sezione
-// ha il suo indirizzo, `/impostazioni/<id>`. `App iOS` (SET-008) arriva
-// dopo Account con i token di AUTH-005, quando c'è l'app.
+// ha il suo indirizzo, `/impostazioni/<id>`.
 export const SECTIONS = [
   { id: 'aspetto', label: 'Aspetto' },
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'moduli', label: 'Moduli' },
   { id: 'navigazione', label: 'Navigazione' },
   { id: 'account', label: 'Account' },
+  { id: 'app-ios', label: 'App iOS' },
   { id: 'integrazioni', label: 'Integrazioni' },
   { id: 'formati', label: 'Formati' },
   { id: 'backup', label: 'Backup configurazione' },

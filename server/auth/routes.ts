@@ -21,6 +21,7 @@ import {
   purgeExpired,
   touchSession,
 } from './sessions.ts'
+import { createToken, deleteToken, listTokens, checkToken } from './tokens.ts'
 
 export const SESSION_COOKIE = 'ron1nos_session'
 
@@ -38,6 +39,7 @@ const PUBLIC = new Set(['GET /api/v1/health', 'POST /api/v1/auth/login'])
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
 
 const loginBody = z.object({ password: z.string().min(1).max(1024) })
+const tokenBody = z.object({ name: z.string().trim().min(1).max(60) })
 
 const unauthenticated = (c: Context) =>
   c.json({ error: 'unauthenticated', message: 'Accesso richiesto' }, 401)
@@ -90,6 +92,14 @@ export function createAuth({
 
   const middleware: MiddlewareHandler = async (c, next) => {
     if (!enabled || PUBLIC.has(`${c.req.method} ${c.req.path}`)) return next()
+    // Token dell'app iOS (AUTH-005): vale come una sessione. Un token
+    // sbagliato è un 401, senza ripiegare sul cookie.
+    const bearer = c.req.header('authorization')?.match(/^Bearer (.+)$/)?.[1]
+    if (bearer) {
+      const db = database.db
+      if (!db || database.status() !== 'ok') return dbUnavailable(c)
+      return (await checkToken(db, bearer)) ? next() : unauthenticated(c)
+    }
     if (!SAFE_METHODS.has(c.req.method) && !sameOrigin(c)) {
       return c.json({ error: 'forbidden_origin', message: 'Origine non permessa' }, 403)
     }
@@ -177,6 +187,29 @@ export function createAuth({
   routes.delete('/sessions', async (c) => {
     if (enabled && database.db) await deleteAllSessions(database.db)
     clearCookie(c)
+    return c.body(null, 204)
+  })
+
+  // Token per l'app iOS (AUTH-005, SET-008). Il token si vede solo nella
+  // risposta che lo crea.
+  routes.get('/tokens', async (c) => {
+    if (!enabled || !database.db) return c.json({ tokens: [] })
+    return c.json({ tokens: await listTokens(database.db) })
+  })
+
+  routes.post('/tokens', async (c) => {
+    if (!enabled) return c.json({ error: 'auth_disabled', message: 'Login non attivo' }, 409)
+    const parsed = tokenBody.safeParse(await c.req.json().catch(() => null))
+    if (!parsed.success) return c.json({ error: 'invalid_name', message: 'Serve un nome' }, 400)
+    const db = database.db
+    if (!db || database.status() !== 'ok') return dbUnavailable(c)
+    return c.json(await createToken(db, parsed.data.name), 201)
+  })
+
+  routes.delete('/tokens/:id', async (c) => {
+    if (!enabled || !database.db || !(await deleteToken(database.db, c.req.param('id')))) {
+      return c.json({ error: 'not_found', message: 'Token non trovato' }, 404)
+    }
     return c.body(null, 204)
   })
 
