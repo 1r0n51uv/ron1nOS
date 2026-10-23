@@ -51,24 +51,25 @@ Accettazione:
 
 #### GYM-002 · Pagina Allenamenti
 
-Stato: pianificato (#123) · Origine: pkm, cambia
+Stato: fatto (#123) · Origine: pkm, cambia
 
 Una pagina `/allenamenti` (oggi `ComingSoon`) fatta soprattutto di
 immagini e con pochi numeri. Dall'alto: titolo con una riga di costanza
 (GYM-013), la dashboard esercizi (GYM-007), i nuovi record (GYM-010)
 accanto al volume per gruppo muscolare (GYM-012), lo storico delle sessioni
 (GYM-004). In testata il pulsante `Importa CSV` (GYM-003) e il link
-all'elenco degli esercizi (GYM-009).
+all'elenco degli esercizi (GYM-009). Il grafico degli allenamenti per
+settimana (GYM-013) sta sopra lo storico.
 
 Accettazione:
 
-- [ ] La voce Allenamenti della barra di navigazione apre la pagina.
-- [ ] Senza dati la pagina mostra solo un invito a importare il CSV.
-- [ ] Card compatte: le immagini sono piccole e le card stanno in griglie
+- [x] La voce Allenamenti della barra di navigazione apre la pagina.
+- [x] Senza dati la pagina mostra solo un invito a importare il CSV.
+- [x] Card compatte: le immagini sono piccole e le card stanno in griglie
       da 4 a 6 colonne.
-- [ ] Ogni esercizio mostrato ha la sua immagine (GYM-014); le foto sono in
+- [x] Ogni esercizio mostrato ha la sua immagine (GYM-014); le foto sono in
       bianco e nero e scurite, così l'unico colore resta l'accento rosso.
-- [ ] Ogni sezione ha il suo skeleton e il suo messaggio di errore, senza
+- [x] Ogni sezione ha il suo skeleton e il suo messaggio di errore, senza
       bloccare le altre.
 
 ### Import

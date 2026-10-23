@@ -6,6 +6,7 @@ import { WidgetSkeleton } from '@/components/WidgetSkeleton'
 import { Button } from '@/components/ui/button'
 import { ApiError } from '@/lib/api'
 import { num } from '@/lib/format'
+import { todayRome } from '@/modules/nutrition/dates'
 import type { ImportSummary } from '../data'
 import { useWorkoutSummary } from '../data'
 import { period, streak, workouts } from '../format'
@@ -22,6 +23,7 @@ import { SessionHistory } from './SessionHistory'
 export function WorkoutPage() {
   const [last, setLast] = useState<ImportSummary | null>(null)
   const { data, error } = useWorkoutSummary()
+  const today = data?.today ?? todayRome()
 
   return (
     <>
@@ -56,31 +58,36 @@ export function WorkoutPage() {
         </div>
       ) : null}
 
-      {!data && error ? (
-        <AlertRow
-          title="Allenamenti non disponibili."
-          body={error instanceof ApiError ? error.message : 'Backend non raggiungibile'}
-        />
-      ) : !data ? (
-        <WidgetSkeleton title="Allenamenti per settimana" />
-      ) : data.last ? (
-        <>
-          <ExerciseDashboard />
-          <div className="grid grid-cols-2 gap-4">
-            <RecentRecords today={data.today} />
-            <GroupVolume />
-          </div>
-          <section aria-label="Allenamenti per settimana">
-            <WidgetCard title="Allenamenti per settimana" meta="ultime 26 settimane">
-              <WeekBars weeks={data.weeks} average height={160} />
-            </WidgetCard>
-          </section>
-          <SessionHistory today={data.today} />
-        </>
-      ) : (
+      {data && !data.last ? (
         <div className="rounded-[20px] p-5 text-sm text-ink-muted glass-panel">
           Importa il CSV esportato da Liftin’ per vedere qui i tuoi allenamenti.
         </div>
+      ) : (
+        // Ogni sezione carica i suoi dati: un errore resta nella sua card.
+        <>
+          <ExerciseDashboard />
+          <div className="grid grid-cols-2 gap-4">
+            <RecentRecords today={today} />
+            <GroupVolume />
+          </div>
+          {data ? (
+            <section aria-label="Allenamenti per settimana">
+              <WidgetCard title="Allenamenti per settimana" meta="ultime 26 settimane">
+                <WeekBars weeks={data.weeks} average height={160} />
+              </WidgetCard>
+            </section>
+          ) : error ? (
+            <WidgetCard title="Allenamenti per settimana">
+              <AlertRow
+                title="Allenamenti non disponibili."
+                body={error instanceof ApiError ? error.message : 'Backend non raggiungibile'}
+              />
+            </WidgetCard>
+          ) : (
+            <WidgetSkeleton title="Allenamenti per settimana" />
+          )}
+          <SessionHistory today={today} />
+        </>
       )}
     </>
   )
