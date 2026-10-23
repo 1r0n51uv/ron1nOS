@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 
 import { AlertRow, Icon } from '@/components/ron1n'
 import { Button } from '@/components/ui/button'
@@ -48,12 +48,20 @@ export function DocumentsPage() {
           </div>
           <h1 className="m-0 font-display text-[44px] leading-[48px] font-bold">Documenti</h1>
         </div>
-        <UploadDialog>
-          <Button>
-            <Icon name="plus" size={16} />
-            Carica file
+        <div className="flex gap-2">
+          <Button variant="glass" asChild>
+            <Link to="/documenti/tipi">
+              <Icon name="settings" size={16} />
+              Tipi
+            </Link>
           </Button>
-        </UploadDialog>
+          <UploadDialog>
+            <Button>
+              <Icon name="plus" size={16} />
+              Carica file
+            </Button>
+          </UploadDialog>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">

@@ -336,6 +336,64 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+    post:
+      summary: Crea un tipo di documento (DOC-016)
+      description: Le chiavi dei campi nuovi le genera il server dalle etichette.
+      operationId: createDocumentType
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DocumentTypeInput" }
+      responses:
+        "201":
+          description: Tipo creato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DocumentType" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "503": { $ref: "#/components/responses/DocumentsUnavailable" }
+  /documents/types/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      summary: Modifica un tipo, anche già pronto (DOC-016)
+      description: >
+        `fields` è l'elenco completo e ordinato: i campi esistenti si
+        passano con la loro `key`, i nuovi senza. I valori dei campi tolti,
+        o che non sono più date valide, diventano campi liberi sui
+        documenti del tipo.
+      operationId: updateDocumentType
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DocumentTypeInput" }
+      responses:
+        "200":
+          description: Tipo aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DocumentType" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DocumentsUnavailable" }
+    delete:
+      summary: Elimina un tipo che nessun documento usa (DOC-016)
+      operationId: deleteDocumentType
+      responses:
+        "204":
+          description: Eliminato.
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: "`type_in_use`: il messaggio dice quanti documenti lo usano."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DocumentsUnavailable" }
   /documents/holders:
     get:
       summary: Titolari già usati (DOC-007)
@@ -1883,6 +1941,22 @@ components:
         label: { type: string, maxLength: 60 }
         kind: { type: string, enum: [text, date, code] }
         copyable: { type: boolean }
+    DocumentTypeInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 60 }
+        icon: { type: string, enum: [id-card, passport, car, health, file, card, person] }
+        fields:
+          type: array
+          maxItems: 40
+          items:
+            type: object
+            required: [label, kind, copyable]
+            properties:
+              key: { type: string, description: Solo per i campi già esistenti. }
+              label: { type: string, maxLength: 60 }
+              kind: { type: string, enum: [text, date, code] }
+              copyable: { type: boolean }
     DocumentType:
       type: object
       required: [id, key, name, icon, preset, fields, documents]

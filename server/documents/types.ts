@@ -104,3 +104,88 @@ export function retype(
   }
   return { fields, moved }
 }
+
+// Icone tra cui scegliere per un tipo (DOC-016).
+export const TYPE_ICONS = ['id-card', 'passport', 'car', 'health', 'file', 'card', 'person'] as const
+
+// Un campo come arriva dalla UI: senza chiave se è nuovo.
+export const FieldInput = TypeField.extend({ key: TypeField.shape.key.optional() })
+export type FieldInput = z.infer<typeof FieldInput>
+
+// Chiave stabile da un'etichetta: `Numero polizza` → `numero_polizza`.
+export function keyFor(label: string, taken: Set<string>) {
+  const base =
+    label
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .replace(/^(?=[0-9])/, 'f_')
+      .slice(0, 36) || 'campo'
+  let key = base
+  for (let i = 2; taken.has(key); i++) key = `${base}_${i}`
+  taken.add(key)
+  return key
+}
+
+// I campi nuovi del tipo: le chiavi esistenti restano, le nuove si
+// generano. Una chiave che il tipo non ha è un errore.
+export function resolveFields(
+  current: TypeField[],
+  input: FieldInput[],
+): { ok: true; fields: TypeField[] } | { ok: false; message: string } {
+  const known = new Set(current.map((f) => f.key))
+  const taken = new Set(input.flatMap((f) => (f.key ? [f.key] : [])))
+  if (taken.size !== input.filter((f) => f.key).length) return { ok: false, message: 'Campo ripetuto' }
+  const fields: TypeField[] = []
+  for (const f of input) {
+    if (f.key && !known.has(f.key)) return { ok: false, message: `Campo sconosciuto: ${f.key}` }
+    fields.push({ ...f, key: f.key ?? keyFor(f.label, taken) })
+  }
+  return { ok: true, fields }
+}
+
+// Valori di un documento dopo una modifica del tipo (DOC-016): quelli dei
+// campi tolti, o che non sono più date valide, diventano campi liberi.
+export function reshape(
+  values: Record<string, string>,
+  before: TypeField[],
+  after: TypeField[],
+): { fields: Record<string, string>; moved: { label: string; value: string }[] } {
+  const now = new Map(after.map((f) => [f.key, f]))
+  const labels = new Map(before.map((f) => [f.key, f.label]))
+  const fields: Record<string, string> = {}
+  const moved: { label: string; value: string }[] = []
+  for (const [key, value] of Object.entries(values)) {
+    const field = now.get(key)
+    const fits =
+      field && (field.kind !== 'date' || (ISO_DATE.test(value) && !Number.isNaN(Date.parse(value))))
+    if (fits) fields[key] = value
+    else moved.push({ label: labels.get(key) ?? key, value })
+  }
+  return { fields, moved }
+}
+
+export async function insertType(db: Queryable, input: { name: string; icon: string; fields: TypeField[] }) {
+  const { rows } = await db.query<{ id: string }>(
+    'insert into document_types (name, icon, fields) values ($1, $2, $3) returning id',
+    [input.name, input.icon, JSON.stringify(input.fields)],
+  )
+  return rows[0].id
+}
+
+export async function saveType(
+  db: Queryable,
+  id: string,
+  input: { name: string; icon: string; fields: TypeField[] },
+) {
+  await db.query(
+    'update document_types set name = $2, icon = $3, fields = $4, updated_at = now() where id = $1',
+    [id, input.name, input.icon, JSON.stringify(input.fields)],
+  )
+}
+
+export async function deleteType(db: Queryable, id: string) {
+  await db.query('delete from document_types where id = $1', [id])
+}
