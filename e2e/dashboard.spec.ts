@@ -11,6 +11,7 @@ const widgets = [
   'Container',
   'Download',
   'Nota fissata',
+  'Documenti',
 ]
 
 test('la dashboard mostra tutti i widget con i dati', async ({ page }) => {
@@ -185,5 +186,50 @@ test.describe('modifica sempre attiva (DASH-004)', () => {
     await expect
       .poll(() => saved(page))
       .toEqual([two.items[0], { id: 'weight.summary', x: 8, y: 0, w: 8, h: 7 }])
+  })
+})
+
+test.describe('opzioni del widget (DASH-005)', () => {
+  test.afterEach(() => sql('delete from dashboard_layouts'))
+
+  test('variante e dati mostrati si scelgono dal menu e si salvano', async ({ page }) => {
+    await page.request.put('/api/v1/dashboard/layouts/desktop', {
+      data: {
+        header: 'full',
+        items: [
+          { id: 'weight.summary', x: 0, y: 0, w: 8, h: 7 },
+          { id: 'nutrition.summary', x: 8, y: 0, w: 8, h: 10 },
+        ],
+      },
+    })
+    await page.goto('/')
+    const weight = page.locator('[data-widget="weight.summary"]')
+    await expect(weight.getByRole('img', { name: /Peso da/ })).toBeVisible()
+    await weight.hover()
+    await page.getByRole('button', { name: 'Altre azioni sul widget Peso' }).click()
+    await page.getByRole('menuitem', { name: 'Opzioni' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Opzioni · Peso' })
+    await dialog.getByRole('radio', { name: 'Compatta' }).click()
+    await dialog.getByRole('button', { name: 'Fatto' }).click()
+    await expect(weight.getByRole('img', { name: /Peso da/ })).toHaveCount(0)
+
+    const nutrition = page.locator('[data-widget="nutrition.summary"]')
+    await nutrition.hover()
+    await page.getByRole('button', { name: 'Altre azioni sul widget Nutrizione' }).click()
+    await page.getByRole('menuitem', { name: 'Opzioni' }).click()
+    await page.getByRole('dialog').getByRole('checkbox', { name: 'Grassi' }).click()
+    await page.keyboard.press('Escape')
+    await expect(nutrition.getByText('Grassi')).toHaveCount(0)
+    await expect(nutrition.getByText('Proteine')).toBeVisible()
+
+    await expect
+      .poll(async () => {
+        const res = await page.request.get('/api/v1/dashboard/layouts/desktop')
+        return ((await res.json()) as { items: unknown[] }).items
+      })
+      .toEqual([
+        { id: 'weight.summary', x: 0, y: 0, w: 8, h: 7, variant: 'compact' },
+        { id: 'nutrition.summary', x: 8, y: 0, w: 8, h: 10, options: { macros: ['protein', 'carbs'] } },
+      ])
   })
 })

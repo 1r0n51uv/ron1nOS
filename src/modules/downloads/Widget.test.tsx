@@ -111,6 +111,18 @@ describe('DownloadsWidget', () => {
     expect(screen.getByText('+1 attivo · 1 in seed')).toBeInTheDocument()
   })
 
+  it('mostra quanti download chiedono le opzioni (DASH-005)', () => {
+    withData({
+      downloadSpeed: 0,
+      torrents: Array.from({ length: 4 }, (_, i) => torrent({ name: `${i}.iso` })),
+    })
+    renderWithProviders(<DownloadsWidget options={{ limit: 1 }} />)
+    expect(
+      within(screen.getByRole('list', { name: 'Download in corso' })).getAllByRole('listitem'),
+    ).toHaveLength(1)
+    expect(screen.getByText('+3 attivi')).toBeInTheDocument()
+  })
+
   it('senza download attivi lo dice e mostra il riepilogo', () => {
     withData({ downloadSpeed: 0, torrents: [torrent({ state: 'seeding', progress: 1 })] })
     renderWithProviders(<DownloadsWidget />)

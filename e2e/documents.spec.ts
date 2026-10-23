@@ -81,3 +81,30 @@ test('file libero senza tipo, poi modificato ed eliminato (DOC-003, DOC-005, DOC
   await expect(page).toHaveURL(/\/documenti$/)
   await expect(page.getByText(/Nessun documento\./)).toBeVisible()
 })
+
+test('il widget mostra fissati e scadenze; la stella fissa dalla pagina (DOC-001, DOC-008, DOC-010)', async ({
+  page,
+  request,
+}) => {
+  const day = (offset: number) => new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10)
+  await request.post('/api/v1/documents/documents', {
+    data: { title: 'Patente', holder: 'Mario', expiresOn: day(-5) },
+  })
+  await request.post('/api/v1/documents/documents', { data: { title: 'Polizza auto', expiresOn: day(400) } })
+
+  await page.goto('/documenti')
+  await page.getByRole('button', { name: 'Metti in evidenza Polizza auto' }).click()
+  await expect(
+    page.getByRole('region', { name: 'In evidenza' }).getByRole('link', { name: /Polizza auto/ }),
+  ).toBeVisible()
+
+  await page.goto('/')
+  const widget = page
+    .locator('[data-slot="card"]')
+    .filter({ has: page.getByText('Documenti', { exact: true }) })
+  await expect(widget.getByRole('list', { name: 'In evidenza' })).toHaveText('Polizza auto')
+  await expect(widget.getByRole('list', { name: 'In scadenza' })).toContainText('Patente · Mario')
+  await expect(widget.getByRole('list', { name: 'In scadenza' })).toContainText('Scaduto')
+  await widget.getByRole('link', { name: 'Polizza auto' }).click()
+  await expect(page.getByRole('heading', { name: 'Polizza auto', level: 1 })).toBeVisible()
+})

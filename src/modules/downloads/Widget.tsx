@@ -3,6 +3,7 @@ import { WidgetSkeleton } from '@/components/WidgetSkeleton'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { num } from '@/lib/format'
+import type { WidgetProps } from '@/widgets/types'
 import type { Torrent } from './data'
 import { useDownloads } from './data'
 import { eta, problem, summary, VISIBLE } from './format'
@@ -39,7 +40,9 @@ function Footer({ text, disabled }: { text: string; disabled?: boolean }) {
   )
 }
 
-export function DownloadsWidget({ className }: { className?: string }) {
+// Quanti download mostrare si sceglie nelle opzioni (DASH-005).
+export function DownloadsWidget({ className, options }: WidgetProps) {
+  const limit = (options?.limit as number | undefined) ?? VISIBLE
   const { data, error } = useDownloads()
   // Un errore vince sui dati vecchi: meglio dire che non sappiamo.
   if (error) {
@@ -55,8 +58,8 @@ export function DownloadsWidget({ className }: { className?: string }) {
   }
   if (!data) return <WidgetSkeleton title="Download" className={className} />
 
-  const active = data.torrents.filter((t) => t.state === 'downloading').slice(0, VISIBLE)
-  const rest = summary(data)
+  const active = data.torrents.filter((t) => t.state === 'downloading').slice(0, limit)
+  const rest = summary(data, limit)
 
   return (
     <WidgetCard

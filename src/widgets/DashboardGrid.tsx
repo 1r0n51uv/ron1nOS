@@ -12,6 +12,8 @@ import { columnUnit, GAP_PX, GRID_COLUMNS, gridRows, moveBy, resizeBy, ROW_PX, R
 import type { LayoutItem } from './layout'
 import { readingOrder } from './layout'
 import type { WidgetDef } from './types'
+import { WidgetOptionsDialog } from './WidgetOptionsDialog'
+import { resolveOptions } from '../../server/dashboard/catalog.ts'
 
 type Placed = { item: LayoutItem; widget: WidgetDef }
 type Gesture = 'move' | 'resize'
@@ -45,6 +47,7 @@ export function DashboardGrid({
   // Dopo uno spostamento da tastiera il widget cambia posto nel DOM: il
   // fuoco torna sulla sua maniglia.
   const refocus = useRef<string | null>(null)
+  const [optionsId, setOptionsId] = useState<string | null>(null)
   const shown = draft?.items ?? items
 
   useEffect(() => {
@@ -96,6 +99,8 @@ export function DashboardGrid({
     refocus.current = widget.id
   }
 
+  const options = placed.find((p) => p.widget.id === optionsId)
+
   const style: CSSProperties = {
     gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))`,
     gridTemplateRows: `repeat(${gridRows(placed.map((p) => p.item))}, ${ROW_PX}px)`,
@@ -115,17 +120,30 @@ export function DashboardGrid({
           )}
           style={{ gridColumn: `${item.x + 1} / span ${item.w}`, gridRow: `${item.y + 1} / span ${item.h}` }}
         >
-          <widget.component className="min-h-0 flex-1 overflow-hidden" />
+          <widget.component
+            className="min-h-0 flex-1 overflow-hidden"
+            variant={item.variant ?? widget.variants[0]}
+            options={resolveOptions(widget, item.options)}
+          />
           {onChange ? (
             <WidgetControls
               widget={widget}
               onPointerDown={(e, gesture) => startGesture(e, widget, gesture)}
               onKeyDown={(e) => onHandleKey(e, widget)}
               onRemove={() => onRemove?.(widget.id)}
+              onOptions={() => setOptionsId(widget.id)}
             />
           ) : null}
         </div>
       ))}
+      {options && onChange ? (
+        <WidgetOptionsDialog
+          item={options.item}
+          widget={options.widget}
+          onChange={(next) => onChange(items.map((i) => (i.id === next.id ? next : i)))}
+          onClose={() => setOptionsId(null)}
+        />
+      ) : null}
     </div>
   )
 }
@@ -139,11 +157,13 @@ function WidgetControls({
   onPointerDown,
   onKeyDown,
   onRemove,
+  onOptions,
 }: {
   widget: WidgetDef
   onPointerDown: (event: ReactPointerEvent, gesture: Gesture) => void
   onKeyDown: (event: KeyboardEvent) => void
   onRemove: () => void
+  onOptions: () => void
 }) {
   return (
     <>
@@ -185,6 +205,7 @@ function WidgetControls({
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={onOptions}>Opzioni</DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onSelect={onRemove}>
             Rimuovi
           </DropdownMenuItem>
