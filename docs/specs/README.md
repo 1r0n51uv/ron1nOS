@@ -10,14 +10,16 @@ https://github.com/1r0n51uv/ron1n/blob/main/docs/flusso-sviluppo.md.
 
 ## Moduli
 
-| Modulo      | File                         | Prefisso ID | Label           |
-| ----------- | ---------------------------- | ----------- | --------------- |
-| Download    | [downloads.md](downloads.md) | `DL`        | `mod:downloads` |
-| Server      | [server.md](server.md)       | `SRV`       | `mod:server`    |
-| Nutrizione  | [nutrition.md](nutrition.md) | `NUT`       | `mod:nutrition` |
-| Documenti   | [documents.md](documents.md) | `DOC`       | `mod:documents` |
-| Login       | [auth.md](auth.md)           | `AUTH`      | `mod:auth`      |
-| Allenamento | [workout.md](workout.md)     | `GYM`       | `mod:workout`   |
+| Modulo       | File                         | Prefisso ID | Label           |
+| ------------ | ---------------------------- | ----------- | --------------- |
+| Download     | [downloads.md](downloads.md) | `DL`        | `mod:downloads` |
+| Server       | [server.md](server.md)       | `SRV`       | `mod:server`    |
+| Nutrizione   | [nutrition.md](nutrition.md) | `NUT`       | `mod:nutrition` |
+| Documenti    | [documents.md](documents.md) | `DOC`       | `mod:documents` |
+| Login        | [auth.md](auth.md)           | `AUTH`      | `mod:auth`      |
+| Allenamento  | [workout.md](workout.md)     | `GYM`       | `mod:workout`   |
+| Dashboard    | [dashboard.md](dashboard.md) | `DASH`      | `mod:dashboard` |
+| Impostazioni | [settings.md](settings.md)   | `SET`       | `mod:settings`  |
 
 Gli altri moduli (`src/modules/*`) hanno per ora solo il mock dell'MVP; la
 loro specifica arriva quando si collegano a una sorgente vera.

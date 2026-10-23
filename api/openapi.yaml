@@ -336,6 +336,215 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+  /documents/holders:
+    get:
+      summary: Titolari già usati (DOC-007)
+      description: I più frequenti per primi. Il titolare di default è `Io`.
+      operationId: getDocumentHolders
+      responses:
+        "200":
+          description: Nomi dei titolari.
+          content:
+            application/json:
+              schema: { type: array, items: { type: string } }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "503": { $ref: "#/components/responses/DocumentsUnavailable" }
+  /documents/documents:
+    get:
+      summary: Elenco dei documenti (DOC-002, DOC-008)
+      description: >
+        Prima i fissati, nell'ordine in cui sono stati fissati, poi gli
+        altri per titolo. Solo dati in chiaro: nessun valore dei campi.
+      operationId: listDocuments
+      parameters:
+        - name: q
+          in: query
+          description: Cerca nel titolo e nei tag.
+          schema: { type: string, maxLength: 100 }
+        - name: type
+          in: query
+          description: Id di un tipo, oppure `none` per i file senza tipo.
+          schema: { type: string }
+        - name: holder
+          in: query
+          schema: { type: string, maxLength: 60 }
+      responses:
+        "200":
+          description: Documenti.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DocumentSummary" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "503": { $ref: "#/components/responses/DocumentsUnavailable" }
+    post:
+      summary: Crea un documento (DOC-005)
+      description: >
+        Solo il titolo è obbligatorio. Con `typeId` i campi si validano
+        contro il tipo; senza tipo il documento ha solo campi liberi.
+      operationId: createDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DocumentInput" }
+      responses:
+        "201":
+          description: Documento creato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Document" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "503": { $ref: "#/components/responses/DocumentsUnavailable" }
+  /documents/documents/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Dettaglio di un documento (DOC-004)
+      operationId: getDocument
+      responses:
+        "200":
+          description: Documento con campi, tipo, scadenza e allegati.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Document" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DocumentsUnavailable" }
+    patch:
+      summary: Modifica un documento (DOC-003, DOC-005, DOC-008)
+      description: >
+        Solo i campi presenti cambiano. Cambiando `typeId` i valori che il
+        nuovo tipo non ha diventano campi liberi. `pinned: true` su un
+        documento già fissato non cambia il suo posto nell'evidenza.
+      operationId: updateDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DocumentPatch" }
+      responses:
+        "200":
+          description: Documento aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Document" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DocumentsUnavailable" }
+    delete:
+      summary: Elimina un documento e i suoi allegati (DOC-014)
+      operationId: deleteDocument
+      responses:
+        "204":
+          description: Eliminato, in modo definitivo.
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DocumentsUnavailable" }
+  /documents/documents/{id}/files:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      summary: Carica un allegato (DOC-011)
+      description: >
+        Un file per richiesta, fino a 20 MB e 100 MB in tutto per
+        documento. Il tipo si ricava dai byte; per le immagini il server
+        genera una miniatura. Contenuto e miniatura sono cifrati.
+      operationId: uploadDocumentFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                label: { $ref: "#/components/schemas/DocumentFileLabel" }
+      responses:
+        "201":
+          description: Allegato caricato, in coda agli altri.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DocumentFile" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: "`document_full`: oltre i 100 MB di allegati."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "413":
+          description: "`file_too_large`: file oltre i 20 MB."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DocumentsUnavailable" }
+  /documents/documents/{id}/files/{fileId}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: fileId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Scarica un allegato o la sua miniatura (DOC-004, DOC-012)
+      description: >
+        Il file in chiaro con `Cache-Control: no-store`. Di default inline
+        per l'anteprima; con `download=1` come allegato con il nome
+        originale.
+      operationId: getDocumentFile
+      parameters:
+        - name: variant
+          in: query
+          description: "`thumb`: miniatura JPEG, lato lungo 400 px."
+          schema: { type: string, enum: [thumb] }
+        - name: download
+          in: query
+          schema: { type: string, enum: ["1"] }
+      responses:
+        "200":
+          description: Contenuto del file.
+          content:
+            "*/*":
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DocumentsUnavailable" }
+    patch:
+      summary: Etichetta e ordine di un allegato (DOC-011)
+      description: "`position` è l'indice nella lista: gli altri allegati scalano."
+      operationId: updateDocumentFile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label: { $ref: "#/components/schemas/DocumentFileLabel" }
+                position: { type: integer, minimum: 0 }
+      responses:
+        "200":
+          description: Allegato aggiornato.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DocumentFile" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DocumentsUnavailable" }
+    delete:
+      summary: Elimina un allegato (DOC-014)
+      operationId: deleteDocumentFile
+      responses:
+        "204":
+          description: Eliminato, in modo definitivo.
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DocumentsUnavailable" }
   /server/stats:
     get:
       summary: Risorse del server lette da Glances
@@ -1473,6 +1682,11 @@ components:
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
+    DocumentsUnavailable:
+      description: "`documents_disabled` (manca il login o DOCUMENTS_KEY) o `database_unavailable`."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
   schemas:
     DocumentTypeField:
       type: object
@@ -1521,6 +1735,157 @@ components:
         skippedRows: { type: integer, description: righe senza data valida o esercizio }
         from: { type: string, format: date, description: primo giorno nel file }
         to: { type: string, format: date, description: ultimo giorno nel file }
+
+    DocumentExpiry:
+      type: [object, "null"]
+      description: >
+        Stato della scadenza (DOC-010): `expiring` dal primo preavviso
+        attivo, `expired` dal giorno dopo la scadenza. null senza data.
+      required: [status, daysLeft]
+      properties:
+        status: { type: string, enum: [ok, expiring, expired] }
+        daysLeft: { type: integer }
+    DocumentExtraField:
+      type: object
+      required: [label, value]
+      properties:
+        label: { type: string, minLength: 1, maxLength: 60 }
+        value: { type: string, minLength: 1, maxLength: 2000 }
+    DocumentFileLabel:
+      type: string
+      enum: [fronte, retro, pagina, altro]
+    DocumentFile:
+      type: object
+      required: [id, name, mime, size, label, position, hasThumb, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, description: Nome originale. }
+        mime: { type: string, description: Ricavato dai byte; `application/octet-stream` se sconosciuto. }
+        size: { type: integer }
+        label: { $ref: "#/components/schemas/DocumentFileLabel" }
+        position: { type: integer }
+        hasThumb: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    DocumentSummary:
+      type: object
+      required:
+        [
+          id,
+          typeId,
+          typeName,
+          typeIcon,
+          title,
+          holder,
+          expiresOn,
+          expiry,
+          tags,
+          pinnedAt,
+          files,
+          thumbFileId,
+          updatedAt,
+        ]
+      properties:
+        id: { type: string, format: uuid }
+        typeId: { type: [string, "null"], format: uuid }
+        typeName: { type: [string, "null"] }
+        typeIcon: { type: [string, "null"] }
+        title: { type: string }
+        holder: { type: string }
+        expiresOn: { type: [string, "null"], format: date }
+        expiry: { $ref: "#/components/schemas/DocumentExpiry" }
+        tags: { type: array, items: { type: string } }
+        pinnedAt: { type: [string, "null"], format: date-time }
+        files: { type: integer, description: Numero di allegati. }
+        thumbFileId:
+          type: [string, "null"]
+          format: uuid
+          description: Primo allegato, se è un'immagine con miniatura.
+        updatedAt: { type: string, format: date-time }
+    Document:
+      type: object
+      required:
+        [
+          id,
+          typeId,
+          type,
+          title,
+          holder,
+          expiresOn,
+          expiry,
+          warnings,
+          tags,
+          pinnedAt,
+          fields,
+          extra,
+          notes,
+          files,
+          createdAt,
+          updatedAt,
+        ]
+      properties:
+        id: { type: string, format: uuid }
+        typeId: { type: [string, "null"], format: uuid }
+        type:
+          type: [object, "null"]
+          required: [id, name, icon, fields]
+          properties:
+            id: { type: string, format: uuid }
+            name: { type: string }
+            icon: { type: string }
+            fields:
+              type: array
+              items: { $ref: "#/components/schemas/DocumentTypeField" }
+        title: { type: string }
+        holder: { type: string }
+        expiresOn: { type: [string, "null"], format: date }
+        expiry: { $ref: "#/components/schemas/DocumentExpiry" }
+        warnings: { type: array, items: { type: integer, enum: [90, 30, 7] } }
+        tags: { type: array, items: { type: string } }
+        pinnedAt: { type: [string, "null"], format: date-time }
+        fields:
+          type: object
+          additionalProperties: { type: string }
+          description: Valori dei campi del tipo, per chiave.
+        extra:
+          type: array
+          items: { $ref: "#/components/schemas/DocumentExtraField" }
+        notes: { type: string }
+        files:
+          type: array
+          items: { $ref: "#/components/schemas/DocumentFile" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    DocumentPatch:
+      type: object
+      properties:
+        typeId: { type: [string, "null"], format: uuid }
+        title: { type: string, minLength: 1, maxLength: 120 }
+        holder: { type: string, minLength: 1, maxLength: 60 }
+        expiresOn: { type: [string, "null"], format: date }
+        warnings:
+          type: array
+          items: { type: integer, enum: [90, 30, 7] }
+        tags:
+          type: array
+          maxItems: 20
+          items: { type: string, minLength: 1, maxLength: 40 }
+        pinned: { type: boolean }
+        fields:
+          type: object
+          additionalProperties: { type: string, maxLength: 2000 }
+        extra:
+          type: array
+          maxItems: 30
+          items: { $ref: "#/components/schemas/DocumentExtraField" }
+        notes: { type: string, maxLength: 5000 }
+    DocumentInput:
+      allOf:
+        - { $ref: "#/components/schemas/DocumentPatch" }
+        - type: object
+          required: [title]
+          description: >
+            Di default titolare `Io`, preavvisi 90, 30 e 7 giorni, nessun
+            tipo, non fissato.
     Food:
       type: object
       description: Alimento, valori per 100 g. `id` null per un candidato esterno non ancora nel catalogo.

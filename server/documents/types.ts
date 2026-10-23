@@ -85,3 +85,22 @@ export function checkFields(
   }
   return { ok: true, values: clean }
 }
+
+// Cambio di tipo (DOC-003): i valori dei campi che il nuovo tipo non ha
+// diventano campi liberi con l'etichetta del vecchio campo, così niente si
+// perde. newType null: documento senza tipo, tutto diventa campo libero.
+export function retype(
+  values: Record<string, string>,
+  oldType: Pick<DocumentType, 'fields'> | null,
+  newType: Pick<DocumentType, 'fields'> | null,
+): { fields: Record<string, string>; moved: { label: string; value: string }[] } {
+  const kept = new Set(newType?.fields.map((f) => f.key) ?? [])
+  const labels = new Map(oldType?.fields.map((f) => [f.key, f.label]) ?? [])
+  const fields: Record<string, string> = {}
+  const moved: { label: string; value: string }[] = []
+  for (const [key, value] of Object.entries(values)) {
+    if (kept.has(key)) fields[key] = value
+    else moved.push({ label: labels.get(key) ?? key, value })
+  }
+  return { fields, moved }
+}

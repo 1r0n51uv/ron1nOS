@@ -7,8 +7,9 @@ import { bodyLimit } from 'hono/body-limit'
 import type { AuthDeps } from './auth/routes.ts'
 import { createAuth } from './auth/routes.ts'
 import type { Database } from './db.ts'
-import type { Vault } from './documents/crypto.ts'
-import { documentsRoutes, DocumentsDisabledError } from './documents/routes.ts'
+import { DocumentFullError } from './documents/files.ts'
+import type { DocumentsDeps } from './documents/routes.ts'
+import { documentsRoutes, DocumentsDisabledError, FileTooLargeError } from './documents/routes.ts'
 import { DatabaseUnavailableError } from './db.ts'
 import type { DraftService } from './drafts.ts'
 import {
@@ -51,7 +52,7 @@ type Deps = {
   // Login della dashboard (docs/specs/auth.md); senza, l'API resta aperta.
   auth?: Omit<AuthDeps, 'database'>
   // Modulo Documenti: la chiave di DOCUMENTS_KEY; senza, il modulo è spento.
-  documents?: { vault?: Vault }
+  documents?: Omit<DocumentsDeps, 'database' | 'authEnabled'>
 }
 
 class InvalidLinkError extends Error {}
@@ -172,6 +173,15 @@ export function createApp({
     }
     if (err instanceof DocumentsDisabledError) {
       return c.json<ApiError>({ error: 'documents_disabled', message: err.message }, 503)
+    }
+    if (err instanceof FileTooLargeError) {
+      return c.json<ApiError>({ error: 'file_too_large', message: 'File oltre i 20 MB' }, 413)
+    }
+    if (err instanceof DocumentFullError) {
+      return c.json<ApiError>(
+        { error: 'document_full', message: 'Il documento supera i 100 MB di allegati' },
+        409,
+      )
     }
     if (err instanceof InvalidRequestError) {
       return c.json<ApiError>({ error: 'invalid_request', message: err.message }, 400)
