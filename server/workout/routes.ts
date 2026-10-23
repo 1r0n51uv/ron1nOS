@@ -15,6 +15,7 @@ import { importLiftin } from './import.ts'
 import { LiftinError, parseLiftin } from './liftin.ts'
 import { normalizeExercise } from './math.ts'
 import { deleteSession, getSession } from './detail.ts'
+import { listExercises } from './exercises.ts'
 import { decodeCursor, listRoutines, listSessions } from './sessions.ts'
 import { getSummary } from './summary.ts'
 
@@ -28,6 +29,11 @@ type WorkoutDeps = {
 const ImageInput = z.object({ catalogId: z.string().min(1).max(200).nullable() })
 const SessionId = z.uuid()
 const ExerciseName = z.string().trim().min(1).max(200)
+const ExercisesQuery = z.object({
+  q: z.string().max(100).optional(),
+  sort: z.enum(['recent', 'sets']).optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+})
 
 // Il CSV completo di Liftin' resta sotto i 5 MB anche dopo anni.
 export const MAX_CSV_BYTES = 5 * 1024 * 1024
@@ -115,6 +121,13 @@ export function workoutRoutes({ database, catalog, now = () => new Date() }: Wor
 
   // Nomi delle routine per il filtro dello storico (GYM-004).
   app.get('/routines', async (c) => c.json({ routines: await listRoutines(c.get('db')) }))
+
+  // Esercizi (GYM-007, GYM-009): `sort=sets&limit=6` dà la dashboard,
+  // senza parametri l'elenco dall'ultima volta più recente.
+  app.get('/exercises', async (c) => {
+    const query = check(ExercisesQuery, c.req.query())
+    return c.json({ exercises: await listExercises(c.get('db'), catalog, query) })
+  })
 
   // Anteprima dell'import (GYM-003): stessi conti dell'import, nessuna scrittura.
   app.post('/import/preview', csvLimit, async (c) => {

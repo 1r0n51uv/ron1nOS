@@ -150,16 +150,16 @@ Accettazione:
 
 #### GYM-007 · Dashboard esercizi
 
-Stato: pianificato (#127) · Origine: pkm (ADR-0030)
+Stato: fatto (#127) · Origine: pkm (ADR-0030)
 
 Accettazione:
 
-- [ ] Una riga di 6 card compatte, i 6 esercizi più allenati per numero di
+- [x] Una riga di 6 card compatte, i 6 esercizi più allenati per numero di
       serie: immagine (GYM-014), nome, miglior 1RM stimato e sparkline
       dell'andamento.
-- [ ] Per un esercizio a tempo la card mostra la durata migliore al posto
+- [x] Per un esercizio a tempo la card mostra la durata migliore al posto
       dell'1RM.
-- [ ] Un clic apre i grafici dell'esercizio (GYM-008).
+- [x] Un clic apre i grafici dell'esercizio (GYM-008).
 
 #### GYM-008 · Pagina di un esercizio
 

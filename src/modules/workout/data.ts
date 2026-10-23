@@ -198,3 +198,36 @@ export function useDeleteSession() {
     },
   })
 }
+
+// Esercizi (GYM-007, GYM-009): uno per nome, con immagine e andamento.
+export type ExerciseRow = {
+  name: string
+  key: string
+  image: ExerciseImage | null
+  group: string | null
+  timed: boolean
+  sets: number
+  sessions: number
+  lastDay: string
+  best1RMKg: number | null
+  bestDurationSeconds: number | null
+  trend: number[]
+}
+
+export function useExercises(params: { q?: string; sort?: 'recent' | 'sets'; limit?: number } = {}) {
+  const search = new URLSearchParams()
+  if (params.q) search.set('q', params.q)
+  if (params.sort) search.set('sort', params.sort)
+  if (params.limit) search.set('limit', String(params.limit))
+  const qs = search.toString()
+  return useQuery({
+    queryKey: ['workout', 'exercises', params],
+    queryFn: () =>
+      api
+        .get<{ exercises: ExerciseRow[] }>(`/workout/exercises${qs ? `?${qs}` : ''}`)
+        .then((r) => r.exercises),
+  })
+}
+
+// Indirizzo della pagina di un esercizio (GYM-008).
+export const exercisePath = (key: string) => `/allenamenti/esercizi/${encodeURIComponent(key)}`
