@@ -2058,6 +2058,45 @@ paths:
                       - { type: "null" }
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /workout/records:
+    get:
+      summary: Record battuti negli ultimi giorni (GYM-010)
+      description: >
+        Una voce per esercizio e sessione, la più importante (1RM stimato,
+        peso più alto, volume, ripetizioni a un peso, durata), dal più
+        recente. Conta solo un record che batte uno precedente: la prima
+        volta di un esercizio o di un peso non lo è. Riscaldamento e serie
+        a 0 kg esclusi.
+      operationId: listWorkoutRecords
+      parameters:
+        - { name: days, in: query, schema: { type: integer, minimum: 1, maximum: 3650, default: 30 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 3 } }
+      responses:
+        "200":
+          description: I record.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [records]
+                properties:
+                  records:
+                    type: array
+                    items:
+                      allOf:
+                        - { $ref: "#/components/schemas/WorkoutRecord" }
+                        - type: object
+                          required: [exercise]
+                          properties:
+                            exercise:
+                              type: object
+                              required: [name, key, image]
+                              properties:
+                                name: { type: string }
+                                key: { type: string }
+                                image: { $ref: "#/components/schemas/ExerciseImage" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /workout/summary:
     get:
       summary: Ultimo allenamento, settimana e giorni di fila (GYM-001, GYM-013)
@@ -2284,6 +2323,20 @@ components:
         skippedRows: { type: integer, description: righe senza data valida o esercizio }
         from: { type: string, format: date, description: primo giorno nel file }
         to: { type: string, format: date, description: ultimo giorno nel file }
+    WorkoutRecord:
+      type: object
+      required: [kind, value, weightKg, day, sessionId]
+      properties:
+        kind: { type: string, enum: [e1rm, weight, reps, volume, duration] }
+        value:
+          {
+            type: number,
+            description: kg per e1rm,
+            weight e volume; ripetizioni per reps; secondi per duration,
+          }
+        weightKg: { type: [number, "null"], description: solo per reps, il peso a cui si riferisce }
+        day: { type: string, format: date }
+        sessionId: { type: string, format: uuid }
     MuscleGroup:
       type: string
       description: Gruppo muscolare dall'elenco fisso (GYM-011).
@@ -2429,6 +2482,7 @@ components:
           sessions,
           range,
           points,
+          records,
           recent,
         ]
       properties:
@@ -2455,6 +2509,10 @@ components:
               volumeKg: { type: number }
               bestDurationSeconds: { type: integer }
               totalDurationSeconds: { type: integer }
+        records:
+          type: array
+          description: i record di oggi (GYM-010), uno per tipo e, per reps, uno per peso
+          items: { $ref: "#/components/schemas/WorkoutRecord" }
         recent:
           type: array
           description: le ultime 3 volte, dalla più recente

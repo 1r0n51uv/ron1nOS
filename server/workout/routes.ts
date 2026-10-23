@@ -25,6 +25,7 @@ import {
   proposeExerciseGroup,
   setExerciseGroup,
 } from './groups.ts'
+import { recentRecords } from './records.ts'
 import { decodeCursor, listRoutines, listSessions } from './sessions.ts'
 import { getSummary } from './summary.ts'
 
@@ -40,6 +41,10 @@ const GroupInput = z.object({ group: z.enum(MUSCLE_GROUPS).nullable() })
 const SessionId = z.uuid()
 const ExerciseName = z.string().trim().min(1).max(200)
 const Range = z.enum(Object.keys(RANGES) as [ExerciseRange, ...ExerciseRange[]]).default('6m')
+const RecordsQuery = z.object({
+  days: z.coerce.number().int().min(1).max(3650).default(30),
+  limit: z.coerce.number().int().min(1).max(50).default(3),
+})
 const ExercisesQuery = z.object({
   q: z.string().max(100).optional(),
   sort: z.enum(['recent', 'sets']).optional(),
@@ -150,6 +155,12 @@ export function workoutRoutes({ database, catalog, now = () => new Date() }: Wor
     const key = normalizeExercise(check(ExerciseName, c.req.param('name')))
     const range = check(Range, c.req.query('range'))
     return c.json(await getExercise(c.get('db'), catalog, key, range, now()))
+  })
+
+  // Record battuti negli ultimi giorni (GYM-010), dal più recente.
+  app.get('/records', async (c) => {
+    const { days, limit } = check(RecordsQuery, c.req.query())
+    return c.json({ records: await recentRecords(c.get('db'), catalog, { days, limit, now: now() }) })
   })
 
   // Anteprima dell'import (GYM-003): stessi conti dell'import, nessuna scrittura.

@@ -96,3 +96,21 @@ export function groupLabel(group: string | null) {
 export function clock(seconds: number) {
   return setLabel({ weightKg: 0, reps: null, durationSeconds: seconds })
 }
+
+const KG = (v: number) => `${v % 1 ? v.toLocaleString('it-IT', { maximumFractionDigits: 1 }) : v} kg`
+
+// Un record (GYM-010): "1RM stimato · 82 kg", "Più ripetizioni a 80 kg · 8".
+export function recordLabel(r: { kind: string; value: number; weightKg: number | null }) {
+  switch (r.kind) {
+    case 'e1rm':
+      return `1RM stimato · ${Math.round(r.value)} kg`
+    case 'weight':
+      return `Peso più alto · ${KG(r.value)}`
+    case 'volume':
+      return `Volume in una sessione · ${Math.round(r.value)} kg`
+    case 'reps':
+      return `Più ripetizioni a ${KG(r.weightKg ?? 0)} · ${r.value}`
+    default:
+      return `Durata più lunga · ${clock(r.value)}`
+  }
+}

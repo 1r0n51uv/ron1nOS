@@ -265,6 +265,7 @@ export type ExerciseDetail = {
     best1RMKg: number | null
     sets: { warmup: boolean; weightKg: number; reps: number | null; durationSeconds: number | null }[]
   }[]
+  records: PersonalRecord[]
 }
 
 export function useExercise(key: string, range: ExerciseRange) {
@@ -288,5 +289,27 @@ export function useSetExerciseGroup() {
         },
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['workout'] }),
+  })
+}
+
+// Record personali (GYM-010).
+export type RecordKind = 'e1rm' | 'weight' | 'reps' | 'volume' | 'duration'
+
+export type PersonalRecord = {
+  kind: RecordKind
+  value: number
+  weightKg: number | null
+  day: string
+  sessionId: string
+}
+
+export type RecentRecord = PersonalRecord & {
+  exercise: { name: string; key: string; image: ExerciseImage | null }
+}
+
+export function useRecords() {
+  return useQuery({
+    queryKey: ['workout', 'records'],
+    queryFn: () => api.get<{ records: RecentRecord[] }>('/workout/records').then((r) => r.records),
   })
 }

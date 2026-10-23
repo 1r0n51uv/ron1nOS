@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as apiModule from '@/lib/api'
 import { api, ApiError } from '@/lib/api'
 import { renderWithProviders } from '@/test/render'
-import type { ExerciseRow, SessionRow, WorkoutSummary } from '../data'
+import type { ExerciseRow, RecentRecord, SessionRow, WorkoutSummary } from '../data'
 import { WorkoutPage } from './WorkoutPage'
 
 vi.mock('@/lib/api', async (importOriginal) => ({
@@ -69,9 +69,29 @@ const EXERCISES: ExerciseRow[] = [
   exercise('Lat machine'),
 ]
 
+const RECORDS: RecentRecord[] = [
+  {
+    kind: 'e1rm',
+    value: 81.7,
+    weightKg: null,
+    day: '2026-10-21',
+    sessionId: 's1',
+    exercise: { name: 'Panca piana', key: 'panca piana', image: null },
+  },
+  {
+    kind: 'reps',
+    value: 10,
+    weightKg: 60,
+    day: '2026-10-15',
+    sessionId: 's2',
+    exercise: { name: 'Squat', key: 'squat', image: null },
+  },
+]
+
 function mockApi(summary: WorkoutSummary, exercises: ExerciseRow[] | Error = EXERCISES) {
   vi.mocked(api.get).mockImplementation(async (path: string) => {
     if (path === '/workout/summary') return summary
+    if (path === '/workout/records') return { records: RECORDS }
     if (path === '/workout/exercises?sort=sets&limit=6') {
       if (exercises instanceof Error) throw exercises
       return { exercises }
@@ -130,6 +150,18 @@ describe('WorkoutPage', () => {
     // Una sola sessione: niente sparkline.
     expect(within(cards[1]!).queryByRole('img', { name: 'Andamento Squat' })).not.toBeInTheDocument()
     expect(cards[2]).toHaveTextContent('Plank1:30durata migliore')
+  })
+
+  it('mostra i nuovi record con link alla sessione (GYM-010)', async () => {
+    mockApi(SUMMARY)
+    renderWithProviders(<WorkoutPage />)
+    const records = await screen.findByRole('region', { name: 'Nuovi record' })
+    const links = await within(records).findAllByRole('link')
+    expect(links.map((l) => l.textContent)).toEqual([
+      'Panca piana1RM stimato · 82 kgieri',
+      'SquatPiù ripetizioni a 60 kg · 10giovedì 15 ottobre',
+    ])
+    expect(links[0]).toHaveAttribute('href', '/allenamenti/sessioni/s1')
   })
 
   it('se gli esercizi non arrivano lo dice solo nella loro sezione', async () => {
