@@ -40,6 +40,9 @@ export class YazioServerError extends YazioError {
   }
 }
 export class YazioUnreachableError extends YazioError {}
+// YAZIO non accetta più questa versione dell'API (403 version_blocked, come
+// la v20 dal 2026-10-23): si cambia versione in YAZIO_URL.
+export class YazioVersionError extends YazioError {}
 // La risposta non ha la forma attesa: l'API è cambiata.
 export class YazioFormatError extends YazioError {
   readonly code = 'yazio_format_changed'
@@ -54,7 +57,7 @@ export class YazioRequestError extends YazioError {
 }
 
 export type YazioConfig = {
-  url: string // con la versione, es. https://yzapi.yazio.com/v20
+  url: string // con la versione, es. https://yzapi.yazio.com/v15
   clientId: string
   clientSecret: string
   username: string
@@ -186,6 +189,8 @@ export function createYazioClient(opts: Options) {
       res = await send(await token(true))
       if (res.status === 401) throw new YazioAuthError('YAZIO ha rifiutato il token')
     }
+    if (res.status === 403 && (await res.clone().text()).includes('version_blocked'))
+      throw new YazioVersionError(`YAZIO: versione bloccata (${base})`)
     if (!res.ok)
       throw new YazioRequestError(`YAZIO: ${method} ${path.split('?')[0]} ${res.status}`, res.status)
     return res

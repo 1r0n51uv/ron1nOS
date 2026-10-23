@@ -13,6 +13,7 @@ import {
   YazioRequestError,
   YazioServerError,
   YazioUnreachableError,
+  YazioVersionError,
 } from '../yazio/client.ts'
 import { dbTokenStore } from '../yazio/tokens.ts'
 import { reason } from './yazio.ts'
@@ -164,6 +165,7 @@ describe('motivi degli errori', () => {
     expect(reason(new YazioUnreachableError('x'))).toBe('YAZIO non raggiungibile.')
     expect(reason(new YazioRequestError('x', 404))).toMatch(/404/)
     expect(reason(new YazioAuthError('x'))).toMatch(/Apple o Google/)
+    expect(reason(new YazioVersionError('x'))).toMatch(/YAZIO_URL/)
     expect(reason(new Error('boom'))).toBe('Errore inatteso durante la sincronizzazione.')
   })
 })

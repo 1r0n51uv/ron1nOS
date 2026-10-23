@@ -69,7 +69,7 @@ function yazioConfig(env: NodeJS.ProcessEnv): Config['yazio'] {
     return undefined
   }
   return {
-    url: (env.YAZIO_URL ?? 'https://yzapi.yazio.com/v20').replace(/\/+$/, ''),
+    url: (env.YAZIO_URL ?? 'https://yzapi.yazio.com/v15').replace(/\/+$/, ''),
     clientId: YAZIO_CLIENT_ID,
     clientSecret: YAZIO_CLIENT_SECRET,
     username: YAZIO_USERNAME,

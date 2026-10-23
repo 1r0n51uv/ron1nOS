@@ -8,7 +8,9 @@ import {
   YazioFormatError,
   YazioRateLimitError,
   YazioServerError,
+  YazioRequestError,
   YazioUnreachableError,
+  YazioVersionError,
 } from './client.ts'
 import { memoryTokenStore } from './tokens.ts'
 
@@ -134,6 +136,31 @@ describe('errori e nuovi tentativi', () => {
     })
     await expect(client.water('2026-10-22')).rejects.toBeInstanceOf(YazioUnreachableError)
     expect(sleep).toHaveBeenCalledTimes(3)
+  })
+
+  it('una versione bloccata (403 version_blocked) diventa YazioVersionError', async () => {
+    const { fake } = setup()
+    const blocked = (async (input: string | URL | Request, init?: RequestInit) =>
+      String(input).includes('/user/')
+        ? Response.json({ error: 'version_blocked' }, { status: 403 })
+        : fake.fetch(input, init)) as typeof fetch
+    const client = createYazioClient({
+      url: 'http://yazio.test/v20',
+      clientId: FAKE_CLIENT.id,
+      clientSecret: FAKE_CLIENT.secret,
+      username: FAKE_USER.username,
+      password: FAKE_USER.password,
+      tokens: memoryTokenStore(),
+      fetch: blocked,
+    })
+    await expect(client.water('2026-10-22')).rejects.toBeInstanceOf(YazioVersionError)
+  })
+
+  it('un altro 403 resta YazioRequestError', async () => {
+    const { client, fake } = setup()
+    await client.login()
+    fake.state.failNext = { status: 403, count: 1 }
+    await expect(client.water('2026-10-22')).rejects.toBeInstanceOf(YazioRequestError)
   })
 
   it('un formato cambiato diventa yazio_format_changed, non un crash', async () => {

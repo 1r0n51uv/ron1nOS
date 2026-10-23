@@ -11,6 +11,7 @@ import {
   YazioRequestError,
   YazioServerError,
   YazioUnreachableError,
+  YazioVersionError,
 } from '../yazio/client.ts'
 import { today } from './dates.ts'
 
@@ -101,6 +102,8 @@ export function reason(err: Error) {
     return 'YAZIO ha chiesto di rallentare: si riprova al prossimo giro.'
   if (err instanceof YazioServerError) return `YAZIO ha un problema (errore ${err.status}).`
   if (err instanceof YazioUnreachableError) return 'YAZIO non raggiungibile.'
+  if (err instanceof YazioVersionError)
+    return 'YAZIO non accetta più questa versione della sua API: cambia la versione in YAZIO_URL.'
   if (err instanceof YazioFormatError)
     return "Le risposte di YAZIO sono cambiate: va aggiornato l'adattatore."
   if (err instanceof YazioRequestError) return `YAZIO ha rifiutato una richiesta (errore ${err.status}).`
