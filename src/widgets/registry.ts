@@ -50,4 +50,5 @@ export const MODULE_LABELS: Record<ModuleId, string> = {
   containers: 'Container',
   downloads: 'Download',
   notes: 'Note',
+  documents: 'Documenti',
 }
