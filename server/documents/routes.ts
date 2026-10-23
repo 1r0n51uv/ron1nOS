@@ -22,6 +22,7 @@ import {
   updateFile,
 } from './files.ts'
 import { expiryOf, WARNINGS } from './status.ts'
+import { summaryPdf } from './summary.ts'
 import type { DocumentInput, StoredDocument } from './store.ts'
 import {
   deleteDocument,
@@ -312,6 +313,24 @@ export function documentsRoutes({ database, vault, authEnabled, now = () => new 
     if (!(await deleteDocument(db, docId(c.req.param('id')))))
       throw new NotFoundError('Documento non trovato')
     return c.body(null, 204)
+  })
+
+  // PDF di riepilogo (DOC-013): generato al volo, mai salvato.
+  routes.get('/documents/:id/summary.pdf', async (c) => {
+    const { db, vault: v } = ready()
+    const doc = await load(db, v, c.req.param('id'))
+    const type = doc.typeId ? await getType(db, doc.typeId) : null
+    const pdf = await summaryPdf({
+      doc,
+      typeName: type?.name ?? null,
+      fields: type?.fields ?? [],
+      files: await listFiles(db, doc.id),
+      content: (file) => readContent(db, v, doc.id, file.id, 'original'),
+    })
+    return c.body(new Uint8Array(pdf), 200, {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(`${doc.title}.pdf`)}`,
+    })
   })
 
   // Un allegato alla volta (multipart: `file`, `label` facoltativa), così

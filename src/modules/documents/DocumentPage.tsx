@@ -9,7 +9,7 @@ import { ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { Attachments } from './Attachments'
 import type { Document } from './data'
-import { useDeleteDocument, useDocument, useDocumentTypes, useUpdateDocument } from './data'
+import { summaryUrl, useDeleteDocument, useDocument, useDocumentTypes, useUpdateDocument } from './data'
 import { DocumentForm } from './DocumentForm'
 import type { FormState } from './form'
 import { formOf, toInput } from './form'
@@ -173,6 +173,7 @@ export function DocumentPage() {
   const remove = useDeleteDocument()
   const [editing, setEditing] = useState(false)
   const [confirm, setConfirm] = useState(false)
+  const [pdf, setPdf] = useState(false)
   const [toast, setToast] = useToast()
 
   if (!doc) {
@@ -235,6 +236,19 @@ export function DocumentPage() {
             <Icon name="star" size={16} />
             {doc.pinnedAt ? 'In evidenza' : 'Metti in evidenza'}
           </Button>
+          {pdf ? (
+            <Button variant="glass" asChild>
+              <a href={summaryUrl(doc.id)} download onClick={() => setPdf(false)}>
+                <Icon name="download" size={16} />
+                Scarica il PDF
+              </a>
+            </Button>
+          ) : (
+            <Button variant="glass" onClick={() => setPdf(true)}>
+              <Icon name="download" size={16} />
+              PDF di riepilogo
+            </Button>
+          )}
           <Button variant="glass" onClick={() => setEditing(true)}>
             Modifica
           </Button>
@@ -258,6 +272,11 @@ export function DocumentPage() {
           )}
         </div>
       </div>
+      {pdf ? (
+        <p className="m-0 text-sm text-ink-muted">
+          Il PDF scaricato non è cifrato: contiene campi e immagini in chiaro.
+        </p>
+      ) : null}
       {confirm ? (
         <p className="m-0 text-sm text-ink-muted">
           Il documento e i suoi file vengono cancellati in modo definitivo.

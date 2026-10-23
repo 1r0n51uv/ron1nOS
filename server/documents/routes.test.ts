@@ -263,6 +263,34 @@ describe('allegati (DOC-011, DOC-012, DOC-014)', () => {
     expect(rows).toEqual([])
   })
 
+  it('PDF di riepilogo: al volo, in chiaro solo nella risposta (DOC-013)', async () => {
+    const { body: doc } = await post('/documents', {
+      typeId: passport,
+      title: 'Passaporto',
+      fields: { number: 'YA1' },
+    })
+    await upload(doc.id, await png(), 'fronte.png', 'fronte')
+    const res = await app.request(`/api/v1/documents/documents/${doc.id}/summary.pdf`, {
+      headers: { cookie },
+    })
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toBe('application/pdf')
+    expect(res.headers.get('content-disposition')).toBe("attachment; filename*=UTF-8''Passaporto.pdf")
+    expect(res.headers.get('cache-control')).toBe('no-store')
+    expect(
+      Buffer.from(await res.arrayBuffer())
+        .subarray(0, 5)
+        .toString(),
+    ).toBe('%PDF-')
+    const missing = await app.request(
+      '/api/v1/documents/documents/00000000-0000-4000-8000-000000000000/summary.pdf',
+      {
+        headers: { cookie },
+      },
+    )
+    expect(missing.status).toBe(404)
+  })
+
   it('oltre 20 MB: 413', async () => {
     const { body: doc } = await post('/documents', { title: 'Grande' })
     const res = await upload(doc.id, Buffer.alloc(20 * 1024 * 1024 + 1), 'grande.bin')

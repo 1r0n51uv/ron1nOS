@@ -12,7 +12,7 @@ test.beforeEach(async () => {
   await sql('delete from documents')
 })
 
-test('carica un passaporto, lo ritrova in griglia e ne copia il numero (DOC-002, DOC-004, DOC-005, DOC-009)', async ({
+test('carica un passaporto, lo ritrova in griglia e ne copia il numero (DOC-002, DOC-004, DOC-005, DOC-009, DOC-013)', async ({
   page,
   context,
 }) => {
@@ -42,6 +42,12 @@ test('carica un passaporto, lo ritrova in griglia e ne copia il numero (DOC-002,
   await expect(page.getByText('Scade il')).toContainText('12/03/2031')
   await expect(page.getByRole('region', { name: 'Allegati' }).getByText('Allegati · 2')).toBeVisible()
   await expect(page.getByRole('img', { name: 'fronte.png' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'PDF di riepilogo' }).click()
+  await expect(page.getByText(/Il PDF scaricato non è cifrato/)).toBeVisible()
+  const download = page.waitForEvent('download')
+  await page.getByRole('link', { name: 'Scarica il PDF' }).click()
+  expect((await download).suggestedFilename()).toBe('Passaporto.pdf')
 
   await page.getByRole('button', { name: 'Copia Numero' }).click()
   await expect(page.getByRole('status')).toHaveText('Copiato · Numero')
