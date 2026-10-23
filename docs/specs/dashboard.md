@@ -19,7 +19,7 @@ Non fa, per ora: più dashboard a schede, widget duplicati con
 impostazioni diverse, titoli o colori personalizzati per widget, layout
 mobile del web (vale la regola desktop di `CLAUDE.md`).
 
-**Stato del documento: proposto il 2026-10-22.** Le scelte sono in fondo,
+**Stato del documento: approvato il 2026-10-22, requisiti pianificati.** Le scelte sono in fondo,
 in "Decisioni".
 
 ## Requisiti
@@ -28,7 +28,7 @@ in "Decisioni".
 
 #### DASH-001 · Catalogo dei widget
 
-Stato: proposto
+Stato: pianificato (#138)
 
 Ogni modulo dichiara uno o più widget in un catalogo unico, invece di un
 solo `Widget.tsx` importato a mano in `Dashboard.tsx`.
@@ -49,7 +49,7 @@ Accettazione:
 
 #### DASH-002 · Primi widget del catalogo
 
-Stato: proposto
+Stato: pianificato (#145)
 
 Gli otto widget di oggi restano, con lo stesso id del loro modulo
 (`<modulo>.summary`), e alcuni moduli ne aggiungono di più piccoli. I
@@ -78,7 +78,7 @@ Accettazione:
 
 #### DASH-003 · Griglia libera
 
-Stato: proposto
+Stato: pianificato (#141)
 
 Accettazione:
 
@@ -93,7 +93,7 @@ Accettazione:
 
 #### DASH-004 · Modifica sempre attiva
 
-Stato: proposto
+Stato: pianificato (#142)
 
 Non c'è una modalità modifica da aprire e chiudere: la dashboard si
 cambia mentre la si usa.
@@ -118,7 +118,7 @@ Annulla` per 8 secondi.
 
 #### DASH-005 · Opzioni del widget
 
-Stato: proposto
+Stato: pianificato (#143)
 
 Accettazione:
 
@@ -133,7 +133,7 @@ Accettazione:
 
 #### DASH-006 · Testata riducibile
 
-Stato: proposto
+Stato: pianificato (#144)
 
 La testata è il blocco in alto con data, saluto, frase di stato e pill
 dell'homelab.
@@ -151,7 +151,7 @@ Accettazione:
 
 #### DASH-007 · Layout sul server
 
-Stato: proposto
+Stato: pianificato (#139)
 
 Accettazione:
 
@@ -175,7 +175,7 @@ Riprova` e il layout resta quello sullo schermo.
 
 #### DASH-008 · Layout predefinito e ripristino
 
-Stato: proposto
+Stato: pianificato (#140)
 
 Accettazione:
 

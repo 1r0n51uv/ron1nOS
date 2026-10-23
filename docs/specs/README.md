@@ -17,6 +17,7 @@ https://github.com/1r0n51uv/ron1n/blob/main/docs/flusso-sviluppo.md.
 | Nutrizione   | [nutrition.md](nutrition.md) | `NUT`       | `mod:nutrition` |
 | Documenti    | [documents.md](documents.md) | `DOC`       | `mod:documents` |
 | Login        | [auth.md](auth.md)           | `AUTH`      | `mod:auth`      |
+| Allenamento  | [workout.md](workout.md)     | `GYM`       | `mod:workout`   |
 | Dashboard    | [dashboard.md](dashboard.md) | `DASH`      | `mod:dashboard` |
 | Impostazioni | [settings.md](settings.md)   | `SET`       | `mod:settings`  |
 

@@ -15,7 +15,7 @@ mostra come stato, non li modifica.
 Non fa, per ora: tema chiaro, colore di accento diverso dal rosso, lingue
 diverse dall'italiano, più utenti.
 
-**Stato del documento: proposto il 2026-10-22.** Le scelte sono in fondo,
+**Stato del documento: approvato il 2026-10-22, requisiti pianificati.** Le scelte sono in fondo,
 in "Decisioni".
 
 ## Requisiti
@@ -24,7 +24,7 @@ in "Decisioni".
 
 #### SET-001 · Pagina a sezioni
 
-Stato: proposto
+Stato: pianificato (#146)
 
 Accettazione:
 
@@ -42,7 +42,7 @@ Accettazione:
 
 #### SET-002 · Preferenze sul server
 
-Stato: proposto
+Stato: pianificato (#137)
 
 Accettazione:
 
@@ -59,7 +59,7 @@ Accettazione:
 
 #### SET-003 · Aspetto
 
-Stato: proposto
+Stato: pianificato (#147)
 
 Resta il tema scuro con il solo rosso del marchio; si personalizzano
 sfondo, vetro e densità.
@@ -80,7 +80,7 @@ Accettazione:
 
 #### SET-004 · Dashboard
 
-Stato: proposto
+Stato: pianificato (#148)
 
 Accettazione:
 
@@ -91,7 +91,7 @@ Accettazione:
 
 #### SET-005 · Moduli
 
-Stato: proposto
+Stato: pianificato (#149)
 
 Accettazione:
 
@@ -107,7 +107,7 @@ spento` con il link per riaccenderlo.
 
 #### SET-006 · Navigazione
 
-Stato: proposto
+Stato: pianificato (#152)
 
 Accettazione:
 
@@ -118,7 +118,7 @@ Accettazione:
 
 #### SET-007 · Account
 
-Stato: proposto
+Stato: pianificato (#151)
 
 Raccoglie i comandi del login ([auth.md](auth.md)).
 
@@ -133,7 +133,7 @@ altre sessioni` (AUTH-002).
 
 #### SET-008 · App iOS
 
-Stato: proposto
+Stato: pianificato (#156)
 
 È la sezione dei token di AUTH-005: creazione con nome, token mostrato una
 volta, elenco con ultimo uso e revoca. Si realizza con AUTH-005, quando
@@ -141,7 +141,7 @@ arriva l'app; fino ad allora la sezione non compare.
 
 #### SET-009 · Integrazioni
 
-Stato: proposto
+Stato: pianificato (#150)
 
 Accettazione:
 
@@ -156,7 +156,7 @@ Accettazione:
 
 #### SET-010 · Formati
 
-Stato: proposto
+Stato: pianificato (#153)
 
 Accettazione:
 
@@ -168,7 +168,7 @@ Accettazione:
 
 #### SET-011 · Backup della configurazione
 
-Stato: proposto
+Stato: pianificato (#154)
 
 Accettazione:
 
@@ -181,7 +181,7 @@ Accettazione:
 
 #### SET-012 · Informazioni
 
-Stato: proposto
+Stato: pianificato (#155)
 
 Accettazione:
 

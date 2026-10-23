@@ -12,13 +12,15 @@ tailnet via Caddy: il login si aggiunge, non sostituisce Tailscale.
 
 Non fa, per ora: più utenti, ruoli, login con Apple/Google, 2FA.
 
-**Stato del documento: proposto il 2026-10-22.**
+**Stato del documento: confermato il 2026-10-22.** Mockup della pagina
+di login nel
+[canvas Modulo Documenti](https://claude.ai/artifact/5qreuPuuYCu468dGvmbULg).
 
 ## Requisiti
 
 #### AUTH-001 · Pagina di login
 
-Stato: proposto
+Stato: fatto (#97)
 
 Accettazione:
 
@@ -30,7 +32,7 @@ Accettazione:
 
 #### AUTH-002 · Sessione web
 
-Stato: proposto
+Stato: fatto (#98)
 
 Accettazione:
 
@@ -44,7 +46,7 @@ Accettazione:
 
 #### AUTH-003 · API protette
 
-Stato: proposto
+Stato: fatto (#99)
 
 Accettazione:
 
@@ -56,7 +58,7 @@ Accettazione:
 
 #### AUTH-004 · Limite ai tentativi
 
-Stato: proposto
+Stato: fatto (#100)
 
 Accettazione:
 
@@ -66,7 +68,7 @@ Accettazione:
 
 #### AUTH-005 · Token per l'app iOS
 
-Stato: proposto
+Stato: proposto, rimandato all'app iOS
 
 Accettazione:
 

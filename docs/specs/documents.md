@@ -31,9 +31,9 @@ rinnovi, condivisione con link, notifiche push (arrivano con l'app iOS).
 login chiunque sia nella tailnet vedrebbe i documenti; il modulo non va in
 produzione prima di AUTH-001…004.
 
-**Stato del documento: proposto il 2026-10-22.** Le scelte sono in fondo,
-in "Decisioni". La disposizione della pagina si decide con i mockup, dopo
-che la specifica è confermata (decisione 7).
+**Stato del documento: confermato il 2026-10-22.** Le scelte sono in
+fondo, in "Decisioni". Mockup:
+[canvas Modulo Documenti](https://claude.ai/artifact/5qreuPuuYCu468dGvmbULg).
 
 ## Requisiti
 
@@ -41,7 +41,7 @@ che la specifica è confermata (decisione 7).
 
 #### DOC-001 · Widget Documenti
 
-Stato: proposto
+Stato: pianificato (#102)
 
 Il widget in dashboard mostra i documenti in evidenza e quelli in
 scadenza.
@@ -60,7 +60,7 @@ Accettazione:
 
 #### DOC-002 · Pagina Documenti
 
-Stato: proposto
+Stato: pianificato (#103)
 
 Una pagina `/documenti` con tutti i documenti.
 
@@ -70,11 +70,12 @@ Accettazione:
 - [ ] Ricerca per titolo e tag; filtri per tipo e titolare (DOC-007).
 - [ ] Ogni documento mostra tipo, titolo, titolare, scadenza e una
       miniatura del primo allegato se è un'immagine.
-- [ ] Disposizione (griglia di card o lista) decisa con i mockup.
+- [ ] Griglia di card con miniatura, come la tavola A dei mockup
+      (decisione 7).
 
 #### DOC-003 · Tipi di documento
 
-Stato: proposto
+Stato: in corso (#104)
 
 Ogni tipo ha un nome, un'icona e un elenco di campi. I tipi stanno nel
 database e si gestiscono dalla UI (DOC-016); questi sono già pronti alla
@@ -103,7 +104,7 @@ Accettazione:
 
 #### DOC-004 · Dettaglio del documento
 
-Stato: proposto
+Stato: pianificato (#105)
 
 Accettazione:
 
@@ -119,7 +120,7 @@ Accettazione:
 
 #### DOC-005 · Creare e modificare un documento
 
-Stato: proposto
+Stato: pianificato (#106)
 
 Accettazione:
 
@@ -139,7 +140,7 @@ Accettazione:
 
 #### DOC-006 · Campi liberi
 
-Stato: proposto
+Stato: pianificato (#107)
 
 Su ogni documento si possono aggiungere coppie etichetta/valore, oltre ai
 campi del tipo. Per i file con info sono gli unici campi.
@@ -153,7 +154,7 @@ Accettazione:
 
 #### DOC-007 · Titolare
 
-Stato: proposto
+Stato: pianificato (#108)
 
 Ogni documento ha un titolare, per tenere anche quelli dei familiari.
 
@@ -167,7 +168,7 @@ Accettazione:
 
 #### DOC-008 · Documenti in evidenza
 
-Stato: proposto
+Stato: pianificato (#109)
 
 Accettazione:
 
@@ -180,7 +181,7 @@ Accettazione:
 
 #### DOC-009 · Copia dei valori e delle immagini
 
-Stato: proposto
+Stato: pianificato (#110)
 
 Accettazione:
 
@@ -192,7 +193,7 @@ Accettazione:
 
 #### DOC-010 · Scadenze e preavvisi
 
-Stato: proposto
+Stato: pianificato (#111)
 
 Accettazione:
 
@@ -206,7 +207,7 @@ Accettazione:
 
 #### DOC-011 · Allegati
 
-Stato: proposto
+Stato: pianificato (#112)
 
 Accettazione:
 
@@ -223,7 +224,7 @@ Accettazione:
 
 #### DOC-012 · Scaricare gli allegati
 
-Stato: proposto
+Stato: pianificato (#113)
 
 Accettazione:
 
@@ -233,7 +234,7 @@ Accettazione:
 
 #### DOC-013 · PDF di riepilogo
 
-Stato: proposto
+Stato: pianificato (#114)
 
 Accettazione:
 
@@ -246,7 +247,7 @@ Accettazione:
 
 #### DOC-014 · Eliminare
 
-Stato: proposto
+Stato: pianificato (#115)
 
 Accettazione:
 
@@ -255,7 +256,7 @@ Accettazione:
 
 #### DOC-016 · Tipi personalizzati
 
-Stato: proposto
+Stato: pianificato (#116)
 
 Dalle impostazioni del modulo si configurano i tipi.
 
@@ -274,7 +275,7 @@ Accettazione:
 
 #### DOC-015 · Cifratura a riposo
 
-Stato: proposto
+Stato: fatto (#101)
 
 Accettazione:
 
@@ -352,10 +353,9 @@ liberi su ogni tipo; titolare.
 
 ### Piano di lavoro
 
-1. **Specifica** (questa PR) e login ([auth.md](auth.md)).
-2. **Mockup** della pagina, del dettaglio e del form.
-3. **Issue** con label `mod:documents`, una per requisito più una per la
-   base (migrazione e cifratura).
+1. **Specifica** e login ([auth.md](auth.md)), confermate.
+2. **Mockup** della pagina, del dettaglio e del form, approvati.
+3. **Issue** con label `mod:documents` e `mod:auth` (#97…#116), una per requisito; la base è #101.
 4. **Login** (AUTH-001…004) prima di tutto il resto.
 5. **Base**: migrazione, busta, tipi (DOC-003, DOC-015).
 6. **API e web**: inserimento, allegati, dettaglio, copia, download,
@@ -378,8 +378,8 @@ Prese il 2026-10-22.
    dashboard, specificato a parte in [auth.md](auth.md).
 6. **Archivio.** File cifrati nel Postgres condiviso, in una tabella a
    parte.
-7. **Evidenza e disposizione.** Si decidono con i mockup dopo la
-   specifica.
+7. **Disposizione.** Griglia di card con miniatura (tavola A dei mockup),
+   con i documenti in evidenza in cima; scelta il 2026-10-22.
 8. **Titolare.** Sì, con filtro; di default il proprietario.
 9. **Copia e download.** Copia per campo, copia immagine, scarica
    originale, PDF di riepilogo. Niente ZIP.

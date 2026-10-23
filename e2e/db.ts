@@ -1,5 +1,7 @@
 // Postgres degli e2e: lo stesso del backend sotto test. Ogni test del
-// modulo Nutrizione parte con le tabelle vuote.
+// modulo Nutrizione parte con le tabelle vuote; le sessioni del login
+// restano, così il cookie del setup vale per tutta la suite, e i tipi di
+// documento già pronti pure.
 import pg from 'pg'
 
 export const E2E_DATABASE_URL =
@@ -11,7 +13,8 @@ export async function resetNutrition() {
   try {
     const { rows } = await client.query<{ table_name: string }>(
       `select table_name from information_schema.tables
-        where table_schema = 'public' and table_type = 'BASE TABLE' and table_name <> 'schema_migrations'`,
+        where table_schema = 'public' and table_type = 'BASE TABLE'
+          and table_name not in ('schema_migrations', 'auth_sessions', 'document_types')`,
     )
     if (rows.length) await client.query(`truncate ${rows.map((r) => r.table_name).join(', ')} cascade`)
   } finally {

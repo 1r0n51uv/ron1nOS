@@ -4,14 +4,107 @@ openapi: 3.1.0
 info:
   title: ron1nOS API
   version: 1.0.0
-  description: Backend della dashboard ron1nOS. Raggiungibile solo dalla tailnet.
+  description: >
+    Backend della dashboard ron1nOS. Raggiungibile solo dalla tailnet. Con il
+    login acceso (AUTH_PASSWORD_HASH) ogni rotta tranne `GET /health` e
+    `POST /auth/login` chiede il cookie di sessione e senza risponde 401
+    `unauthenticated`; le richieste che cambiano dati con un header Origin di
+    un altro host rispondono 403 `forbidden_origin`.
 servers:
   - url: /api/v1
+security:
+  - session: []
 paths:
+  /auth/login:
+    post:
+      summary: Entra con la password della dashboard (AUTH-001, AUTH-002)
+      description: >
+        Crea una sessione di 30 giorni, rinnovata a ogni uso, e la mette nel
+        cookie `ron1nos_session` (HttpOnly, Secure, SameSite=Strict). Dopo 5
+        password sbagliate in 15 minuti dallo stesso indirizzo risponde 429
+        per 15 minuti (AUTH-004).
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string, minLength: 1, maxLength: 1024 }
+      responses:
+        "200":
+          description: Sessione creata.
+          headers:
+            Set-Cookie:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [enabled, expiresAt]
+                properties:
+                  enabled: { type: boolean, const: true }
+                  expiresAt: { type: string, format: date-time }
+        "401":
+          description: "`invalid_password`: password non valida."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: "`auth_disabled`: login spento, AUTH_PASSWORD_HASH non impostato."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429":
+          description: "`too_many_attempts`: troppi tentativi, il messaggio dice quanto aspettare."
+          headers:
+            Retry-After:
+              schema: { type: integer }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /auth/logout:
+    post:
+      summary: Chiude la sessione di questo client
+      operationId: logout
+      responses:
+        "204":
+          description: Sessione chiusa e cookie tolto.
+  /auth/me:
+    get:
+      summary: Stato del login
+      description: >
+        Con il login acceso risponde solo con una sessione valida (altrimenti
+        401); con il login spento risponde `{ enabled: false }`.
+      operationId: getMe
+      responses:
+        "200":
+          description: Sessione valida, o login spento.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [enabled]
+                properties:
+                  enabled: { type: boolean }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+  /auth/sessions:
+    delete:
+      summary: Esci ovunque
+      description: Chiude tutte le sessioni, compresa questa.
+      operationId: deleteSessions
+      responses:
+        "204":
+          description: Sessioni chiuse e cookie tolto.
   /health:
     get:
       summary: Stato del backend
       operationId: getHealth
+      security: []
       responses:
         "200":
           description: Il backend risponde.
@@ -221,6 +314,28 @@ paths:
       responses:
         "204":
           description: Bozza tolta, o già assente.
+  /documents/types:
+    get:
+      summary: Tipi di documento con i loro campi (DOC-003)
+      description: >
+        Prima i tipi già pronti, poi quelli creati dall'utente. Il modulo
+        Documenti risponde 503 `documents_disabled` finché il login non è
+        acceso e DOCUMENTS_KEY non è impostata.
+      operationId: getDocumentTypes
+      responses:
+        "200":
+          description: Tipi di documento.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DocumentType" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "503":
+          description: "`documents_disabled` o `database_unavailable`."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
   /server/stats:
     get:
       summary: Risorse del server lette da Glances
@@ -1270,6 +1385,12 @@ paths:
               schema: { $ref: "#/components/schemas/Error" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
 components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: ron1nos_session
+      description: Cookie di sessione creato da `POST /auth/login`.
   parameters:
     NutritionDate:
       name: date
@@ -1277,6 +1398,11 @@ components:
       description: Giorno locale Europe/Rome; di default oggi.
       schema: { type: string, format: date }
   responses:
+    Unauthenticated:
+      description: "`unauthenticated`: serve il login."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
     InvalidRequest:
       description: "`invalid_request`: richiesta non valida, il messaggio dice quale campo."
       content:
@@ -1293,6 +1419,29 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
   schemas:
+    DocumentTypeField:
+      type: object
+      required: [key, label, kind, copyable]
+      properties:
+        key: { type: string, pattern: "^[a-z][a-z0-9_]{0,39}$" }
+        label: { type: string, maxLength: 60 }
+        kind: { type: string, enum: [text, date, code] }
+        copyable: { type: boolean }
+    DocumentType:
+      type: object
+      required: [id, key, name, icon, preset, fields, documents]
+      properties:
+        id: { type: string, format: uuid }
+        key:
+          type: [string, "null"]
+          description: Chiave stabile dei tipi già pronti (identity_card…), null per quelli creati.
+        name: { type: string }
+        icon: { type: string }
+        preset: { type: boolean }
+        fields:
+          type: array
+          items: { $ref: "#/components/schemas/DocumentTypeField" }
+        documents: { type: integer, description: Documenti di questo tipo. }
     Food:
       type: object
       description: Alimento, valori per 100 g. `id` null per un candidato esterno non ancora nel catalogo.

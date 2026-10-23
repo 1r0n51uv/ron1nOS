@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
 
+import { E2E_PASSWORD_HASH, STATE } from './e2e/auth.ts'
 import { E2E_DATABASE_URL } from './e2e/db.ts'
 import { FAKE_CLIENT, FAKE_USER } from './server/testing/fake-yazio.ts'
 
@@ -21,13 +22,17 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
+    // Login una volta sola (AUTH-001): il cookie finisce in STATE.
+    { name: 'setup', testMatch: /auth\.setup\.ts/ },
     {
       name: 'chromium',
+      dependencies: ['setup'],
       // Solo desktop per ora: larghezza minima 1024px.
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1440, height: 900 },
         launchOptions: { executablePath },
+        storageState: STATE,
       },
     },
   ],
@@ -79,6 +84,11 @@ export default defineConfig({
         YAZIO_USERNAME: FAKE_USER.username,
         YAZIO_PASSWORD: FAKE_USER.password,
         YAZIO_TOKEN_KEY: 'chiave-e2e',
+        // Login acceso come in produzione; cookie senza Secure su http://localhost.
+        AUTH_PASSWORD_HASH: E2E_PASSWORD_HASH,
+        AUTH_COOKIE_SECURE: 'false',
+        // Chiave di prova del modulo Documenti (DOC-015).
+        DOCUMENTS_KEY: 'ABB9OVQtWCp76GiMotgkxs3SgJ6emQ/YjCrpY8CAnBc=',
       },
     },
   ],
