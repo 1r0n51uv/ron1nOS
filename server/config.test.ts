@@ -21,7 +21,7 @@ describe('loadConfig', () => {
     expect(loadConfig({}).yazio).toBeUndefined()
     expect(loadConfig({ ...yazio, YAZIO_TOKEN_KEY: '' }).yazio).toBeUndefined()
     expect(loadConfig(yazio).yazio).toEqual({
-      url: 'https://yzapi.yazio.com/v20',
+      url: 'https://yzapi.yazio.com/v15',
       clientId: 'id',
       clientSecret: 'secret',
       username: 'mario@example.com',

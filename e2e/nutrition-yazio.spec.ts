@@ -29,6 +29,12 @@ test('YAZIO si collega con Sincronizza ora, mostra l’errore e si spegne (NUT-0
   await expect(panel.getByText('errore', { exact: true })).toBeVisible()
   await expect(panel.getByRole('status')).toContainText('imposta prima una password')
 
+  // Versione dell'API bloccata da YAZIO: il motivo dice cosa cambiare.
+  await request.post(`${fake}/__fake/reset`)
+  await request.post(`${fake}/__fake/state`, { data: { versionBlocked: true } })
+  await panel.getByRole('button', { name: 'Sincronizza ora' }).click()
+  await expect(panel.getByRole('status')).toContainText('cambia la versione in YAZIO_URL')
+
   // Spenta, la sincronizzazione non parte e il diario resta.
   const tile = panel.getByRole('button', { name: /Sincronizzazione/ })
   await tile.click()

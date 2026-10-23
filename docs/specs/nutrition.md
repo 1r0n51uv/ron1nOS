@@ -565,6 +565,11 @@ NUT-016.
 | Acqua                 | lettura e scrittura ok: si scrive `[{ date, water_intake }]` e il totale del giorno si aggiorna (0 → 250 ml)           |
 | Peso                  | `weight/last` vuole `date`; lo storico `?start=&end=` (non documentato) dà `{ date, value }`                           |
 
+Il 2026-10-23 YAZIO ha bloccato la `v20` per i dati utente: login e ricerca
+rispondono, ogni `/user/*` dà `403 version_blocked`. ron1nOS usa la `v15`
+(default di `YAZIO_URL`) e mostra una versione bloccata come errore in
+NUT-020.
+
 Resta aperto, senza bloccare:
 
 - la forma delle voci vere (porzioni, ricette, voci semplici): il diario

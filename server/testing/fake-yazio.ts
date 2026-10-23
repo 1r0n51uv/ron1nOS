@@ -37,6 +37,8 @@ export type FakeYazioState = {
   failNext: { status: number; count: number } | null
   // Rompe il formato del diario (campo daytime mancante).
   brokenFormat: boolean
+  // Versione dell'API bloccata: /user/* risponde 403 version_blocked.
+  versionBlocked: boolean
   consumed: ConsumedProduct[]
   water: Record<string, number>
   goals: { kcal: number; protein: number; carbs: number; fat: number; water: number }
@@ -81,6 +83,7 @@ export function initialFakeYazioState(): FakeYazioState {
     password: FAKE_USER.password,
     failNext: null,
     brokenFormat: false,
+    versionBlocked: false,
     consumed: [],
     water: {},
     goals: { kcal: 2021, protein: 126, carbs: 227, fat: 67, water: 2500 },
@@ -124,6 +127,8 @@ export function createFakeYazio(state: FakeYazioState = initialFakeYazioState())
       state.failNext.count--
       return c.json({ error: 'forzato' }, state.failNext.status as 500)
     }
+    if (state.versionBlocked && new URL(c.req.url).pathname.includes('/user/'))
+      return c.json({ error: 'version_blocked' }, 403)
     await next()
   })
 
