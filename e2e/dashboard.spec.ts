@@ -280,7 +280,7 @@ test.describe('ripristino del layout (DASH-008)', () => {
         items: [{ id: 'downloads.summary', x: 0, y: 0, w: 8, h: 8, options: { limit: 1 } }],
       },
     })
-    await page.goto('/impostazioni')
+    await page.goto('/impostazioni/dashboard')
     await page.getByRole('button', { name: 'Ripristina layout predefinito' }).click()
     const dialog = page.getByRole('dialog', { name: 'Ripristinare il layout predefinito?' })
     await dialog.getByRole('button', { name: 'Ripristina', exact: true }).click()

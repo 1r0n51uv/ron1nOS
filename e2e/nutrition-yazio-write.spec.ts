@@ -72,7 +72,7 @@ test('un alimento senza equivalente si abbina a mano in Impostazioni (NUT-023)',
   expect(meal.ok()).toBe(true)
   expect((await page.request.post('/api/v1/nutrition/yazio/sync')).ok()).toBe(true)
 
-  await page.goto('/impostazioni')
+  await page.goto('/impostazioni/moduli/nutrizione')
   await expect(
     page.getByRole('region', { name: 'YAZIO' }).getByText('Senza equivalente').locator('..'),
   ).toContainText('1')

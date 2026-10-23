@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router'
 
 import { LoginPage } from '@/auth/LoginPage'
 import { RequireAuth } from '@/auth/RequireAuth'
@@ -12,7 +12,7 @@ import { RecipesPage } from '@/modules/nutrition/recipes/RecipesPage'
 import { ReportPage } from '@/modules/nutrition/report/ReportPage'
 import { TemplatesPage } from '@/modules/nutrition/templates/TemplatesPage'
 import { Dashboard } from '@/pages/Dashboard'
-import { Settings } from '@/pages/Settings'
+import { NutritionSettings, Settings, SettingsSection } from '@/pages/Settings'
 import { WorkoutPage } from '@/modules/workout/page/WorkoutPage'
 
 export default function App() {
@@ -33,7 +33,11 @@ export default function App() {
           <Route path="note" element={<ComingSoon title="Note" />} />
           <Route path="casa" element={<ComingSoon title="Casa" />} />
           <Route path="server" element={<ComingSoon title="Server e container" />} />
-          <Route path="impostazioni" element={<Settings />} />
+          <Route path="impostazioni" element={<Settings />}>
+            <Route index element={<Navigate to="aspetto" replace />} />
+            <Route path="moduli/nutrizione" element={<NutritionSettings />} />
+            <Route path=":section" element={<SettingsSection />} />
+          </Route>
           <Route path="*" element={<ComingSoon title="Pagina non trovata" />} />
         </Route>
       </Route>

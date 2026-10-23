@@ -24,17 +24,17 @@ in "Decisioni".
 
 #### SET-001 · Pagina a sezioni
 
-Stato: pianificato (#146)
+Stato: in corso (#146)
 
 Accettazione:
 
-- [ ] A sinistra il menu delle sezioni, a destra una sezione alla volta.
+- [x] A sinistra il menu delle sezioni, a destra una sezione alla volta.
       Ogni sezione ha il suo indirizzo `/impostazioni/<sezione>`;
       `/impostazioni` apre `Aspetto`.
-- [ ] Sezioni, in ordine: Aspetto, Dashboard, Moduli, Navigazione,
+- [x] Sezioni, in ordine: Aspetto, Dashboard, Moduli, Navigazione,
       Account, App iOS, Integrazioni, Formati, Backup configurazione,
       Informazioni.
-- [ ] Le impostazioni dei singoli moduli (oggi Nutrizione: YAZIO, alimenti
+- [x] Le impostazioni dei singoli moduli (oggi Nutrizione: YAZIO, alimenti
       non abbinati, obiettivi, alimenti, integratori) stanno sotto
       `Moduli`, una pagina per modulo: `/impostazioni/moduli/nutrizione`.
 - [ ] Ogni modifica si salva da sola, senza pulsante `Salva`; un errore si
@@ -42,7 +42,7 @@ Accettazione:
 
 #### SET-002 · Preferenze sul server
 
-Stato: in corso (#137)
+Stato: fatto (#174)
 
 Accettazione:
 

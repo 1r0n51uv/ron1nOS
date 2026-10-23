@@ -7,7 +7,7 @@ test.beforeEach(async () => {
 })
 
 test('gli integratori si aggiungono, si spuntano nel giorno e si disattivano (NUT-014)', async ({ page }) => {
-  await page.goto('/impostazioni')
+  await page.goto('/impostazioni/moduli/nutrizione')
   await expect(page.getByText('Nessun integratore.')).toBeVisible()
   for (const [name, dose, when] of [
     ['Creatina', '5 g', 'mattina'],
@@ -34,7 +34,7 @@ test('gli integratori si aggiungono, si spuntano nel giorno e si disattivano (NU
   await expect(card.getByRole('button', { name: /Creatina/ })).toHaveAttribute('aria-pressed', 'true')
 
   // Disattivata, la Vitamina D esce dalla checklist di oggi.
-  await page.goto('/impostazioni')
+  await page.goto('/impostazioni/moduli/nutrizione')
   await page.getByRole('listitem', { name: 'Vitamina D' }).getByRole('button', { name: 'Disattiva' }).click()
   await expect(page.getByText('1 attivo')).toBeVisible()
   await page.goto('/pasti')

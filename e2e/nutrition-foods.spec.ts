@@ -14,7 +14,7 @@ async function fill(scope: Locator, values: Record<string, string>) {
 }
 
 test('un alimento personale si crea, si usa, si modifica e si elimina (NUT-006)', async ({ page }) => {
-  await page.goto('/impostazioni')
+  await page.goto('/impostazioni/moduli/nutrizione')
   await page.getByRole('button', { name: 'Nuovo alimento' }).click()
   const form = page.getByRole('form', { name: 'Alimento personale' })
   await fill(form, {
@@ -41,7 +41,7 @@ test('un alimento personale si crea, si usa, si modifica e si elimina (NUT-006)'
   await expect(breakfast.getByText('225 kcal').first()).toBeVisible()
 
   // Modificato ed eliminato, il pasto resta com'era.
-  await page.goto('/impostazioni')
+  await page.goto('/impostazioni/moduli/nutrizione')
   await row.getByRole('button', { name: 'Modifica' }).click()
   await fill(page.getByRole('form', { name: 'Alimento personale' }), { Calorie: '400' })
   await page.getByRole('button', { name: 'Salva' }).last().click()

@@ -14,7 +14,7 @@ test('YAZIO si collega con Sincronizza ora, mostra l’errore e si spegne (NUT-0
   page,
   request,
 }) => {
-  await page.goto('/impostazioni')
+  await page.goto('/impostazioni/moduli/nutrizione')
   const panel = page.getByRole('region', { name: 'YAZIO' })
   await expect(panel.getByText('non collegato')).toBeVisible()
   await expect(panel.getByText('mai')).toBeVisible()
@@ -52,7 +52,7 @@ test('obiettivo, attività e peso arrivano da YAZIO e l’obiettivo non si modif
       weights: [{ date: '2026-10-20 08:00:00', value: 80.1 }],
     },
   })
-  await page.goto('/impostazioni')
+  await page.goto('/impostazioni/moduli/nutrizione')
   const goals = page.getByRole('button', { name: 'Salva' })
   await expect(goals).toBeVisible()
 
