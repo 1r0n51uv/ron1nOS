@@ -12,11 +12,14 @@ export function ExercisePhoto({
   name,
   image,
   className,
+  compact = false,
   children,
 }: {
   name: string
   image: ExerciseImage | null
   className?: string
+  // Miniatura: senza immagine solo l'icona, senza etichetta.
+  compact?: boolean
   children?: ReactNode
 }) {
   return (
@@ -30,8 +33,8 @@ export function ExercisePhoto({
         />
       ) : (
         <div className="absolute inset-0 -z-10 flex flex-col items-center justify-center gap-1.5 text-ink-muted">
-          <Icon name="gym" size={26} />
-          <span className="text-xs">Scegli immagine</span>
+          <Icon name="gym" size={compact ? 18 : 26} />
+          {compact ? null : <span className="text-xs">Scegli immagine</span>}
         </div>
       )}
       {children ? (

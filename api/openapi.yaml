@@ -1776,6 +1776,57 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/WorkoutSummary" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /workout/sessions:
+    get:
+      summary: Storico delle sessioni (GYM-004)
+      description: >
+        Dalla più recente, a pagine da 20. Ogni riga porta i primi tre
+        esercizi nell'ordine del CSV, con la loro immagine (GYM-014).
+      operationId: listWorkoutSessions
+      parameters:
+        - {
+            name: routine,
+            in: query,
+            schema: { type: string },
+            description: solo le sessioni di questa routine,
+          }
+        - {
+            name: cursor,
+            in: query,
+            schema: { type: string },
+            description: "`nextCursor` della pagina prima",
+          }
+      responses:
+        "200":
+          description: Una pagina di sessioni.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sessions, nextCursor]
+                properties:
+                  sessions:
+                    type: array
+                    items: { $ref: "#/components/schemas/WorkoutSessionRow" }
+                  nextCursor: { type: [string, "null"] }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /workout/routines:
+    get:
+      summary: Nomi delle routine per il filtro dello storico (GYM-004)
+      description: Dalla routine usata più di recente; senza le sessioni senza routine.
+      operationId: listWorkoutRoutines
+      responses:
+        "200":
+          description: I nomi.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [routines]
+                properties:
+                  routines: { type: array, items: { type: string } }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
 components:
   securitySchemes:
     session:

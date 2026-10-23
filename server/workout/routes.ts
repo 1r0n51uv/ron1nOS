@@ -14,6 +14,7 @@ import { exerciseImages, imageUrl, setExerciseImage } from './images.ts'
 import { importLiftin } from './import.ts'
 import { LiftinError, parseLiftin } from './liftin.ts'
 import { normalizeExercise } from './math.ts'
+import { decodeCursor, listRoutines, listSessions } from './sessions.ts'
 import { getSummary } from './summary.ts'
 
 type WorkoutDeps = {
@@ -88,6 +89,18 @@ export function workoutRoutes({ database, catalog, now = () => new Date() }: Wor
 
   // Ultimo allenamento, settimana e giorni di fila (GYM-001, GYM-013).
   app.get('/summary', async (c) => c.json(await getSummary(c.get('db'), catalog, now())))
+
+  // Storico a pagine da 20, dalla più recente (GYM-004).
+  app.get('/sessions', async (c) => {
+    const routine = c.req.query('routine')
+    const cursor = c.req.query('cursor')
+    const after = cursor ? decodeCursor(cursor) : undefined
+    if (after === null) throw new InvalidRequestError('Cursore non valido')
+    return c.json(await listSessions(c.get('db'), catalog, { routine: routine || undefined, after }))
+  })
+
+  // Nomi delle routine per il filtro dello storico (GYM-004).
+  app.get('/routines', async (c) => c.json({ routines: await listRoutines(c.get('db')) }))
 
   // Anteprima dell'import (GYM-003): stessi conti dell'import, nessuna scrittura.
   app.post('/import/preview', csvLimit, async (c) => {
