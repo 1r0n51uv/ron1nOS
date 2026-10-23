@@ -1,12 +1,14 @@
 // Ricerca su OpenFoodFacts e USDA FoodData Central (ADR-0018 e ADR-0036 di
 // 1r0-pkm, foodsearch.js): OpenFoodFacts per i prodotti confezionati e i
 // codici a barre, USDA per gli alimenti generici. I risultati sono
-// candidati: entrano nel catalogo solo quando si usano.
+// candidati: entrano nel catalogo solo quando si usano. La ricerca per nome
+// passa da search.openfoodfacts.org (search-a-licious): cgi/search.pl e
+// api/v2/search rispondono 503 a intermittenza (prova del 2026-10-23).
 import type { FoodCandidate } from './foods.ts'
 
 export type ExternalConfig = {
-  offUrl: string // ricerca mondiale
-  offItalyUrl: string // filtro Solo Italia (it.openfoodfacts.org)
+  offUrl: string // schede prodotto e codici a barre
+  offSearchUrl: string // ricerca per nome (search-a-licious)
   usdaUrl: string
   usdaKey: string
 }
@@ -19,6 +21,9 @@ export type ExternalSearch = {
 
 const UA = 'ron1nOS/1.0 (github.com/1r0n51uv/ron1nOS)'
 const OFF_FIELDS = 'code,product_name,generic_name,brands,serving_quantity,nutriments'
+const OFF_SEARCH_FIELDS = `${OFF_FIELDS},product_name_it,generic_name_it,countries_tags`
+// Solo Italia: filtro nella query, senza AND (con AND non trova niente).
+const OFF_ITALY = 'countries_tags:"en:italy"'
 
 const round1 = (n: number) => Math.round(n * 10) / 10
 const posNum = (v: unknown) => {
@@ -29,8 +34,12 @@ const posNum = (v: unknown) => {
 type OffProduct = {
   code?: string
   product_name?: string
+  product_name_it?: string
   generic_name?: string
-  brands?: string
+  generic_name_it?: string
+  // Stringa separata da virgole nelle schede, elenco in search-a-licious.
+  brands?: string | string[]
+  countries_tags?: string[]
   serving_quantity?: unknown
   nutriments?: Record<string, unknown>
 }
@@ -40,9 +49,10 @@ export function fromOff(p: OffProduct): FoodCandidate | null {
   let kcal = posNum(n['energy-kcal_100g'])
   const kj = posNum(n['energy_100g'])
   if (kcal === null && kj !== null) kcal = kj / 4.184
-  const name = (p.product_name || p.generic_name || '').trim()
+  const name = (p.product_name_it || p.product_name || p.generic_name_it || p.generic_name || '').trim()
   if (!name || kcal === null) return null
-  const brand = (p.brands ?? '').split(',')[0]?.trim() || null
+  const brands = Array.isArray(p.brands) ? p.brands : (p.brands ?? '').split(',')
+  const brand = brands[0]?.trim() || null
   const caffeine = posNum(n['caffeine_100g'])
   return {
     source: 'openfoodfacts',
@@ -131,19 +141,19 @@ export function createExternalSearch(
 
   return {
     async off(q, { limit, italy }) {
-      const base = italy ? config.offItalyUrl : config.offUrl
       const params = new URLSearchParams({
-        search_terms: q,
-        search_simple: '1',
-        action: 'process',
-        json: '1',
+        q: italy ? `${q} ${OFF_ITALY}` : q,
+        langs: 'it',
         page_size: String(limit),
-        fields: OFF_FIELDS,
+        fields: OFF_SEARCH_FIELDS,
       })
-      const r = await json(`${base}/cgi/search.pl?${params}`)
+      const r = await json(`${config.offSearchUrl}/search?${params}`)
       if (!r) return null
-      const products = (r.body as { products?: OffProduct[] } | null)?.products ?? []
-      return products.map(fromOff).filter((x) => x !== null)
+      const hits = (r.body as { hits?: OffProduct[] } | null)?.hits ?? []
+      return hits
+        .filter((h) => !italy || h.countries_tags?.includes('en:italy'))
+        .map(fromOff)
+        .filter((x) => x !== null)
     },
 
     async usda(q, { limit }) {

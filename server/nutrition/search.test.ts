@@ -48,7 +48,7 @@ describe('ricerca alimenti (NUT-004)', () => {
     const { api, fake } = setup()
     const it = await api.get('/foods/search?q=joghurt')
     expect(it.body.results).toEqual([])
-    expect(fake.state.calls[0]).toBe('/off-it joghurt')
+    expect(fake.state.calls[0]).toBe('/off-search joghurt (it)')
     const world = await api.get('/foods/search?q=joghurt&italy=0')
     expect(world.body.results.map((r: Result) => r.name)).toEqual(['Griechischer Joghurt'])
   })
@@ -108,6 +108,18 @@ describe('conversioni', () => {
     ).toMatchObject({ kcal: 100, caffeineMg: 40 })
     expect(fromOff({ code: '1', product_name: 'X', nutriments: {} })).toBeNull()
     expect(fromOff({ code: '1', product_name: '', nutriments: { 'energy-kcal_100g': 1 } })).toBeNull()
+  })
+
+  it('OpenFoodFacts search-a-licious: nome italiano prima, marche in elenco', () => {
+    expect(
+      fromOff({
+        code: '8076809575140',
+        product_name: 'Pates aux lentilles rouges',
+        product_name_it: 'Pasta di lenticchie rosse',
+        brands: ['Barilla', 'Altro'],
+        nutriments: { 'energy-kcal_100g': 335 },
+      }),
+    ).toMatchObject({ name: 'Pasta di lenticchie rosse', brand: 'Barilla', kcal: 335 })
   })
 
   it('USDA: preferisce le kcal ai kJ e mette il nome in minuscolo', () => {

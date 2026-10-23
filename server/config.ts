@@ -45,7 +45,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     yazio: yazioConfig(env),
     foods: {
       offUrl: (env.OFF_URL ?? 'https://world.openfoodfacts.org').replace(/\/+$/, ''),
-      offItalyUrl: (env.OFF_ITALY_URL ?? 'https://it.openfoodfacts.org').replace(/\/+$/, ''),
+      offSearchUrl: (env.OFF_SEARCH_URL ?? 'https://search.openfoodfacts.org').replace(/\/+$/, ''),
       usdaUrl: (env.USDA_URL ?? 'https://api.nal.usda.gov/fdc/v1').replace(/\/+$/, ''),
       // DEMO_KEY basta per poche ricerche al giorno; una chiave gratuita su api.data.gov.
       usdaKey: env.USDA_API_KEY || 'DEMO_KEY',

@@ -18,8 +18,8 @@ test('registrare un pasto cercando un alimento (NUT-003)', async ({ page }) => {
 
   await dialog.getByLabel('Cerca un alimento').fill('yogurt greco')
   await dialog.getByRole('button', { name: /Yogurt greco bianco 2%/ }).click()
-  // La porzione del prodotto è la quantità proposta.
-  await expect(dialog.getByLabel('Quantità in grammi')).toHaveValue('170')
+  // La ricerca di OpenFoodFacts non dà la porzione: si propongono 100 g.
+  await expect(dialog.getByLabel('Quantità in grammi')).toHaveValue('100')
   await dialog.getByLabel('Quantità in grammi').fill('200')
   await expect(dialog.getByText('146 kcal · P 20 · C 8 · G 4')).toBeVisible()
   await dialog.getByRole('button', { name: 'Aggiungi' }).click()

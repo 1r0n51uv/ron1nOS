@@ -81,7 +81,7 @@ export default defineConfig({
         // Postgres vero: in CI il servizio del job, in locale lo stesso utente.
         DATABASE_URL: E2E_DATABASE_URL,
         OFF_URL: 'http://localhost:18083/off',
-        OFF_ITALY_URL: 'http://localhost:18083/off-it',
+        OFF_SEARCH_URL: 'http://localhost:18083/off-search',
         USDA_URL: 'http://localhost:18083/usda',
         YAZIO_URL: 'http://localhost:18084/v20',
         YAZIO_CLIENT_ID: FAKE_CLIENT.id,
