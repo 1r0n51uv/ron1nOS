@@ -1,9 +1,9 @@
-import { fireEvent, screen, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { renderWithProviders } from '@/test/render'
 import type * as data from './data'
-import { useDocuments, useDocumentTypes, useHolders } from './data'
+import { documentsSource, useDocuments, useDocumentTypes, useHolders } from './data'
 import { DocumentsPage } from './DocumentsPage'
 import { summary, types } from './fixtures'
 
@@ -68,6 +68,15 @@ describe('DocumentsPage (DOC-002)', () => {
       within(screen.getByRole('group', { name: 'Titolare' })).getByRole('button', { name: 'Giulia' }),
     )
     expect(vi.mocked(useDocuments)).toHaveBeenLastCalledWith({ q: '', type: 'cie', holder: 'Giulia' })
+  })
+
+  it('la stella fissa o toglie dall’evidenza dalla pagina (DOC-008)', async () => {
+    const patch = vi.spyOn(documentsSource, 'update').mockResolvedValue({} as never)
+    renderWithProviders(<DocumentsPage />, { route: '/documenti' })
+    fireEvent.click(screen.getByRole('button', { name: "Togli Carta d'identità dall’evidenza" }))
+    await waitFor(() => expect(patch).toHaveBeenCalledWith('a', { pinned: false }))
+    fireEvent.click(screen.getByRole('button', { name: 'Metti in evidenza Contratto affitto' }))
+    await waitFor(() => expect(patch).toHaveBeenCalledWith('b', { pinned: true }))
   })
 
   it('stato vuoto e filtri senza risultati', () => {

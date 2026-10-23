@@ -41,7 +41,7 @@ fondo, in "Decisioni". Mockup:
 
 #### DOC-001 · Widget Documenti
 
-Stato: pianificato (#102)
+Stato: fatto (#102)
 
 Il widget in dashboard mostra i documenti in evidenza e quelli in
 scadenza.
@@ -168,7 +168,7 @@ Accettazione:
 
 #### DOC-008 · Documenti in evidenza
 
-Stato: in corso (#109)
+Stato: fatto (#109)
 
 Accettazione:
 
@@ -193,7 +193,7 @@ Accettazione:
 
 #### DOC-010 · Scadenze e preavvisi
 
-Stato: in corso (#111)
+Stato: fatto (#111)
 
 Accettazione:
 

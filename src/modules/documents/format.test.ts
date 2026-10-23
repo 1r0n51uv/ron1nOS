@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import type { DocumentSummary } from './data'
-import { copyAllText, expiryText, fileKind, groupDocuments, itDate, monthYear } from './format'
+import {
+  copyAllText,
+  expiryText,
+  fileKind,
+  groupDocuments,
+  itDate,
+  monthYear,
+  widgetExpiry,
+  widgetView,
+} from './format'
 
 const summary = (over: Partial<DocumentSummary>): DocumentSummary => ({
   id: 'd',
@@ -77,5 +86,24 @@ describe('formati dei documenti', () => {
         extra: [{ label: 'PIN', value: '1234' }],
       }),
     ).toBe('Numero: YA1\nData di nascita: 12/04/1990\nPIN: 1234')
+  })
+})
+
+describe('widget (DOC-001)', () => {
+  it('testi della scadenza', () => {
+    expect(widgetExpiry({ status: 'expired', daysLeft: -2 })).toBe('Scaduto')
+    expect(widgetExpiry({ status: 'expiring', daysLeft: 0 })).toBe('Scade oggi')
+    expect(widgetExpiry({ status: 'expiring', daysLeft: 1 })).toBe('Scade domani')
+    expect(widgetExpiry({ status: 'ok', daysLeft: 84 })).toBe('Scade tra 84 giorni')
+  })
+
+  it('entro 90 giorni in lista, oltre solo come prossima scadenza', () => {
+    const view = widgetView([
+      summary({ id: 'far', expiresOn: '2027-06-01', expiry: { status: 'ok', daysLeft: 200 } }),
+      summary({ id: 'near', expiresOn: '2026-12-01', expiry: { status: 'ok', daysLeft: 90 } }),
+      summary({ id: 'none' }),
+    ])
+    expect(view.expiring.map((d) => d.id)).toEqual(['near'])
+    expect(view.nextDays).toBe(200)
   })
 })

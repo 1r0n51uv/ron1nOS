@@ -1,4 +1,5 @@
 import { widgets as containers } from '@/modules/containers/widgets'
+import { widgets as documents } from '@/modules/documents/widgets'
 import { widgets as downloads } from '@/modules/downloads/widgets'
 import { widgets as home } from '@/modules/home/widgets'
 import { widgets as notes } from '@/modules/notes/widgets'
@@ -19,6 +20,7 @@ export const moduleWidgets: WidgetModuleDef[] = [
   ...containers,
   ...downloads,
   ...notes,
+  ...documents,
 ]
 
 const byId = new Map(moduleWidgets.map((w) => [w.id, w]))
