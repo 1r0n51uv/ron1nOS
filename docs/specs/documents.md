@@ -234,7 +234,7 @@ Accettazione:
 
 #### DOC-013 · PDF di riepilogo
 
-Stato: pianificato (#114)
+Stato: fatto (#114)
 
 Accettazione:
 

@@ -118,6 +118,9 @@ export function fileUrl(
   return `/api/v1${BASE}/documents/${documentId}/files/${fileId}${s ? `?${s}` : ''}`
 }
 
+// PDF di riepilogo (DOC-013), generato dal backend.
+export const summaryUrl = (documentId: string) => `/api/v1${BASE}/documents/${documentId}/summary.pdf`
+
 // Caricamento con avanzamento (DOC-011): fetch non lo dà, XMLHttpRequest sì.
 function uploadFile(documentId: string, file: File, label: FileLabel, onProgress?: (ratio: number) => void) {
   return new Promise<DocumentFile>((resolve, reject) => {

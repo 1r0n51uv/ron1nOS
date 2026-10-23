@@ -503,6 +503,25 @@ paths:
         "401": { $ref: "#/components/responses/Unauthenticated" }
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/DocumentsUnavailable" }
+  /documents/documents/{id}/summary.pdf:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: PDF di riepilogo (DOC-013)
+      description: >
+        A4 generato al volo e mai salvato sul server: titolo, titolare,
+        scadenza, immagini allegate e campi; gli allegati PDF in coda, gli
+        altri file elencati per nome. Il file scaricato è in chiaro.
+      operationId: getDocumentSummary
+      responses:
+        "200":
+          description: Il PDF, come allegato con il titolo del documento.
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DocumentsUnavailable" }
   /documents/documents/{id}/files:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }

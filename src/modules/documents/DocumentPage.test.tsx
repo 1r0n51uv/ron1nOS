@@ -116,6 +116,16 @@ describe('DocumentPage (DOC-004, DOC-009)', () => {
     expect(update).toHaveBeenCalledWith(expect.objectContaining({ typeId: 'pass' }), expect.anything())
   })
 
+  it('PDF di riepilogo: prima avvisa che è in chiaro, poi scarica (DOC-013)', () => {
+    show()
+    fireEvent.click(screen.getByRole('button', { name: 'PDF di riepilogo' }))
+    expect(screen.getByText(/Il PDF scaricato non è cifrato/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Scarica il PDF' })).toHaveAttribute(
+      'href',
+      '/api/v1/documents/documents/d1/summary.pdf',
+    )
+  })
+
   it('documento inesistente', () => {
     vi.mocked(useDocument).mockReturnValue({
       data: undefined,
