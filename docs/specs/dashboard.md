@@ -183,14 +183,16 @@ Riprova` e il layout resta quello sullo schermo.
 
 #### DASH-008 · Layout predefinito e ripristino
 
-Stato: pianificato (#140)
+Stato: in corso (#140)
 
 Accettazione:
 
-- [ ] Il layout predefinito del desktop riproduce la dashboard di oggi:
+- [x] Il layout predefinito del desktop riproduce la dashboard di oggi:
       gli otto `summary` nello stesso ordine.
-- [ ] `Ripristina layout predefinito`, nelle impostazioni (SET-004), con
-      conferma, rimette quello e cancella le opzioni dei widget.
+- [x] `Ripristina layout predefinito`, nelle impostazioni (SET-004), con
+      conferma, rimette quello e cancella le opzioni dei widget
+      (`DELETE /api/v1/dashboard/layouts/{device}`). Finché non arriva
+      SET-004 il pulsante sta nel pannello `Dashboard` delle impostazioni.
 
 ## Decisioni
 

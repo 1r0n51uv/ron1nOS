@@ -27,6 +27,7 @@ function api(database: Database = { db, status: () => 'ok' }) {
   return {
     get: (path: string) => call('GET', path),
     put: (path: string, body: unknown) => call('PUT', path, body),
+    delete: (path: string) => call('DELETE', path),
   }
 }
 
@@ -87,5 +88,24 @@ describe('rotte del layout (DASH-007)', () => {
     const res = await offline.get('/layouts/desktop')
     expect(res.body).toMatchObject({ ...defaultLayout('desktop'), stored: false })
     expect((await offline.put('/layouts/desktop', moved)).status).toBe(503)
+    expect((await offline.delete('/layouts/desktop')).status).toBe(503)
+  })
+})
+
+describe('ripristino del layout (DASH-008)', () => {
+  it('cancella il layout del dispositivo, opzioni comprese, e restituisce il predefinito', async () => {
+    await api().put('/layouts/desktop', {
+      header: 'hidden',
+      items: [{ id: 'downloads.summary', x: 0, y: 0, w: 8, h: 8, options: { limit: 1 } }],
+    })
+    await api().put('/layouts/iphone', moved)
+    const res = await api().delete('/layouts/desktop')
+    expect(res).toEqual({
+      status: 200,
+      body: { device: 'desktop', ...defaultLayout('desktop'), updatedAt: null, stored: true },
+    })
+    expect((await api().get('/layouts/desktop')).body.updatedAt).toBeNull()
+    // L'iPhone tiene il suo.
+    expect((await api().get('/layouts/iphone')).body).toMatchObject(moved)
   })
 })
