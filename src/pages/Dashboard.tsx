@@ -6,7 +6,8 @@ import type { SlotId } from '@/modules/nutrition/data'
 import { useDay } from '@/modules/nutrition/data'
 import { todayRome } from '@/modules/nutrition/dates'
 import { isFinished, useWorkout } from '@/modules/workout/data'
-import { readingOrder, useDashboardLayout } from '@/widgets/layout'
+import { DashboardGrid } from '@/widgets/DashboardGrid'
+import { useDashboardLayout } from '@/widgets/layout'
 import { availableWidgets } from '@/widgets/registry'
 
 const MEAL_ARTICLE: Record<SlotId, string> = {
@@ -46,19 +47,15 @@ function useSummary(now: Date) {
   return parts.join(' ')
 }
 
-// I widget del layout salvato, in ordine di lettura; finché il layout non
-// arriva, quelli del catalogo nel loro ordine.
+// Il layout salvato (o quello predefinito) con i widget disponibili: quelli
+// dei moduli spenti restano nel layout ma non si vedono.
 function useWidgets() {
   const { layout, stored, saveFailed, retry } = useDashboardLayout()
-  const available = availableWidgets()
-  const widgets = layout
-    ? readingOrder(layout.items).flatMap((item) => available.filter((w) => w.id === item.id))
-    : available
-  return { widgets, stored, saveFailed, retry }
+  return { items: layout?.items ?? [], widgets: availableWidgets(), stored, saveFailed, retry }
 }
 
 export function Dashboard() {
-  const { widgets, stored, saveFailed, retry } = useWidgets()
+  const { items, widgets, stored, saveFailed, retry } = useWidgets()
   const now = useNow()
   const summary = useSummary(now)
   const containers = useContainers().data
@@ -98,11 +95,7 @@ export function Dashboard() {
           </button>
         </p>
       ) : null}
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5">
-        {widgets.map(({ id, component: Widget }) => (
-          <Widget key={id} />
-        ))}
-      </div>
+      <DashboardGrid items={items} widgets={widgets} />
     </>
   )
 }

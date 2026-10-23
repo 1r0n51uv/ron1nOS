@@ -80,17 +80,17 @@ Accettazione:
 
 #### DASH-003 · Griglia libera
 
-Stato: pianificato (#141)
+Stato: in corso (#141)
 
 Accettazione:
 
-- [ ] La griglia ha 24 colonne e righe da 24px; ogni widget occupa un
+- [x] La griglia ha 24 colonne e righe da 24px; ogni widget occupa un
       rettangolo `x, y, w, h` in queste unità.
-- [ ] I widget stanno dove li si lascia: niente compattazione verso
+- [x] I widget stanno dove li si lascia: niente compattazione verso
       l'alto, gli spazi vuoti restano.
-- [ ] Due widget non si sovrappongono: se il rilascio cade su un widget
+- [x] Due widget non si sovrappongono: se il rilascio cade su un widget
       occupato, l'altro si sposta sotto quanto basta.
-- [ ] La griglia è larga quanto l'area dei contenuti (minimo 1024px); la
+- [x] La griglia è larga quanto l'area dei contenuti (minimo 1024px); la
       sua altezza cresce con il widget più in basso.
 
 #### DASH-004 · Modifica sempre attiva

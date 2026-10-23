@@ -70,3 +70,28 @@ test.describe('layout salvato sul server (DASH-007)', () => {
     expect((await res.json()).error).toBe('invalid_layout')
   })
 })
+
+test.describe('griglia libera (DASH-003)', () => {
+  test.afterEach(() => sql('delete from dashboard_layouts'))
+
+  test('i widget stanno dove sono salvati e gli spazi vuoti restano', async ({ page }) => {
+    await page.request.put('/api/v1/dashboard/layouts/desktop', {
+      data: {
+        header: 'full',
+        items: [
+          { id: 'notes.summary', x: 16, y: 0, w: 8, h: 7 },
+          { id: 'weight.summary', x: 0, y: 20, w: 12, h: 7 },
+        ],
+      },
+    })
+    await page.goto('/')
+    const notes = await page.locator('[data-widget="notes.summary"]').boundingBox()
+    const weight = await page.locator('[data-widget="weight.summary"]').boundingBox()
+    const grid = await page.getByTestId('dashboard-grid').boundingBox()
+    if (!notes || !weight || !grid) throw new Error('widget non trovati')
+    // Note a destra in alto, peso a sinistra 20 righe più in basso (40px l'una).
+    expect(notes.x).toBeGreaterThan(grid.x + grid.width / 2)
+    expect(Math.round(weight.y - grid.y)).toBe(20 * 40)
+    expect(weight.width).toBeGreaterThan(notes.width)
+  })
+})
