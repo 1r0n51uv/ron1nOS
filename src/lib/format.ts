@@ -22,6 +22,14 @@ export function eyebrowDate(d: Date) {
   return d.toLocaleDateString(it, { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase()
 }
 
+// Versione corta per la testata su una riga: "GIO 22 OTT".
+export function eyebrowShortDate(d: Date) {
+  return d
+    .toLocaleDateString(it, { weekday: 'short', day: 'numeric', month: 'short' })
+    .replaceAll('.', '')
+    .toUpperCase()
+}
+
 export function time(d: Date) {
   return d.toLocaleTimeString(it, { hour: '2-digit', minute: '2-digit' })
 }
