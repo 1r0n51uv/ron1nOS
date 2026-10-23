@@ -15,8 +15,9 @@ mostra come stato, non li modifica.
 Non fa, per ora: tema chiaro, colore di accento diverso dal rosso, lingue
 diverse dall'italiano, più utenti.
 
-**Stato del documento: approvato il 2026-10-22, requisiti pianificati.** Le scelte sono in fondo,
-in "Decisioni".
+**Stato del documento: approvato il 2026-10-22, requisiti fatti il
+2026-10-23 tranne SET-008, che aspetta AUTH-005.** Le scelte sono in
+fondo, in "Decisioni".
 
 ## Requisiti
 
@@ -186,7 +187,7 @@ Accettazione:
 
 #### SET-012 · Informazioni
 
-Stato: in corso (#155)
+Stato: fatto (#194)
 
 Accettazione:
 
