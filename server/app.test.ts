@@ -90,6 +90,16 @@ describe('API /api/v1/downloads/drafts', () => {
     })
   }
 
+  it('un multipart troncato è un torrent non valido', async () => {
+    const res = await createApp({ qbt: fakeQbt() }).request('/api/v1/downloads/drafts', {
+      method: 'POST',
+      headers: { 'content-type': 'multipart/form-data; boundary=x' },
+      body: '--x\r\nContent-Disposition: form-data; name="file"; filename="a.torrent"\r\n\r\nd8:ann',
+    })
+    expect(res.status).toBe(400)
+    expect(await res.json()).toMatchObject({ error: 'invalid_torrent' })
+  })
+
   it('crea una bozza da un file e la rilegge', async () => {
     const app = createApp({ qbt: fakeQbt() })
     const res = await upload(app, DEBIAN_DVD)

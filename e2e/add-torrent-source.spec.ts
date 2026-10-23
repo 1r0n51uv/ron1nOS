@@ -10,6 +10,10 @@ test.beforeEach(async ({ page }) => {
   await widget.getByRole('button', { name: 'Aggiungi' }).click()
 })
 
+test('il selettore non filtra per tipo, così sul telefono i .torrent si scelgono', async ({ page }) => {
+  await expect(page.getByRole('dialog').getByLabel('File .torrent')).not.toHaveAttribute('accept')
+})
+
 test('un file .torrent porta ai contenuti letti dal server', async ({ page }) => {
   const dialog = page.getByRole('dialog')
   await dialog.getByLabel('File .torrent').setInputFiles({

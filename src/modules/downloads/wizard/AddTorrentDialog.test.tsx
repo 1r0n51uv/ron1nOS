@@ -39,10 +39,12 @@ function open() {
 
 const avanti = () => screen.getByRole('button', { name: 'Avanti' })
 
-function chooseFile(name = 'debian.torrent', content = 'd4:infod4:name1:aee') {
+// Il file si legge in memoria appena scelto: si aspetta che compaia il nome.
+async function chooseFile(name = 'debian.torrent', content = 'd4:infod4:name1:aee') {
   fireEvent.change(screen.getByLabelText('File .torrent'), {
     target: { files: [new File([content], name, { type: 'application/x-bittorrent' })] },
   })
+  await screen.findByText(name)
 }
 
 beforeEach(() => {
@@ -84,16 +86,16 @@ describe('Passo 1: sorgente', () => {
     expect(avanti()).toBeDisabled()
   })
 
-  it('un file .torrent attiva Avanti', () => {
+  it('un file .torrent attiva Avanti', async () => {
     open()
-    chooseFile()
+    await chooseFile()
     expect(screen.getByText('debian.torrent')).toBeInTheDocument()
     expect(avanti()).toBeEnabled()
   })
 
-  it('un file che non è un torrent mostra l’errore', () => {
+  it('un file che non è un torrent mostra l’errore', async () => {
     open()
-    chooseFile('foto.jpg')
+    await chooseFile('foto.jpg')
     expect(screen.getByText('File torrent non valido.')).toBeInTheDocument()
     expect(avanti()).toBeDisabled()
   })
@@ -127,7 +129,7 @@ describe('Passo 2: contenuti', () => {
   it('con un file mostra subito nome, numero di file e dimensione', async () => {
     vi.mocked(api.post).mockResolvedValue(DRAFT)
     open()
-    chooseFile()
+    await chooseFile()
     fireEvent.click(avanti())
     expect(await screen.findByText('debian-13.1.0-amd64-DVD')).toBeInTheDocument()
     expect(screen.getByText('4 file · 7,9 GB')).toBeInTheDocument()
@@ -204,7 +206,7 @@ describe('Passo 3: scelta dei file', () => {
   async function toFiles(draft: Draft = DRAFT) {
     vi.mocked(api.post).mockResolvedValue(draft)
     open()
-    chooseFile()
+    await chooseFile()
     fireEvent.click(avanti())
     await screen.findByText(`${draft.files.length} file · ${draft.files.length > 1 ? '7,9 GB' : '700 B'}`)
     fireEvent.click(avanti())
@@ -271,7 +273,7 @@ describe('Passo 4: riepilogo e avvio', () => {
       path === '/downloads/space' ? { free, path: '/downloads' } : DRAFT,
     )
     open()
-    chooseFile()
+    await chooseFile()
     fireEvent.click(avanti())
     await screen.findByText('4 file · 7,9 GB')
     fireEvent.click(avanti())
@@ -365,7 +367,7 @@ describe('Annulla (DL-008)', () => {
       path === '/downloads/space' ? { free: 412_000_000_000, path: '/downloads' } : DRAFT,
     )
     open()
-    chooseFile()
+    await chooseFile()
     fireEvent.click(avanti())
     await screen.findByText('4 file · 7,9 GB')
     fireEvent.click(avanti())
