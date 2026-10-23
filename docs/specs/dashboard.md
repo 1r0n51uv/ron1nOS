@@ -153,7 +153,7 @@ Accettazione:
 
 #### DASH-007 · Layout sul server
 
-Stato: in corso (#139)
+Stato: fatto (#161)
 
 Accettazione:
 
