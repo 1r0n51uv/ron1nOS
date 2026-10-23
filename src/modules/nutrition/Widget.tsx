@@ -4,10 +4,11 @@ import { Progress } from '@/components/ui/progress'
 import { useNow } from '@/hooks/useNow'
 import { ApiError } from '@/lib/api'
 import { num } from '@/lib/format'
+import { useFormats } from '@/preferences/data'
 import type { WidgetProps } from '@/widgets/types'
 import { SLOT_LABELS, useDay } from './data'
 import { todayRome } from './dates'
-import { plannedLine } from './format'
+import { energyText, plannedLine, ringLabels } from './format'
 
 const MACROS = [
   { key: 'protein', label: 'Proteine' },
@@ -23,6 +24,7 @@ export function NutritionWidget({ className, options }: WidgetProps) {
   const shown = (options?.macros as readonly string[] | undefined) ?? MACROS.map((m) => m.key)
   const today = todayRome(useNow())
   const { data, error } = useDay(today)
+  const fmt = useFormats()
   if (!data && error) {
     return (
       <WidgetCard title="Nutrizione" action={{ label: 'Dettagli', to: '/pasti' }} className={className}>
@@ -45,23 +47,21 @@ export function NutritionWidget({ className, options }: WidgetProps) {
           <ProgressRing
             value={eaten}
             max={target || Math.max(eaten, 1)}
-            label={num(eaten)}
-            sublabel={target ? `di ${num(target)} kcal` : 'kcal'}
-            ariaLabel={target ? `${num(eaten)} kcal su ${num(target)}` : `${num(eaten)} kcal`}
+            {...ringLabels(eaten, target, fmt)}
           />
           <div className="flex min-w-0 flex-col gap-1.5">
             {data.nextSlot ? (
               <>
                 <div className="text-[13px] text-ink-muted">Prossimo pasto</div>
                 <div className="font-display text-lg font-semibold">{SLOT_LABELS[data.nextSlot]}</div>
-                <div className="truncate font-mono text-[13px] text-ink-muted">{plannedLine(data)}</div>
+                <div className="truncate font-mono text-[13px] text-ink-muted">{plannedLine(data, fmt)}</div>
               </>
             ) : (
               <>
                 <div className="font-display text-lg font-semibold">Pasti completati</div>
                 {target ? (
                   <div className="text-[13px] text-ink-muted">
-                    Restano <span className="font-mono">{num(Math.max(0, target - eaten))} kcal</span>
+                    Restano <span className="font-mono">{energyText(Math.max(0, target - eaten), fmt)}</span>
                   </div>
                 ) : null}
               </>

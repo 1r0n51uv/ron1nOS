@@ -4,9 +4,10 @@ import { AlertRow, WidgetCard } from '@/components/ron1n'
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
 import { ApiError } from '@/lib/api'
 import { num, shortDay } from '@/lib/format'
+import { useFormats } from '@/preferences/data'
 import { useGroupVolume } from '../data'
 import { RadioChips } from '../exercise/RadioChips'
-import { groupLabel } from '../format'
+import { groupLabel, massTotal } from '../format'
 
 type Measure = 'volume' | 'sets'
 
@@ -28,6 +29,7 @@ function swatch(index: number, unassigned: boolean) {
 export function GroupVolume() {
   const [measure, setMeasure] = useState<Measure>('volume')
   const { data, error } = useGroupVolume()
+  const fmt = useFormats()
 
   if (!data && error) {
     return (
@@ -44,7 +46,7 @@ export function GroupVolume() {
   const value = (g: { volumeKg: number; sets: number }) => (measure === 'volume' ? g.volumeKg : g.sets)
   const totals = data.weeks.map((w) => w.groups.reduce((sum, g) => sum + value(g), 0))
   const top = Math.max(1, ...totals)
-  const unit = (v: number) => (measure === 'volume' ? `${num(Math.round(v))} kg` : `${num(v)} serie`)
+  const unit = (v: number) => (measure === 'volume' ? massTotal(v, fmt) : `${num(v)} serie`)
   const index = new Map(data.groups.map((g, i) => [g, i]))
   const first = data.weeks[0]
   const label = `${measure === 'volume' ? 'Volume' : 'Serie'} per gruppo muscolare dal ${

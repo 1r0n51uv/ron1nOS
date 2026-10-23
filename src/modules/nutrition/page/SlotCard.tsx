@@ -2,6 +2,8 @@ import { Icon } from '@/components/ron1n'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { num } from '@/lib/format'
+import { useFormats } from '@/preferences/data'
+import { energyText } from '../format'
 import type { SlotDay } from '../data'
 import { SLOT_LABELS } from '../data'
 import { AddMealDialog } from '../log/AddMealDialog'
@@ -18,6 +20,7 @@ const STATE_TAG: Record<SlotDay['state'], string | null> = {
 // Uno slot del giorno nei suoi stati (NUT-002): vuoto, pianificato,
 // mangiato o saltato.
 export function SlotCard({ date, slot }: { date: string; slot: SlotDay }) {
+  const fmt = useFormats()
   const label = SLOT_LABELS[slot.slot]
   const tag = STATE_TAG[slot.state]
   const planned = slot.state === 'planned' ? slot.planned : null
@@ -40,9 +43,9 @@ export function SlotCard({ date, slot }: { date: string; slot: SlotDay }) {
         </div>
         {tag ? <Badge>{tag}</Badge> : null}
         {slot.meal ? (
-          <span className="font-mono text-[15px]">{num(slot.meal.kcal)} kcal</span>
+          <span className="font-mono text-[15px]">{energyText(slot.meal.kcal, fmt)}</span>
         ) : planned ? (
-          <span className="font-mono text-[15px] text-ink-muted">{num(planned.kcal)} kcal</span>
+          <span className="font-mono text-[15px] text-ink-muted">{energyText(planned.kcal, fmt)}</span>
         ) : null}
         <AddMealDialog date={date} slot={slot.slot}>
           <Button variant="glass" size="icon" className="size-9" aria-label={`Registra in ${label}`}>
@@ -63,7 +66,7 @@ export function SlotCard({ date, slot }: { date: string; slot: SlotDay }) {
             <li key={`${item.name}-${i}`} className="flex min-h-10 items-center gap-3 text-sm">
               <span className="min-w-0 flex-1 truncate">{item.name}</span>
               <span className="font-mono text-[13px]">{num(item.grams)} g</span>
-              <span className="w-[72px] text-right font-mono text-[13px]">{num(item.kcal)} kcal</span>
+              <span className="w-[72px] text-right font-mono text-[13px]">{energyText(item.kcal, fmt)}</span>
             </li>
           ))}
         </ul>

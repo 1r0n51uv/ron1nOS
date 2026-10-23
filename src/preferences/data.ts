@@ -4,6 +4,7 @@ import { api } from '@/lib/api'
 import type { ModuleId } from '../../server/dashboard/catalog.ts'
 import type { Preferences, PreferencesPatch } from '../../server/preferences/schema.ts'
 import { applyPatch, DEFAULT_PREFERENCES, normalize } from '../../server/preferences/schema.ts'
+import { makeFormats } from './formats'
 
 // Preferenze di ron1nOS (SET-002): GET e PATCH /api/v1/preferences,
 // contratto in api/openapi.yaml. Tipi e predefiniti vengono dal backend.
@@ -85,6 +86,11 @@ export function usePreferences() {
 // Moduli spenti in Impostazioni › Moduli (SET-005).
 export function useDisabledModules(): readonly ModuleId[] {
   return usePreferences().data?.disabledModules ?? []
+}
+
+// Unità e fuso orario scelti in Impostazioni › Formati (SET-010).
+export function useFormats() {
+  return makeFormats(usePreferences().data?.formats ?? DEFAULT_PREFERENCES.formats)
 }
 
 // La modifica si vede subito; se il server la rifiuta torna la versione di prima.

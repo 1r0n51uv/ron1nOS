@@ -107,7 +107,7 @@ spento` con il link per riaccenderlo.
 
 #### SET-006 · Navigazione
 
-Stato: in corso (#152)
+Stato: fatto (#190)
 
 Accettazione:
 
@@ -156,15 +156,20 @@ Accettazione:
 
 #### SET-010 · Formati
 
-Stato: pianificato (#153)
+Stato: in corso (#153)
 
 Accettazione:
 
-- [ ] Fuso orario (predefinito `Europe/Rome`), usato dove oggi è scritto
+- [x] Fuso orario (predefinito `Europe/Rome`), usato dove oggi è scritto
       fisso, a partire dalle date della Nutrizione.
-- [ ] Unità del peso (`kg`, `lb`) e dell'energia (`kcal`, `kJ`):
+- [x] Unità del peso (`kg`, `lb`) e dell'energia (`kcal`, `kJ`):
       cambiano solo la visualizzazione, i dati restano in kg e kcal.
-- [ ] Lingua: solo italiano, mostrata ma non modificabile.
+- [x] Lingua: solo italiano, mostrata ma non modificabile.
+
+Il fuso vale per le ore mostrate (ultima sincronizzazione YAZIO, inizio
+di una sessione). I giorni del diario e degli allenamenti restano
+sull'ora di Roma, come nel backend che li calcola. I campi da compilare
+(obiettivi, ricette, serie) restano in kcal e kg.
 
 #### SET-011 · Backup della configurazione
 

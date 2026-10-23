@@ -2,11 +2,11 @@ import { AlertRow, ProgressRing, SegmentedProgress, WidgetCard } from '@/compone
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
 import { useNow } from '@/hooks/useNow'
 import { ApiError } from '@/lib/api'
-import { num } from '@/lib/format'
+import { useFormats } from '@/preferences/data'
 import type { WidgetProps } from '@/widgets/types'
 import { SLOT_LABELS, useDay } from './data'
 import { todayRome } from './dates'
-import { plannedLine } from './format'
+import { plannedLine, ringLabels } from './format'
 
 // Widget piccoli della Nutrizione (DASH-002): leggono lo stesso giorno di
 // NutritionWidget, senza rotte nuove.
@@ -27,6 +27,7 @@ function Unavailable({ title, error, className }: { title: string; error: unknow
 
 export function CaloriesWidget({ className }: WidgetProps) {
   const { data, error } = useToday()
+  const fmt = useFormats()
   if (!data && error) return <Unavailable title="Calorie" error={error} className={className} />
   if (!data) return <WidgetSkeleton title="Calorie" className={className} />
 
@@ -35,13 +36,7 @@ export function CaloriesWidget({ className }: WidgetProps) {
   return (
     <WidgetCard title="Calorie" action={{ label: 'Dettagli', to: '/pasti' }} className={className}>
       <div className="flex justify-center">
-        <ProgressRing
-          value={eaten}
-          max={target || Math.max(eaten, 1)}
-          label={num(eaten)}
-          sublabel={target ? `di ${num(target)} kcal` : 'kcal'}
-          ariaLabel={target ? `${num(eaten)} kcal su ${num(target)}` : `${num(eaten)} kcal`}
-        />
+        <ProgressRing value={eaten} max={target || Math.max(eaten, 1)} {...ringLabels(eaten, target, fmt)} />
       </div>
     </WidgetCard>
   )
@@ -49,6 +44,7 @@ export function CaloriesWidget({ className }: WidgetProps) {
 
 export function NextMealWidget({ className }: WidgetProps) {
   const { data, error } = useToday()
+  const fmt = useFormats()
   if (!data && error) return <Unavailable title="Prossimo pasto" error={error} className={className} />
   if (!data) return <WidgetSkeleton title="Prossimo pasto" className={className} />
 
@@ -57,7 +53,7 @@ export function NextMealWidget({ className }: WidgetProps) {
       {data.nextSlot ? (
         <div className="flex min-w-0 flex-col gap-1">
           <div className="font-display text-lg font-semibold">{SLOT_LABELS[data.nextSlot]}</div>
-          <div className="truncate font-mono text-[13px] text-ink-muted">{plannedLine(data)}</div>
+          <div className="truncate font-mono text-[13px] text-ink-muted">{plannedLine(data, fmt)}</div>
         </div>
       ) : (
         <div className="font-display text-lg font-semibold">Pasti completati</div>
