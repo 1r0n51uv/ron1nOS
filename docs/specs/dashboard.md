@@ -51,7 +51,7 @@ Accettazione:
 
 #### DASH-002 · Primi widget del catalogo
 
-Stato: in corso (#145)
+Stato: fatto (#172)
 
 Gli otto widget di oggi restano, con lo stesso id del loro modulo
 (`<modulo>.summary`), e alcuni moduli ne aggiungono di più piccoli. I

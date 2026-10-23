@@ -603,6 +603,40 @@ paths:
               schema: { $ref: "#/components/schemas/DashboardLayoutResponse" }
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /preferences:
+    get:
+      summary: Preferenze di ron1nOS
+      description: >
+        Aspetto, moduli spenti, ordine della navigazione e formati (SET-002).
+        Senza preferenze salvate valgono i predefiniti; senza database risponde
+        con i predefiniti e `stored: false`.
+      operationId: getPreferences
+      responses:
+        "200":
+          description: Le preferenze.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PreferencesResponse" }
+    patch:
+      summary: Modifica una parte delle preferenze
+      description: >
+        Ogni gruppo è facoltativo; in `appearance` e `formats` anche ogni campo.
+        Campi sconosciuti o valori fuori elenco danno 400. `navOrder` deve
+        contenere tutte le voci una sola volta.
+      operationId: patchPreferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PreferencesPatch" }
+      responses:
+        "200":
+          description: Le preferenze dopo la modifica.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PreferencesResponse" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /server/stats:
     get:
       summary: Risorse del server lette da Glances
@@ -2642,6 +2676,63 @@ components:
           required: [device, updatedAt, stored]
           properties:
             device: { type: string, enum: [desktop, iphone] }
+            updatedAt: { type: [string, "null"], format: date-time }
+            stored: { type: boolean, description: "false senza database: le modifiche non si salvano." }
+    PreferencesAppearance:
+      type: object
+      additionalProperties: false
+      properties:
+        background: { type: string, enum: [brace, nebbia, grafite, nero, image] }
+        glass: { type: string, enum: [light, medium, strong] }
+        density: { type: string, enum: [comfortable, compact] }
+    PreferencesFormats:
+      type: object
+      additionalProperties: false
+      properties:
+        timeZone: { type: string, description: "Fuso IANA, es. Europe/Rome." }
+        weightUnit: { type: string, enum: [kg, lb] }
+        energyUnit: { type: string, enum: [kcal, kJ] }
+    PreferencesNavOrder:
+      type: array
+      description: Tutte le voci spostabili della barra, una volta ciascuna.
+      items: { type: string, enum: [pasti, allenamenti, documenti, note, casa, server] }
+      uniqueItems: true
+      minItems: 6
+      maxItems: 6
+    PreferencesDisabledModules:
+      type: array
+      items:
+        type: string
+        enum: [nutrition, workout, weight, home, server, containers, downloads, notes, documents]
+      uniqueItems: true
+    Preferences:
+      type: object
+      required: [appearance, disabledModules, navOrder, formats]
+      properties:
+        appearance:
+          allOf:
+            - $ref: "#/components/schemas/PreferencesAppearance"
+            - required: [background, glass, density]
+        disabledModules: { $ref: "#/components/schemas/PreferencesDisabledModules" }
+        navOrder: { $ref: "#/components/schemas/PreferencesNavOrder" }
+        formats:
+          allOf:
+            - $ref: "#/components/schemas/PreferencesFormats"
+            - required: [timeZone, weightUnit, energyUnit]
+    PreferencesPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        appearance: { $ref: "#/components/schemas/PreferencesAppearance" }
+        disabledModules: { $ref: "#/components/schemas/PreferencesDisabledModules" }
+        navOrder: { $ref: "#/components/schemas/PreferencesNavOrder" }
+        formats: { $ref: "#/components/schemas/PreferencesFormats" }
+    PreferencesResponse:
+      allOf:
+        - $ref: "#/components/schemas/Preferences"
+        - type: object
+          required: [updatedAt, stored]
+          properties:
             updatedAt: { type: [string, "null"], format: date-time }
             stored: { type: boolean, description: "false senza database: le modifiche non si salvano." }
     Error:

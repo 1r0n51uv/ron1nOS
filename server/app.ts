@@ -8,6 +8,7 @@ import type { AuthDeps } from './auth/routes.ts'
 import { createAuth } from './auth/routes.ts'
 import { InvalidLayoutError } from './dashboard/layout.ts'
 import { dashboardRoutes } from './dashboard/routes.ts'
+import { preferencesRoutes } from './preferences/routes.ts'
 import type { Database } from './db.ts'
 import { DocumentFullError } from './documents/files.ts'
 import type { DocumentsDeps } from './documents/routes.ts'
@@ -158,6 +159,9 @@ export function createApp({
 
   // Layout della dashboard (docs/specs/dashboard.md): uno per dispositivo.
   app.route('/api/v1/dashboard', dashboardRoutes({ database }))
+
+  // Preferenze (docs/specs/settings.md): un documento unico per tutti i dispositivi.
+  app.route('/api/v1/preferences', preferencesRoutes({ database }))
 
   // Modulo Nutrizione (docs/specs/nutrition.md): dati propri in Postgres.
   app.route('/api/v1/nutrition', nutritionRoutes({ ...nutrition, database }))
