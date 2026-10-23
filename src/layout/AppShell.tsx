@@ -24,7 +24,7 @@ export function AppShell() {
       </div>
 
       <div className="relative flex gap-5 p-5">
-        <NavRail items={visibleRailItems(prefs?.disabledModules ?? [])} />
+        <NavRail items={visibleRailItems(prefs?.disabledModules ?? [], prefs?.navOrder)} />
         <main className="flex min-w-0 flex-1 flex-col gap-(--page-gap) px-2 pt-3 pb-6">
           <Outlet />
         </main>

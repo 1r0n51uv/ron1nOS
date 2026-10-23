@@ -13,6 +13,7 @@ import { YazioPanel } from '@/modules/nutrition/settings/YazioPanel'
 import { AppearanceSection } from '@/preferences/AppearanceSection'
 import { StorageNotice } from '@/preferences/StorageNotice'
 import { ModulesSection } from '@/preferences/ModulesSection'
+import { NavigationSection } from '@/preferences/NavigationSection'
 import { DashboardPanel } from '@/widgets/DashboardPanel'
 import { findSection, SECTIONS } from './settings/sections'
 
@@ -71,6 +72,8 @@ export function SettingsSection() {
         <DashboardPanel />
       ) : found.id === 'moduli' ? (
         <ModulesSection />
+      ) : found.id === 'navigazione' ? (
+        <NavigationSection />
       ) : found.id === 'integrazioni' ? (
         <IntegrationsSection />
       ) : found.id === 'account' ? (
