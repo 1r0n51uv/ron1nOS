@@ -118,7 +118,11 @@ export function createApp({
     async (c) => {
       const type = c.req.header('content-type') ?? ''
       if (type.startsWith('multipart/form-data')) {
-        const body = await c.req.parseBody()
+        // Un multipart troncato (file non più leggibile sul client) è un
+        // torrent non valido, non un errore del server.
+        const body = await c.req.parseBody().catch(() => {
+          throw new InvalidTorrentError()
+        })
         const file = body.file
         if (!(file instanceof File)) throw new InvalidTorrentError()
         const torrent = Buffer.from(await file.arrayBuffer())

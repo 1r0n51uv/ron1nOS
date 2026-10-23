@@ -4,7 +4,7 @@ import { AlertRow } from '@/components/ron1n'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import type { SourceState } from './source'
-import { isTorrentFile, linkLabel, parseLink } from './source'
+import { linkLabel, parseLink, readTorrentFile } from './source'
 
 // Passo 1 (DL-004): un file .torrent oppure un link, magnet o URL.
 export function SourceStep({
@@ -17,9 +17,10 @@ export function SourceStep({
   const [over, setOver] = useState(false)
   const link = value.link.trim() ? parseLink(value.link) : null
 
-  function pick(file: File | undefined) {
+  async function pick(file: File | undefined) {
     if (!file) return
-    onChange({ ...value, file, fileError: !isTorrentFile(file) })
+    const copy = await readTorrentFile(file)
+    onChange({ ...value, file: copy ?? file, fileError: !copy })
   }
 
   return (
@@ -43,7 +44,7 @@ export function SourceStep({
           onDrop={(e) => {
             e.preventDefault()
             setOver(false)
-            pick(e.dataTransfer.files[0])
+            void pick(e.dataTransfer.files[0])
           }}
         >
           <svg
@@ -74,13 +75,15 @@ export function SourceStep({
             </span>
             {' · un file, fino a 10 MB'}
           </span>
+          {/* Niente accept: iOS e Android non conoscono il tipo dei .torrent e
+              li mostrano non selezionabili. Il controllo lo fa pick. */}
           <input
             type="file"
-            accept=".torrent,application/x-bittorrent"
             aria-label="File .torrent"
             className="sr-only"
             onChange={(e) => {
-              pick(e.target.files?.[0])
+              // La lettura parte subito, prima di svuotare il campo.
+              void pick(e.target.files?.[0])
               e.target.value = ''
             }}
           />

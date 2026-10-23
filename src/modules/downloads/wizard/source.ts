@@ -27,6 +27,21 @@ export function isTorrentFile(file: File) {
   return file.name.toLowerCase().endsWith('.torrent') && file.size > 0 && file.size <= MAX_TORRENT_BYTES
 }
 
+// Copia in memoria del file scelto. Sul telefono il File dato dal selettore
+// (iCloud, Files, provider di Android) può non essere più leggibile quando
+// il passo 2 lo invia, e al server arriva un multipart troncato. Null se il
+// file non è valido o non si legge.
+export async function readTorrentFile(file: File): Promise<File | null> {
+  if (!isTorrentFile(file)) return null
+  try {
+    const bytes = await file.arrayBuffer()
+    if (bytes.byteLength !== file.size) return null
+    return new File([bytes], file.name, { type: 'application/x-bittorrent' })
+  } catch {
+    return null
+  }
+}
+
 export function linkLabel(link: Link) {
   return link.kind === 'magnet' ? `magnet · ${link.version}` : 'URL di un file .torrent'
 }

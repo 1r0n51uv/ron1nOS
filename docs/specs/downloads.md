@@ -83,7 +83,9 @@ Accettazione:
 - [ ] Due schede: `File` e `Link`.
 - [ ] `File`: area di trascinamento e scelta da disco; accetta un solo file
       `.torrent` fino a 10 MB. Un file non valido mostra
-      `File torrent non valido.` e non si prosegue.
+      `File torrent non valido.` e non si prosegue. Il selettore non filtra
+      per tipo, perché su iOS e Android i `.torrent` risulterebbero non
+      selezionabili; il file si legge in memoria appena scelto.
 - [ ] `Link`: campo di testo che accetta due forme: - link magnet che inizia con `magnet:?` e contiene `xt=urn:btih:`
       (v1) o `xt=urn:btmh:` (v2); - URL `http://` o `https://` di un file `.torrent`.
       Altro testo mostra `Link non valido.`
