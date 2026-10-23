@@ -1,5 +1,5 @@
 // qBittorrent finto per gli e2e: implementa solo le rotte della Web API che
-// il backend usa, con login admin/admin e cookie SID. Le rotte /__fake/*
+// il backend usa, con login admin/admin e cookie di sessione. Le rotte /__fake/*
 // cambiano lo stato dai test (qBittorrent spento, credenziali cambiate,
 // peer che non mandano i metadati) e mostrano i torrent aggiunti.
 import type { IncomingMessage } from 'node:http'
@@ -10,7 +10,8 @@ import { parseTorrent } from '../server/torrentfile.ts'
 import { DEBIAN_DVD } from './torrents.ts'
 
 const port = Number(process.env.FAKE_QBT_PORT ?? 18080)
-const SID = 'e2e-sid'
+// Come qBittorrent 5: il cookie si chiama QBT_SID_<porta>.
+const SID = 'QBT_SID_8080=e2e-sid'
 
 type State = {
   online: boolean
@@ -223,13 +224,13 @@ createServer(async (req, res) => {
     const form = new URLSearchParams(await readBody(req))
     if (form.get('username') === 'admin' && form.get('password') === state.password) {
       // Come qBittorrent 5: 204 senza corpo.
-      res.writeHead(204, { 'Set-Cookie': `SID=${SID}; HttpOnly; path=/` }).end()
+      res.writeHead(204, { 'Set-Cookie': `${SID}; HttpOnly; path=/` }).end()
     } else {
-      res.writeHead(200).end('Fails.')
+      res.writeHead(401).end('Unauthorized')
     }
     return
   }
-  if (req.headers.cookie !== `SID=${SID}` || state.password !== 'admin') {
+  if (req.headers.cookie !== SID || state.password !== 'admin') {
     res.writeHead(403).end('Forbidden')
     return
   }

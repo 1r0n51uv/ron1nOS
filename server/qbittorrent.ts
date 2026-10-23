@@ -1,5 +1,5 @@
 // Client minimo della Web API di qBittorrent (v2). Fa login con utente e
-// password, tiene il cookie SID e lo rinnova da solo quando qBittorrent
+// password, tiene il cookie di sessione e lo rinnova da solo quando qBittorrent
 // risponde 403 (sessione scaduta o qBittorrent riavviato).
 
 export class QbtUnreachableError extends Error {}
@@ -65,6 +65,7 @@ export function createQbtClient({
 }: Options) {
   // qBittorrent rifiuta le richieste il cui Referer non corrisponde all'Host.
   const headers = { Referer: url }
+  // Coppia nome=valore del cookie di sessione, da rimandare così com'è.
   let sid: string | null = null
   let loggingIn: Promise<void> | null = null
 
@@ -84,12 +85,14 @@ export function createQbtClient({
     })
     const body = await res.text()
     if (res.status === 403) throw new QbtAuthError('IP bloccato da qBittorrent dopo troppi login falliti')
+    if (res.status === 401) throw new QbtAuthError('credenziali di qBittorrent rifiutate')
     if (!res.ok) throw new QbtUnreachableError(`login: HTTP ${res.status}`)
-    // Fino alla 4.x il login riuscito risponde 200 "Ok.", dalla 5 risponde 204
-    // senza corpo: conta il cookie SID. Credenziali errate: 200 "Fails.".
-    const cookie = res.headers.getSetCookie().find((c) => c.startsWith('SID='))
+    // Fino alla 4.x il login riuscito risponde 200 "Ok." con il cookie SID,
+    // dalla 5 risponde 204 senza corpo con il cookie QBT_SID_<porta>: conta
+    // il cookie. Credenziali errate: 200 "Fails." fino alla 4.x, 401 dalla 5.
+    const cookie = res.headers.getSetCookie().find((c) => /^(SID|QBT_SID_\d+)=/.test(c))
     if (!cookie || body.trim() === 'Fails.') throw new QbtAuthError('credenziali di qBittorrent rifiutate')
-    sid = cookie.slice(4).split(';')[0]
+    sid = cookie.split(';')[0]
   }
 
   async function ensureLogin() {
@@ -103,7 +106,7 @@ export function createQbtClient({
     await ensureLogin()
     const res = await call(path, {
       ...init,
-      headers: { ...headers, ...(sid ? { Cookie: `SID=${sid}` } : {}), ...init.headers },
+      headers: { ...headers, ...(sid ? { Cookie: sid } : {}), ...init.headers },
     })
     if (res.status === 403) {
       sid = null
