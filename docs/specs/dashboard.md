@@ -185,7 +185,7 @@ Riprova` e il layout resta quello sullo schermo.
 
 #### DASH-008 · Layout predefinito e ripristino
 
-Stato: in corso (#140)
+Stato: fatto (#171)
 
 Accettazione:
 
