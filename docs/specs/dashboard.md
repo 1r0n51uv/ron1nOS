@@ -28,7 +28,7 @@ in "Decisioni".
 
 #### DASH-001 · Catalogo dei widget
 
-Stato: in corso (#138)
+Stato: fatto (#158)
 
 Ogni modulo dichiara uno o più widget in un catalogo unico, invece di un
 solo `Widget.tsx` importato a mano in `Dashboard.tsx`.
