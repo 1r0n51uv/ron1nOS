@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress'
 import { useNow } from '@/hooks/useNow'
 import { ApiError } from '@/lib/api'
 import { num } from '@/lib/format'
+import type { WidgetProps } from '@/widgets/types'
 import type { Day } from './data'
 import { SLOT_LABELS, useDay } from './data'
 import { todayRome } from './dates'
@@ -26,7 +27,9 @@ function plannedLine(day: Day) {
 }
 
 // Widget della dashboard (NUT-001): la giornata di oggi.
-export function NutritionWidget({ className }: { className?: string }) {
+// Le macro mostrate si scelgono nelle opzioni (DASH-005); senza, tutte.
+export function NutritionWidget({ className, options }: WidgetProps) {
+  const shown = (options?.macros as readonly string[] | undefined) ?? MACROS.map((m) => m.key)
   const today = todayRome(useNow())
   const { data, error } = useDay(today)
   if (!data && error) {
@@ -75,7 +78,7 @@ export function NutritionWidget({ className }: { className?: string }) {
           </div>
         </div>
         <div className="flex flex-col gap-3">
-          {MACROS.map((m) => {
+          {MACROS.filter((m) => shown.includes(m.key)).map((m) => {
             const value = data.totals[m.key]
             const max = data.goal?.[m.key] ?? 0
             const text = max ? `${num(value)} / ${num(max)} g` : `${num(value)} g`

@@ -121,18 +121,22 @@ Annulla` per 8 secondi.
 
 #### DASH-005 · Opzioni del widget
 
-Stato: pianificato (#143)
+Stato: in corso (#143)
 
 Accettazione:
 
-- [ ] `Opzioni` apre un pannello con l'anteprima del widget e le sue
+- [x] `Opzioni` apre un pannello con l'anteprima del widget e le sue
       impostazioni.
-- [ ] Variante `compatta` o `dettagliata`, se il widget le supporta.
-- [ ] Dati mostrati, dichiarati dal widget: per esempio quale risorsa per
+- [x] Variante `compatta` o `dettagliata`, se il widget le supporta.
+- [x] Dati mostrati, dichiarati dal widget: per esempio quale risorsa per
       `server.metric`, quali macro per `nutrition.summary`, quanti elementi
       per gli elenchi.
-- [ ] Le opzioni si salvano con il layout (DASH-007) e il widget le riceve
+- [x] Le opzioni si salvano con il layout (DASH-007) e il widget le riceve
       come proprietà; senza opzioni salvate usa i valori predefiniti.
+
+Primi widget con opzioni: `nutrition.summary` (macro mostrate),
+`weight.summary` (variante compatta senza andamento), `downloads.summary`
+(quanti download). `server.metric` arriva con DASH-002.
 
 #### DASH-006 · Testata riducibile
 

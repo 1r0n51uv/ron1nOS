@@ -77,6 +77,16 @@ describe('modifica sempre attiva (DASH-004)', () => {
     expect(onRemove).toHaveBeenCalledWith('a')
   })
 
+  it('Opzioni apre il pannello e le scelte cambiano il layout (DASH-005)', async () => {
+    const onChange = vi.fn()
+    const opts = { ...def('a', 'Primo'), variants: ['detailed', 'compact'] as const }
+    renderWithProviders(<DashboardGrid items={items} widgets={[opts, widgets[1]]} onChange={onChange} />)
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Altre azioni sul widget Primo' }), { key: 'Enter' })
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Opzioni' }))
+    fireEvent.click(await screen.findByRole('radio', { name: 'Compatta' }))
+    expect(onChange).toHaveBeenLastCalledWith([{ ...items[0], variant: 'compact' }, items[1]])
+  })
+
   it('il menu del widget ha Rimuovi', async () => {
     const { onRemove } = setup()
     fireEvent.keyDown(screen.getByRole('button', { name: 'Altre azioni sul widget Secondo' }), {

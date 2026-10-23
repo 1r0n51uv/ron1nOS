@@ -83,6 +83,14 @@ describe('NutritionWidget (NUT-001)', () => {
     expect(screen.getByRole('link', { name: /Dettagli/ })).toHaveAttribute('href', '/pasti')
   })
 
+  it('mostra solo le macro scelte nelle opzioni (DASH-005)', () => {
+    mockDay({ data: day() })
+    renderWithProviders(<NutritionWidget options={{ macros: ['fat'] }} />)
+    expect(screen.getByLabelText('Grassi 6 / 67 g')).toBeInTheDocument()
+    expect(screen.queryByText('Proteine')).toBeNull()
+    expect(screen.queryByText('Carboidrati')).toBeNull()
+  })
+
   it('l’anello usa la quota del giorno, con l’attività da YAZIO (NUT-016)', () => {
     mockDay({ data: day({ quota: { kcal: 2098, baseKcal: 2021, activityKcal: 77 } }) })
     renderWithProviders(<NutritionWidget />)

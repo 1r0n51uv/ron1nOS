@@ -1,9 +1,11 @@
 import { Metric, Sparkline, WidgetCard } from '@/components/ron1n'
 import { WidgetSkeleton } from '@/components/WidgetSkeleton'
 import { num, signed } from '@/lib/format'
+import type { WidgetProps } from '@/widgets/types'
 import { useWeight } from './data'
 
-export function WeightWidget({ className }: { className?: string }) {
+// Variante `compact`: solo il valore, senza andamento (DASH-005).
+export function WeightWidget({ className, variant }: WidgetProps) {
   const { data } = useWeight()
   if (!data) return <WidgetSkeleton title="Peso" className={className} />
 
@@ -15,7 +17,7 @@ export function WeightWidget({ className }: { className?: string }) {
   return (
     <WidgetCard title="Peso" meta={`${data.days} giorni`} className={className}>
       <Metric value={num(last, 1)} unit="kg" delta={delta} />
-      <Sparkline points={data.points} ariaLabel={aria} />
+      {variant === 'compact' ? null : <Sparkline points={data.points} ariaLabel={aria} />}
     </WidgetCard>
   )
 }
