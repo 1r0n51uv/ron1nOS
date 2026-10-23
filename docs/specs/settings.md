@@ -91,7 +91,7 @@ Accettazione:
 
 #### SET-005 · Moduli
 
-Stato: in corso (#149)
+Stato: fatto (#184)
 
 Accettazione:
 
