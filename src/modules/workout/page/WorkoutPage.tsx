@@ -10,10 +10,11 @@ import { useWorkoutSummary } from '../data'
 import { period, streak, workouts } from '../format'
 import { ImportDialog } from '../import/ImportDialog'
 import { WeekBars } from '../WeekBars'
+import { SessionHistory } from './SessionHistory'
 
-// Pagina /allenamenti (GYM-002): costanza (GYM-013) e import del CSV
-// (GYM-003). Le sezioni dello storico, degli esercizi e dei record
-// arrivano con le loro issue.
+// Pagina /allenamenti (GYM-002): costanza (GYM-013), storico (GYM-004)
+// e import del CSV (GYM-003). Esercizi e record arrivano con le loro
+// issue.
 export function WorkoutPage() {
   const [last, setLast] = useState<ImportSummary | null>(null)
   const { data, error } = useWorkoutSummary()
@@ -50,11 +51,14 @@ export function WorkoutPage() {
       ) : !data ? (
         <WidgetSkeleton title="Allenamenti per settimana" />
       ) : data.last ? (
-        <section aria-label="Allenamenti per settimana">
-          <WidgetCard title="Allenamenti per settimana" meta="ultime 26 settimane">
-            <WeekBars weeks={data.weeks} average height={160} />
-          </WidgetCard>
-        </section>
+        <>
+          <section aria-label="Allenamenti per settimana">
+            <WidgetCard title="Allenamenti per settimana" meta="ultime 26 settimane">
+              <WeekBars weeks={data.weeks} average height={160} />
+            </WidgetCard>
+          </section>
+          <SessionHistory today={data.today} />
+        </>
       ) : (
         <div className="rounded-[20px] p-5 text-sm text-ink-muted glass-panel">
           Importa il CSV esportato da Liftin’ per vedere qui i tuoi allenamenti.

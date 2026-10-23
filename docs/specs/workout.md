@@ -106,14 +106,14 @@ Accettazione:
 
 #### GYM-004 · Storico delle sessioni
 
-Stato: pianificato (#124) · Origine: pkm
+Stato: fatto (#124) · Origine: pkm
 
 Accettazione:
 
-- [ ] Elenco dalla più recente: le miniature dei primi tre esercizi,
+- [x] Elenco dalla più recente: le miniature dei primi tre esercizi,
       routine, giorno e durata. Niente altri numeri nella riga.
-- [ ] Filtro per routine, con i nomi presi dai dati.
-- [ ] Caricamento a pagine da 20 sessioni.
+- [x] Filtro per routine, con i nomi presi dai dati.
+- [x] Caricamento a pagine da 20 sessioni.
 
 #### GYM-005 · Dettaglio di una sessione
 

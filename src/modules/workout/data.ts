@@ -1,4 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 
 import { api } from '@/lib/api'
 
@@ -110,5 +116,41 @@ export function useWorkoutSummary() {
   return useQuery({
     queryKey: ['workout', 'summary'],
     queryFn: () => api.get<WorkoutSummary>('/workout/summary'),
+  })
+}
+
+// Storico delle sessioni (GYM-004): pagine da 20 dalla più recente.
+export type SessionRow = {
+  id: string
+  day: string
+  routine: string
+  startedAt: string
+  durationSeconds: number | null
+  exercises: { name: string; image: ExerciseImage | null }[]
+}
+
+type SessionPage = { sessions: SessionRow[]; nextCursor: string | null }
+
+export function useSessions(routine: string | null) {
+  return useInfiniteQuery({
+    queryKey: ['workout', 'sessions', routine],
+    queryFn: ({ pageParam }) => {
+      const params = new URLSearchParams()
+      if (routine) params.set('routine', routine)
+      if (pageParam) params.set('cursor', pageParam)
+      const qs = params.toString()
+      return api.get<SessionPage>(`/workout/sessions${qs ? `?${qs}` : ''}`)
+    },
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => last.nextCursor,
+    // Cambiando routine resta l'elenco di prima finché arriva il nuovo.
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useRoutines() {
+  return useQuery({
+    queryKey: ['workout', 'routines'],
+    queryFn: () => api.get<{ routines: string[] }>('/workout/routines'),
   })
 }
