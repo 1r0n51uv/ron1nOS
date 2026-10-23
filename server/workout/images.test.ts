@@ -11,6 +11,7 @@ import { testDb } from '../testing/db.ts'
 import { createFakeExercises, FAKE_JPEG } from '../testing/fake-exercises.ts'
 import { fakeQbt } from '../testing/fake-qbt.ts'
 import { createCatalog } from './catalog.ts'
+import { groupFromMuscles } from './groups.ts'
 import { exerciseImages } from './images.ts'
 
 let db: Awaited<ReturnType<typeof testDb>>
@@ -111,6 +112,8 @@ describe('PUT /exercises/{name}/image', () => {
         source: 'manual',
         url: '/api/v1/workout/catalog/images/Dumbbell_Flyes/0.jpg',
       },
+      // Il gruppo proposto dai muscoli del catalogo (GYM-011).
+      group: 'petto',
     })
     // null torna al dizionario.
     const reset = await call('PUT', '/exercises/panca%20piana/image', { catalogId: null })
@@ -120,9 +123,47 @@ describe('PUT /exercises/{name}/image', () => {
     })
   })
 
+  it('il gruppo si propone solo se manca', async () => {
+    await call('PUT', '/exercises/curl%20strano/group', { group: 'bicipiti' })
+    const kept = await call('PUT', '/exercises/curl%20strano/image', { catalogId: 'Face_Pull' })
+    expect((kept.body as { group?: unknown }).group).toBe('bicipiti')
+    const proposed = await call('PUT', '/exercises/plank%20laterale/image', { catalogId: 'Plank' })
+    expect((proposed.body as { group?: unknown }).group).toBe('addome')
+  })
+
   it('un id che non è nel catalogo risponde 404, un corpo sbagliato 400', async () => {
     expect((await call('PUT', '/exercises/squat/image', { catalogId: 'Nope' })).status).toBe(404)
     expect((await call('PUT', '/exercises/squat/image', { id: 'Plank' })).status).toBe(400)
+  })
+})
+
+describe('PUT /exercises/{name}/group', () => {
+  it('assegna e toglie il gruppo per il nome normalizzato', async () => {
+    expect(await call('PUT', '/exercises/Panca%20%20PIANA/group', { group: 'petto' })).toEqual({
+      status: 200,
+      body: { name: 'panca piana', group: 'petto' },
+    })
+    const { rows } = await db.query(
+      `select muscle_group from workout_exercises where exercise_key = 'panca piana'`,
+    )
+    expect(rows).toEqual([{ muscle_group: 'petto' }])
+    expect((await call('PUT', '/exercises/panca%20piana/group', { group: null })).body).toEqual({
+      name: 'panca piana',
+      group: null,
+    })
+  })
+
+  it('un gruppo fuori elenco risponde 400', async () => {
+    expect((await call('PUT', '/exercises/squat/group', { group: 'quadricipiti' })).status).toBe(400)
+  })
+})
+
+describe('groupFromMuscles', () => {
+  it('il primo muscolo che ha un gruppo', () => {
+    expect(groupFromMuscles(['quadriceps', 'glutes'])).toBe('gambe')
+    expect(groupFromMuscles(['Lower Back'])).toBe('schiena')
+    expect(groupFromMuscles(['mistero', 'triceps'])).toBe('tricipiti')
+    expect(groupFromMuscles([])).toBeNull()
   })
 })
 
