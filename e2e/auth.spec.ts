@@ -25,7 +25,7 @@ test('Esci in Impostazioni chiude la sessione', async ({ page }) => {
   await page.getByRole('button', { name: 'Accedi' }).click()
   await expect(page).toHaveURL(/\/$/)
 
-  await page.goto('/impostazioni')
+  await page.goto('/impostazioni/account')
   await page
     .getByRole('region', { name: 'Accesso' })
     .getByRole('button', { name: 'Esci', exact: true })

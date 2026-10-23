@@ -15,7 +15,7 @@ test('la quota del giorno somma l’attività letta da YAZIO, con il tetto (NUT-
   request,
 }) => {
   await request.post(`${fake}/__fake/state`, { data: { activity: { [todayRome()]: 77 } } })
-  await page.goto('/impostazioni')
+  await page.goto('/impostazioni/moduli/nutrizione')
   await page.getByRole('region', { name: 'YAZIO' }).getByRole('button', { name: 'Sincronizza ora' }).click()
   await expect(page.getByText('+77 kcal')).toBeVisible()
 
@@ -26,7 +26,7 @@ test('la quota del giorno somma l’attività letta da YAZIO, con il tetto (NUT-
 
   // Una giornata molto attiva si ferma a +1200.
   await request.post(`${fake}/__fake/state`, { data: { activity: { [todayRome()]: 1850 } } })
-  await page.goto('/impostazioni')
+  await page.goto('/impostazioni/moduli/nutrizione')
   await page.getByRole('region', { name: 'YAZIO' }).getByRole('button', { name: 'Sincronizza ora' }).click()
   await expect(page.getByText(/^\+1\.?850 kcal$/)).toBeVisible()
   await page.goto('/')

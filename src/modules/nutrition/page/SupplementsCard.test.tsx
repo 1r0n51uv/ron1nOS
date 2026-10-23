@@ -53,7 +53,7 @@ describe('SupplementsCard (NUT-014)', () => {
     renderWithProviders(<SupplementsCard day={day([])} />)
     expect(screen.getByRole('link', { name: 'Aggiungili in Impostazioni' })).toHaveAttribute(
       'href',
-      '/impostazioni',
+      '/impostazioni/moduli/nutrizione',
     )
   })
 })

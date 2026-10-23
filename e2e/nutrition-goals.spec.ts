@@ -5,7 +5,7 @@ import { resetNutrition } from './db.ts'
 test.beforeEach(() => resetNutrition())
 
 test("l'obiettivo nutrizionale si imposta a mano e resta salvato (NUT-015)", async ({ page }) => {
-  await page.goto('/impostazioni')
+  await page.goto('/impostazioni/moduli/nutrizione')
   const panel = page.getByText('Obiettivo nutrizionale').locator('xpath=ancestor::*[@data-slot="card"]')
   await panel.getByLabel('Calorie').fill('2021')
   await panel.getByLabel('Proteine').fill('126')
@@ -25,7 +25,7 @@ test('un secondo obiettivo entra nello storico', async ({ page, request }) => {
   await request.post('/api/v1/nutrition/goals', {
     data: { kcal: 1900, protein: 120, carbs: 200, fat: 60, effectiveFrom: '2026-09-01' },
   })
-  await page.goto('/impostazioni')
+  await page.goto('/impostazioni/moduli/nutrizione')
   await page.getByLabel('Calorie').fill('2100')
   await page.getByRole('button', { name: 'Salva' }).click()
   await expect(page.getByText('Storico')).toBeVisible()
