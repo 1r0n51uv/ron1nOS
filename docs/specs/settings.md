@@ -173,7 +173,7 @@ sull'ora di Roma, come nel backend che li calcola. I campi da compilare
 
 #### SET-011 · Backup della configurazione
 
-Stato: in corso (#154)
+Stato: fatto (#193)
 
 Accettazione:
 
@@ -186,15 +186,16 @@ Accettazione:
 
 #### SET-012 · Informazioni
 
-Stato: pianificato (#155)
+Stato: in corso (#155)
 
 Accettazione:
 
-- [ ] Versione dell'immagine (commit e data della build, passati come
+- [x] Versione dell'immagine (commit e data della build, passati come
       argomenti al `Dockerfile` dalla pipeline di rilascio).
-- [ ] Stato del backend e del database (da `GET /api/v1/health`) e da
-      quanto tempo è acceso.
-- [ ] Link al repository e alla specifica.
+- [x] Stato del backend e del database (da `GET /api/v1/health`) e da
+      quanto tempo è acceso (da `GET /api/v1/about`, dietro il login come
+      la versione).
+- [x] Link al repository e alla specifica.
 
 ## Decisioni
 

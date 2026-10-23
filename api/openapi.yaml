@@ -165,6 +165,32 @@ paths:
                       Postgres del modulo Nutrizione. `disabled` senza DATABASE_URL,
                       `starting` mentre si applicano le migrazioni, `unavailable` se
                       all'avvio non risponde (il backend riprova da solo).
+  /about:
+    get:
+      summary: Versione dell'immagine e da quanto tempo il backend è acceso
+      description: >
+        Per Impostazioni › Informazioni (SET-012). Commit e data della build
+        arrivano dalla pipeline di rilascio come argomenti del Dockerfile;
+        fuori da un'immagine sono null. A differenza di `/health` chiede il
+        login, se acceso.
+      operationId: getAbout
+      responses:
+        "200":
+          description: Versione e avvio.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [version, startedAt, uptimeSeconds]
+                properties:
+                  version:
+                    type: object
+                    required: [commit, builtAt]
+                    properties:
+                      commit: { type: [string, "null"] }
+                      builtAt: { type: [string, "null"], format: date-time }
+                  startedAt: { type: string, format: date-time }
+                  uptimeSeconds: { type: integer, minimum: 0 }
   /downloads:
     get:
       summary: Velocità totale e torrent di qBittorrent
