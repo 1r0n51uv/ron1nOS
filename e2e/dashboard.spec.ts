@@ -34,3 +34,10 @@ test('una rotta sconosciuta mostra la pagina non trovata', async ({ page }) => {
   await page.goto('/non-esiste')
   await expect(page.getByText('Pagina non trovata')).toBeVisible()
 })
+
+test('i widget compaiono nell’ordine del catalogo', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.locator('[aria-busy="true"]')).toHaveCount(0)
+  const titles = page.locator('main [data-slot="card-title"]')
+  await expect(titles).toHaveText(widgets)
+})

@@ -28,24 +28,26 @@ in "Decisioni".
 
 #### DASH-001 · Catalogo dei widget
 
-Stato: pianificato (#138)
+Stato: in corso (#138)
 
 Ogni modulo dichiara uno o più widget in un catalogo unico, invece di un
 solo `Widget.tsx` importato a mano in `Dashboard.tsx`.
 
 Accettazione:
 
-- [ ] Ogni modulo ha un file `widgets.ts` che esporta le sue definizioni:
+- [x] Ogni modulo ha un file `widgets.ts` che esporta le sue definizioni:
       id stabile `<modulo>.<nome>` (es. `nutrition.calories`), titolo,
-      descrizione di una riga, componente, dimensione minima, massima e
-      predefinita, varianti supportate, opzioni dei dati (DASH-005).
-- [ ] Un registro (`src/widgets/registry.ts`) li raccoglie tutti; la
-      dashboard e il pannello `Aggiungi widget` leggono solo da lì.
-- [ ] Il backend conosce gli stessi id (elenco in `server/dashboard/`) per
-      validare i layout (DASH-007); un test controlla che i due elenchi
-      coincidano.
-- [ ] I widget di un modulo spento (SET-005) non compaiono né in griglia
-      né nel catalogo.
+      descrizione di una riga e componente.
+- [x] Modulo, dimensione minima, massima e predefinita e varianti di ogni
+      id stanno nel catalogo `server/dashboard/catalog.ts`, unica fonte
+      per il backend (validazione dei layout, DASH-007) e per la
+      dashboard. Le opzioni dei dati arrivano con DASH-005.
+- [x] Un registro (`src/widgets/registry.ts`) unisce le due parti; la
+      dashboard e il pannello `Aggiungi widget` leggono solo da lì. Un
+      test controlla che ogni voce del catalogo abbia il suo componente e
+      viceversa.
+- [x] I widget di un modulo spento (SET-005) non compaiono né in griglia
+      né nel catalogo (`availableWidgets`).
 
 #### DASH-002 · Primi widget del catalogo
 
@@ -202,6 +204,10 @@ Prese il 2026-10-22 dal proprietario, con le schede di scelta.
    nascosta.
 
 Scelte fatte nella stesura, da confermare con i mockup:
+
+- Dimensioni e varianti dei widget stanno in un catalogo unico condiviso
+  da backend e web, invece di ripeterle nel `widgets.ts` di ogni modulo
+  (DASH-001, 2026-10-23).
 
 - Con la modifica sempre attiva, il trascinamento parte solo dalla
   maniglia e la rimozione ha `Annulla`, per evitare modifiche per sbaglio.

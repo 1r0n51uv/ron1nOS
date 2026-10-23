@@ -1,12 +1,17 @@
 # Moduli
 
-Ogni modulo della dashboard vive nella sua cartella, con due file:
+Ogni modulo della dashboard vive nella sua cartella, con tre file:
 
 - `data.ts`: tipi, sorgente dati e hook di React Query. Nei moduli non
   ancora collegati la sorgente è un mock in memoria; per collegare il
   servizio vero si riscrive solo il corpo delle funzioni `get…` e delle
   mutazioni, lasciando tipi e hook invariati.
 - `Widget.tsx`: il widget della dashboard, che legge solo dall'hook.
+- `widgets.ts`: i widget che il modulo offre alla dashboard, con id,
+  titolo, descrizione e componente. Dimensioni e varianti stanno nel
+  catalogo condiviso con il backend (`server/dashboard/catalog.ts`), e
+  `src/widgets/registry.ts` unisce le due parti
+  ([specifica](../../docs/specs/dashboard.md)).
 
 | Modulo     | Sorgente prevista                                                                 |
 | ---------- | --------------------------------------------------------------------------------- |

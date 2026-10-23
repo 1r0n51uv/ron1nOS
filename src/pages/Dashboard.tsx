@@ -2,18 +2,11 @@ import { StatusPill } from '@/components/ron1n'
 import { useNow } from '@/hooks/useNow'
 import { eyebrowDate, greeting, time } from '@/lib/format'
 import { summarize, useContainers } from '@/modules/containers/data'
-import { ContainersWidget } from '@/modules/containers/Widget'
-import { DownloadsWidget } from '@/modules/downloads/Widget'
-import { HomeWidget } from '@/modules/home/Widget'
-import { NotesWidget } from '@/modules/notes/Widget'
 import type { SlotId } from '@/modules/nutrition/data'
 import { useDay } from '@/modules/nutrition/data'
 import { todayRome } from '@/modules/nutrition/dates'
-import { NutritionWidget } from '@/modules/nutrition/Widget'
-import { ServerWidget } from '@/modules/server/Widget'
-import { WeightWidget } from '@/modules/weight/Widget'
 import { isFinished, useWorkout } from '@/modules/workout/data'
-import { WorkoutWidget } from '@/modules/workout/Widget'
+import { availableWidgets } from '@/widgets/registry'
 
 const MEAL_ARTICLE: Record<SlotId, string> = {
   breakfast: 'la colazione',
@@ -76,14 +69,9 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5">
-        <NutritionWidget />
-        <WorkoutWidget />
-        <WeightWidget />
-        <HomeWidget />
-        <ServerWidget />
-        <ContainersWidget />
-        <DownloadsWidget />
-        <NotesWidget />
+        {availableWidgets().map(({ id, component: Widget }) => (
+          <Widget key={id} />
+        ))}
       </div>
     </>
   )
