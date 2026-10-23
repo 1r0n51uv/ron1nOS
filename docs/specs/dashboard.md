@@ -121,7 +121,7 @@ Annulla` per 8 secondi.
 
 #### DASH-005 · Opzioni del widget
 
-Stato: in corso (#143)
+Stato: fatto (#168)
 
 Accettazione:
 
