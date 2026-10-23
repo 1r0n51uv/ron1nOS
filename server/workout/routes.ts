@@ -14,9 +14,11 @@ import { exerciseImages, imageUrl, setExerciseImage } from './images.ts'
 import { importLiftin } from './import.ts'
 import { LiftinError, parseLiftin } from './liftin.ts'
 import { normalizeExercise } from './math.ts'
+import { getSummary } from './summary.ts'
 
 type WorkoutDeps = {
   database: Database
+  now?: () => Date
   // Catalogo delle immagini (GYM-014); senza, le sue rotte rispondono 503.
   catalog?: Catalog
 }
@@ -47,7 +49,7 @@ async function readCsv(c: Context) {
   return parseLiftin(await file.text())
 }
 
-export function workoutRoutes({ database, catalog }: WorkoutDeps) {
+export function workoutRoutes({ database, catalog, now = () => new Date() }: WorkoutDeps) {
   const app = new Hono<{ Variables: { db: Db } }>()
 
   async function readyCatalog() {
@@ -83,6 +85,9 @@ export function workoutRoutes({ database, catalog }: WorkoutDeps) {
     c.set('db', database.db)
     await next()
   })
+
+  // Ultimo allenamento, settimana e giorni di fila (GYM-001, GYM-013).
+  app.get('/summary', async (c) => c.json(await getSummary(c.get('db'), catalog, now())))
 
   // Anteprima dell'import (GYM-003): stessi conti dell'import, nessuna scrittura.
   app.post('/import/preview', csvLimit, async (c) => {

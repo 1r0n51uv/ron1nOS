@@ -1,16 +1,22 @@
 import { useState } from 'react'
 
+import { AlertRow, WidgetCard } from '@/components/ron1n'
+import { WidgetSkeleton } from '@/components/WidgetSkeleton'
 import { Button } from '@/components/ui/button'
+import { ApiError } from '@/lib/api'
 import { num } from '@/lib/format'
 import type { ImportSummary } from '../data'
-import { period, workouts } from '../format'
+import { useWorkoutSummary } from '../data'
+import { period, streak, workouts } from '../format'
 import { ImportDialog } from '../import/ImportDialog'
+import { WeekBars } from '../WeekBars'
 
-// Pagina /allenamenti (GYM-002). Per ora l'import del CSV (GYM-003); le
-// sezioni dello storico, degli esercizi e dei record arrivano con le loro
-// issue.
+// Pagina /allenamenti (GYM-002): costanza (GYM-013) e import del CSV
+// (GYM-003). Le sezioni dello storico, degli esercizi e dei record
+// arrivano con le loro issue.
 export function WorkoutPage() {
   const [last, setLast] = useState<ImportSummary | null>(null)
+  const { data, error } = useWorkoutSummary()
 
   return (
     <>
@@ -18,24 +24,42 @@ export function WorkoutPage() {
         <div className="flex flex-col gap-1.5">
           <div className="eyebrow">Palestra</div>
           <h1 className="m-0 font-display text-[44px] leading-[48px] font-bold">Allenamenti</h1>
+          {data?.last ? (
+            <div className="font-mono text-sm text-ink-muted">
+              {workouts(data.thisWeek)} questa settimana · {streak(data.streakDays)}
+            </div>
+          ) : null}
         </div>
         <ImportDialog onImported={setLast}>
           <Button>Importa CSV</Button>
         </ImportDialog>
       </div>
 
-      <div role="status" className="rounded-[20px] p-5 text-sm glass-panel">
-        {last ? (
-          <>
-            Import completato · {workouts(last.newSessions)} nuovi, {num(last.updatedSessions)} aggiornati ·{' '}
-            {period(last.from, last.to)}
-          </>
-        ) : (
-          <span className="text-ink-muted">
-            Importa il CSV esportato da Liftin’ per vedere qui i tuoi allenamenti.
-          </span>
-        )}
-      </div>
+      {last ? (
+        <div role="status" className="text-sm text-ink-muted">
+          Import completato · {workouts(last.newSessions)} nuovi, {num(last.updatedSessions)} aggiornati ·{' '}
+          {period(last.from, last.to)}
+        </div>
+      ) : null}
+
+      {!data && error ? (
+        <AlertRow
+          title="Allenamenti non disponibili."
+          body={error instanceof ApiError ? error.message : 'Backend non raggiungibile'}
+        />
+      ) : !data ? (
+        <WidgetSkeleton title="Allenamenti per settimana" />
+      ) : data.last ? (
+        <section aria-label="Allenamenti per settimana">
+          <WidgetCard title="Allenamenti per settimana" meta="ultime 26 settimane">
+            <WeekBars weeks={data.weeks} average height={160} />
+          </WidgetCard>
+        </section>
+      ) : (
+        <div className="rounded-[20px] p-5 text-sm text-ink-muted glass-panel">
+          Importa il CSV esportato da Liftin’ per vedere qui i tuoi allenamenti.
+        </div>
+      )}
     </>
   )
 }

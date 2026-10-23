@@ -150,3 +150,27 @@ export function useSetExerciseImage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['workout'] }),
   })
 }
+
+// Riepilogo (GYM-001, GYM-013): ultimo allenamento, settimana, giorni di
+// fila e allenamenti per settimana sulle ultime 26 settimane.
+export type WorkoutSummary = {
+  today: string
+  last: {
+    id: string
+    day: string
+    routine: string
+    startedAt: string
+    durationSeconds: number | null
+    exercise: { name: string; image: ExerciseImage | null } | null
+  } | null
+  thisWeek: number
+  streakDays: number
+  weeks: { monday: string; count: number }[]
+}
+
+export function useWorkoutSummary() {
+  return useQuery({
+    queryKey: ['workout', 'summary'],
+    queryFn: () => api.get<WorkoutSummary>('/workout/summary'),
+  })
+}
