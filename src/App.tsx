@@ -10,6 +10,7 @@ import { ReportPage } from '@/modules/nutrition/report/ReportPage'
 import { TemplatesPage } from '@/modules/nutrition/templates/TemplatesPage'
 import { Dashboard } from '@/pages/Dashboard'
 import { Settings } from '@/pages/Settings'
+import { WorkoutPage } from '@/modules/workout/page/WorkoutPage'
 
 export default function App() {
   return (
@@ -22,7 +23,7 @@ export default function App() {
           <Route path="pasti/ricette" element={<RecipesPage />} />
           <Route path="pasti/template" element={<TemplatesPage />} />
           <Route path="pasti/andamento" element={<ReportPage />} />
-          <Route path="allenamenti" element={<ComingSoon title="Allenamenti" />} />
+          <Route path="allenamenti" element={<WorkoutPage />} />
           <Route path="note" element={<ComingSoon title="Note" />} />
           <Route path="casa" element={<ComingSoon title="Casa" />} />
           <Route path="server" element={<ComingSoon title="Server e container" />} />

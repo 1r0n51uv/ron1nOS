@@ -75,7 +75,7 @@ Accettazione:
 
 #### GYM-003 · Import del CSV di Liftin'
 
-Stato: pianificato (#119) · Origine: pkm, cambia
+Stato: fatto (#119) · Origine: pkm, cambia
 
 Dalla pagina si carica il file esportato da Liftin' (`Date;Duration;
 Routine;Exercise;Set;Warmup;Weight;Reps/Time;Goal;Perception`, separatore
@@ -83,24 +83,24 @@ Routine;Exercise;Set;Warmup;Weight;Reps/Time;Goal;Perception`, separatore
 
 Accettazione:
 
-- [ ] Dialog con area di trascinamento e scelta del file, solo `.csv`,
+- [x] Dialog con area di trascinamento e scelta del file, solo `.csv`,
       massimo 5 MB.
-- [ ] Il parser sta nel server ed è quello di pkm portato in TypeScript:
+- [x] Il parser sta nel server ed è quello di pkm portato in TypeScript:
       colonne cercate per nome e non per posizione, `Reps/Time` intero =
       ripetizioni, `mm:ss` = durata, virgole o punti nei decimali, righe
       senza data o esercizio scartate e contate.
-- [ ] Una sessione è un giorno più una routine; la serie è identificata da
+- [x] Una sessione è un giorno più una routine; la serie è identificata da
       giorno, routine, esercizio (confronto senza maiuscole e spazi in più)
       e numero di serie. Un re-import aggiorna le righe già presenti e non
       le duplica; un re-import identico non cambia nulla.
-- [ ] Prima di confermare il dialog mostra l'anteprima calcolata dal
+- [x] Prima di confermare il dialog mostra l'anteprima calcolata dal
       server, in tre righe: allenamenti nuovi, allenamenti aggiornati,
       righe scartate, più il periodo coperto. `Importa` applica, `Annulla` non scrive
       niente.
-- [ ] Errori chiari: file vuoto, colonne mancanti (con i nomi), nessuna
+- [x] Errori chiari: file vuoto, colonne mancanti (con i nomi), nessuna
       riga valida, file troppo grande.
-- [ ] Le sessioni eliminate (GYM-006) non tornano con un re-import.
-- [ ] Dopo l'import widget e pagina si aggiornano senza ricaricare.
+- [x] Le sessioni eliminate (GYM-006) non tornano con un re-import.
+- [x] Dopo l'import widget e pagina si aggiornano senza ricaricare.
 
 ### Storico
 
