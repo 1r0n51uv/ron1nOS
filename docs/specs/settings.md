@@ -134,7 +134,7 @@ altre sessioni` (AUTH-002).
 
 #### SET-008 · App iOS
 
-Stato: fatto (#PR)
+Stato: fatto (#206)
 
 È la sezione dei token di AUTH-005: creazione con nome (di default
 `iPhone`), token mostrato una volta con Copia, elenco con ultimo uso e

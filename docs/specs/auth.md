@@ -68,7 +68,7 @@ Accettazione:
 
 #### AUTH-005 · Token per l'app iOS
 
-Stato: fatto (#PR)
+Stato: fatto (#206)
 
 Accettazione:
 
