@@ -35,3 +35,4 @@ test-results
 # Prova YAZIO
 scripts/yazio-probe/.env
 scripts/yazio-probe/yazio-probe-report.json
+data/

@@ -13,6 +13,9 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/dist-server ./dist-server
+# Copia del catalogo delle immagini degli esercizi (GYM-014), in un volume.
+ENV WORKOUT_CATALOG_DIR=/data/workout-catalog
+RUN mkdir -p /data/workout-catalog && chown -R node:node /data
 USER node
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://127.0.0.1:8080/api/v1/health || exit 1

@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
 import { E2E_PASSWORD_HASH, STATE } from './e2e/auth.ts'
-import { E2E_DATABASE_URL } from './e2e/db.ts'
+import { E2E_CATALOG_DIR, E2E_DATABASE_URL } from './e2e/db.ts'
 import { FAKE_CLIENT, FAKE_USER } from './server/testing/fake-yazio.ts'
 
 // E2E sulla build di produzione servita dal backend. In CI il browser
@@ -61,6 +61,11 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
+      command: 'node e2e/fake-exercises.ts',
+      url: 'http://localhost:18085/__fake/health',
+      reuseExistingServer: !process.env.CI,
+    },
+    {
       command: 'node dist-server/index.js',
       url: 'http://localhost:4173/api/v1/health',
       reuseExistingServer: !process.env.CI,
@@ -88,6 +93,9 @@ export default defineConfig({
         AUTH_PASSWORD_HASH: E2E_PASSWORD_HASH,
         AUTH_COOKIE_SECURE: 'false',
         // Chiave di prova del modulo Documenti (DOC-015).
+        // Catalogo delle immagini degli esercizi finto, copia in una cartella temporanea.
+        WORKOUT_CATALOG_URL: 'http://localhost:18085/catalog',
+        WORKOUT_CATALOG_DIR: E2E_CATALOG_DIR,
         DOCUMENTS_KEY: 'ABB9OVQtWCp76GiMotgkxs3SgJ6emQ/YjCrpY8CAnBc=',
       },
     },

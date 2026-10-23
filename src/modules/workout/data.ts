@@ -113,3 +113,40 @@ export function csvFileError(file: File) {
   if (file.size > MAX_CSV_BYTES) return 'Il file supera i 5 MB.'
   return null
 }
+
+// Immagini degli esercizi (GYM-014): foto di free-exercise-db servite dal
+// backend. La scelta a mano vale per tutto lo storico di quel nome.
+export type ExerciseImage = {
+  catalogId: string
+  source: 'manual' | 'dictionary' | 'catalog'
+  url: string
+}
+
+export type CatalogExercise = {
+  id: string
+  name: string
+  primaryMuscles: string[]
+  equipment: string | null
+  images: number
+  url: string
+}
+
+export function useCatalog(q: string) {
+  return useQuery({
+    queryKey: ['workout', 'catalog', q],
+    queryFn: () => api.get<{ exercises: CatalogExercise[] }>(`/workout/catalog?q=${encodeURIComponent(q)}`),
+    staleTime: Infinity,
+  })
+}
+
+export function useSetExerciseImage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ name, catalogId }: { name: string; catalogId: string | null }) =>
+      api.put<{ name: string; image: ExerciseImage | null }>(
+        `/workout/exercises/${encodeURIComponent(name)}/image`,
+        { catalogId },
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['workout'] }),
+  })
+}
