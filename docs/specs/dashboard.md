@@ -181,6 +181,34 @@ Accettazione:
 - [x] La modalità non si ricorda: ricaricando o tornando alla dashboard
       si riparte fuori dalla modifica.
 
+#### DASH-010 · Griglia dell'iPhone
+
+Stato: pianificato (#208) · Richiesto dall'app iOS (IOS-020…024 di
+[ron1nos-ios](https://github.com/1r0n51uv/ron1nos-ios/blob/main/docs/specs/home.md))
+
+Il layout `iphone` oggi riusa la griglia del desktop con i widget alla
+larghezza massima. L'app lo mostra come la Home di iOS: serve una griglia
+sua, con misure fisse.
+
+Accettazione:
+
+- [ ] Il layout `iphone` usa una griglia di 4 colonne; ogni widget ha una
+      di tre misure: `piccolo` (2×2), `medio` (4×2), `grande` (4×4).
+- [ ] Il catalogo (`server/dashboard/catalog.ts`) dichiara per ogni id le
+      misure ammesse su iPhone e quella predefinita; i widget senza misure
+      iPhone non si aggiungono a quel layout.
+- [ ] `PUT /dashboard/layouts/iphone` rifiuta con `422` misure non ammesse,
+      posizioni fuori dalle 4 colonne e sovrapposizioni, come per il
+      desktop. Il layout del desktop non cambia.
+- [ ] Layout predefinito dell'iPhone: `nutrition.summary` grande,
+      `workout.summary` medio, `server.metric` e `downloads.speed`
+      piccoli, `documents.summary` medio.
+- [ ] Un layout `iphone` salvato prima di DASH-010 si converte da solo
+      alla prima lettura (ogni widget diventa `medio`, nell'ordine di
+      oggi).
+- [ ] Schema e misure in `api/openapi.yaml`; test del catalogo, della
+      validazione e della conversione.
+
 ### Salvataggio
 
 #### DASH-007 · Layout sul server

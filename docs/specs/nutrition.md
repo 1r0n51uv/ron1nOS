@@ -294,6 +294,46 @@ Accettazione:
       all'ora.
 - [ ] Orari degli slot modificabili e salvati sul server.
 
+#### NUT-026 · Dati da Apple Salute
+
+Stato: pianificato (#209) · Origine: nuovo · Serve a NUT-018 (IOS-040 dell'app iOS)
+
+Le rotte con cui l'app iOS manda al backend ciò che legge da Salute.
+
+Accettazione:
+
+- [ ] `POST /nutrition/health/samples` riceve un elenco di campioni:
+      tipo (`weight` in kg, `water` in ml, `active_energy` in kcal),
+      istante, valore e l'id del campione di Salute.
+- [ ] I campioni già ricevuti (stesso id) non si duplicano; un invio
+      ripetuto non cambia nulla.
+- [ ] Il peso di Salute diventa il peso di riferimento al posto di quello
+      di YAZIO (NUT-024) e compare nell'andamento (NUT-017) del web e
+      dell'app.
+- [ ] L'acqua di Salute entra nel contatore del giorno (NUT-012) con
+      fonte `Salute`, senza contare due volte quella già inviata a Salute
+      da ron1nOS.
+- [ ] L'energia attiva di Salute vale per la quota (NUT-016) solo se
+      YAZIO non la dà.
+- [ ] `GET /nutrition/health/status` dice se e quando sono arrivati dati
+      da Salute; la pagina Integrazioni del web lo mostra.
+- [ ] Rotte in `api/openapi.yaml`, validate con zod, con test.
+
+#### NUT-027 · Orari dei promemoria
+
+Stato: pianificato (#210) · Origine: nuovo · Serve a NUT-019 (IOS-041 dell'app iOS)
+
+Accettazione:
+
+- [ ] Le preferenze (SET-002) hanno una sezione `reminders`: orario
+      `HH:MM` per ognuno dei 5 slot e un elenco di orari per l'acqua.
+- [ ] Predefiniti: colazione 07:30, spuntino 10:30, pranzo 13:00,
+      merenda 16:30, cena 20:00; acqua 10:00, 13:00, 16:00, 19:00.
+- [ ] `PATCH /preferences` valida gli orari; `api/openapi.yaml`
+      aggiornato, con test.
+- [ ] Le notifiche le programma solo l'app: il backend salva gli orari e
+      basta.
+
 ### YAZIO
 
 #### NUT-020 · Collegamento all'account YAZIO
