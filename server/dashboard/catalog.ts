@@ -5,6 +5,16 @@
 
 export const GRID_COLUMNS = 24
 
+// Griglia dell'iPhone (DASH-010): 4 colonne, come la Home di iOS, e tre
+// misure fisse in celle.
+export const IPHONE_COLUMNS = 4
+export const IPHONE_SIZES = {
+  small: { w: 2, h: 2 },
+  medium: { w: 4, h: 2 },
+  large: { w: 4, h: 4 },
+} as const
+export type IphoneSize = keyof typeof IPHONE_SIZES
+
 export const MODULES = [
   'nutrition',
   'workout',
@@ -40,6 +50,9 @@ export type CatalogEntry = {
   // La prima è la predefinita; vuoto se il widget ha un solo aspetto.
   variants: readonly WidgetVariant[]
   options?: readonly WidgetOption[]
+  // Misure ammesse su iPhone, la predefinita per prima; senza, il widget
+  // non si aggiunge al layout `iphone`.
+  iphone?: readonly IphoneSize[]
 }
 
 const size = (min: [number, number], def: [number, number], max: [number, number]) => ({
@@ -69,8 +82,15 @@ export const WIDGET_CATALOG: readonly CatalogEntry[] = [
         default: ['protein', 'carbs', 'fat'],
       },
     ],
+    iphone: ['large', 'medium'],
   },
-  { id: 'workout.summary', module: 'workout', size: size([6, 6], [8, 8], [16, 12]), variants: [] },
+  {
+    id: 'workout.summary',
+    module: 'workout',
+    size: size([6, 6], [8, 8], [16, 12]),
+    variants: [],
+    iphone: ['medium', 'large'],
+  },
   {
     id: 'weight.summary',
     module: 'weight',
@@ -78,7 +98,13 @@ export const WIDGET_CATALOG: readonly CatalogEntry[] = [
     variants: ['detailed', 'compact'],
   },
   { id: 'home.summary', module: 'home', size: size([6, 6], [8, 8], [16, 14]), variants: [] },
-  { id: 'server.summary', module: 'server', size: size([6, 6], [8, 11], [16, 14]), variants: [] },
+  {
+    id: 'server.summary',
+    module: 'server',
+    size: size([6, 6], [8, 11], [16, 14]),
+    variants: [],
+    iphone: ['medium', 'small', 'large'],
+  },
   { id: 'containers.summary', module: 'containers', size: size([6, 6], [8, 8], [16, 16]), variants: [] },
   {
     id: 'downloads.summary',
@@ -86,12 +112,37 @@ export const WIDGET_CATALOG: readonly CatalogEntry[] = [
     size: size([6, 6], [8, 8], [16, 16]),
     variants: [],
     options: [{ key: 'limit', label: 'Download mostrati', type: 'count', min: 1, max: 6, default: 3 }],
+    iphone: ['medium', 'large'],
   },
   { id: 'notes.summary', module: 'notes', size: size([6, 5], [8, 7], [16, 12]), variants: [] },
-  { id: 'documents.summary', module: 'documents', size: size([6, 6], [8, 8], [16, 14]), variants: [] },
-  { id: 'nutrition.calories', module: 'nutrition', size: size([4, 6], [6, 7], [8, 9]), variants: [] },
-  { id: 'nutrition.next-meal', module: 'nutrition', size: size([6, 4], [8, 4], [12, 6]), variants: [] },
-  { id: 'nutrition.supplements', module: 'nutrition', size: size([6, 4], [8, 4], [12, 6]), variants: [] },
+  {
+    id: 'documents.summary',
+    module: 'documents',
+    size: size([6, 6], [8, 8], [16, 14]),
+    variants: [],
+    iphone: ['medium', 'small'],
+  },
+  {
+    id: 'nutrition.calories',
+    module: 'nutrition',
+    size: size([4, 6], [6, 7], [8, 9]),
+    variants: [],
+    iphone: ['small', 'medium'],
+  },
+  {
+    id: 'nutrition.next-meal',
+    module: 'nutrition',
+    size: size([6, 4], [8, 4], [12, 6]),
+    variants: [],
+    iphone: ['medium', 'small'],
+  },
+  {
+    id: 'nutrition.supplements',
+    module: 'nutrition',
+    size: size([6, 4], [8, 4], [12, 6]),
+    variants: [],
+    iphone: ['medium', 'small'],
+  },
   {
     id: 'server.metric',
     module: 'server',
@@ -111,8 +162,15 @@ export const WIDGET_CATALOG: readonly CatalogEntry[] = [
         default: 'cpu',
       },
     ],
+    iphone: ['small', 'medium'],
   },
-  { id: 'downloads.speed', module: 'downloads', size: size([4, 4], [6, 4], [10, 6]), variants: [] },
+  {
+    id: 'downloads.speed',
+    module: 'downloads',
+    size: size([4, 4], [6, 4], [10, 6]),
+    variants: [],
+    iphone: ['small', 'medium'],
+  },
   { id: 'containers.status', module: 'containers', size: size([4, 4], [6, 4], [10, 6]), variants: [] },
 ]
 
@@ -123,6 +181,12 @@ export function isStarter(entry: CatalogEntry) {
 
 export function catalogEntry(id: string) {
   return WIDGET_CATALOG.find((w) => w.id === id)
+}
+
+// La misura iPhone che corrisponde a una dimensione in celle, o null.
+export function iphoneSize(w: number, h: number): IphoneSize | null {
+  const found = Object.entries(IPHONE_SIZES).find(([, s]) => s.w === w && s.h === h)
+  return found ? (found[0] as IphoneSize) : null
 }
 
 // Le opzioni del widget con i predefiniti al posto di quelle non salvate.

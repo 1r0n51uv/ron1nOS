@@ -98,7 +98,8 @@ describe('ripristino del layout (DASH-008)', () => {
       header: 'hidden',
       items: [{ id: 'downloads.summary', x: 0, y: 0, w: 8, h: 8, options: { limit: 1 } }],
     })
-    await api().put('/layouts/iphone', moved)
+    const phone = { header: 'line', items: [{ id: 'server.metric', x: 0, y: 0, w: 2, h: 2 }] }
+    await api().put('/layouts/iphone', phone)
     const res = await api().delete('/layouts/desktop')
     expect(res).toEqual({
       status: 200,
@@ -106,6 +107,45 @@ describe('ripristino del layout (DASH-008)', () => {
     })
     expect((await api().get('/layouts/desktop')).body.updatedAt).toBeNull()
     // L'iPhone tiene il suo.
-    expect((await api().get('/layouts/iphone')).body).toMatchObject(moved)
+    expect((await api().get('/layouts/iphone')).body).toMatchObject(phone)
+  })
+})
+
+describe('griglia dell’iPhone (DASH-010)', () => {
+  it('salva un layout sulla griglia di 4 colonne e rifiuta quello del desktop', async () => {
+    const phone = {
+      header: 'full',
+      items: [
+        { id: 'server.metric', x: 0, y: 0, w: 2, h: 2, options: { metric: 'ram' } },
+        { id: 'downloads.speed', x: 2, y: 0, w: 2, h: 2 },
+      ],
+    }
+    expect((await api().put('/layouts/iphone', phone)).status).toBe(200)
+    expect((await api().get('/layouts/iphone')).body).toMatchObject(phone)
+    const res = await api().put('/layouts/iphone', moved)
+    expect(res.status).toBe(422)
+    expect(res.body.error).toBe('invalid_layout')
+  })
+
+  it('converte alla lettura un layout iPhone salvato prima di DASH-010', async () => {
+    await db.query(`insert into dashboard_layouts (device, layout) values ('iphone', $1)`, [
+      JSON.stringify(moved),
+    ])
+    const res = await api().get('/layouts/iphone')
+    expect(res.body).toMatchObject({
+      header: 'line',
+      items: [{ id: 'server.summary', x: 0, y: 0, w: 4, h: 2 }],
+    })
+  })
+
+  it('pubblica il catalogo con le misure iPhone', async () => {
+    const res = await api().get('/catalog')
+    expect(res.status).toBe(200)
+    expect(res.body.grids.iphone).toEqual({
+      columns: 4,
+      sizes: { small: { w: 2, h: 2 }, medium: { w: 4, h: 2 }, large: { w: 4, h: 4 } },
+    })
+    const metric = res.body.widgets.find((w: { id: string }) => w.id === 'server.metric')
+    expect(metric).toMatchObject({ iphone: ['small', 'medium'], variants: ['detailed', 'compact'] })
   })
 })
