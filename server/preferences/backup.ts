@@ -9,7 +9,7 @@ import { DEVICES, getLayout, Layout, putLayout, validateLayout } from '../dashbo
 import { InvalidRequestError } from '../nutrition/http.ts'
 import { hasBackground } from './background.ts'
 import type { Preferences as PreferencesType } from './schema.ts'
-import { DEFAULT_PREFERENCES, Preferences } from './schema.ts'
+import { DEFAULT_PREFERENCES, DEFAULT_REMINDERS, Preferences, Reminders } from './schema.ts'
 import { getPreferences, patchPreferences } from './store.ts'
 
 export const BACKUP_FORMAT = 1
@@ -18,7 +18,8 @@ export const Backup = z.object({
   app: z.literal('ron1nOS'),
   format: z.literal(BACKUP_FORMAT),
   exportedAt: z.string(),
-  preferences: Preferences,
+  // I backup di prima di NUT-027 non hanno i promemoria: valgono i predefiniti.
+  preferences: Preferences.extend({ reminders: Reminders.default(DEFAULT_REMINDERS) }),
   layouts: z.object({ desktop: Layout, iphone: Layout }).partial(),
 })
 
@@ -31,6 +32,7 @@ const GROUPS: [keyof PreferencesType, string][] = [
   ['disabledModules', 'Moduli accesi e spenti'],
   ['navOrder', 'Ordine della barra'],
   ['formats', 'Formati'],
+  ['reminders', 'Promemoria'],
 ]
 
 // Confronto senza badare all'ordine delle chiavi, che jsonb non conserva.

@@ -51,4 +51,45 @@ describe('preferenze (SET-002)', () => {
     ])
     expect(out.formats).toEqual({ timeZone: 'Europe/Rome', weightUnit: 'kg', energyUnit: 'kJ' })
   })
+
+  it('ha gli orari dei promemoria predefiniti (NUT-027)', () => {
+    expect(DEFAULT_PREFERENCES.reminders).toEqual({
+      meals: {
+        breakfast: '07:30',
+        morning_snack: '10:30',
+        lunch: '13:00',
+        afternoon_snack: '16:30',
+        dinner: '20:00',
+      },
+      water: ['10:00', '13:00', '16:00', '19:00'],
+    })
+  })
+
+  it('cambia un orario dei pasti senza toccare gli altri e ordina quelli dell’acqua', () => {
+    const patch = PreferencesPatch.parse({
+      reminders: { meals: { lunch: '12:45' }, water: ['18:00', '09:30'] },
+    })
+    const next = applyPatch(DEFAULT_PREFERENCES, patch)
+    expect(next.reminders.meals).toMatchObject({ breakfast: '07:30', lunch: '12:45' })
+    expect(next.reminders.water).toEqual(['09:30', '18:00'])
+    expect(applyPatch(DEFAULT_PREFERENCES, { reminders: { water: [] } }).reminders.water).toEqual([])
+  })
+
+  it('rifiuta orari non validi, ripetuti, slot sconosciuti e troppi avvisi', () => {
+    for (const reminders of [
+      { meals: { lunch: '25:00' } },
+      { meals: { lunch: '7:30' } },
+      { meals: { brunch: '11:00' } },
+      { water: ['10:00', '10:00'] },
+      { water: Array.from({ length: 13 }, (_, i) => `${String(i + 8).padStart(2, '0')}:00`) },
+    ]) {
+      expect(PreferencesPatch.safeParse({ reminders }).success).toBe(false)
+    }
+  })
+
+  it('normalize completa i promemoria mancanti o non validi', () => {
+    const out = normalize({ reminders: { meals: { dinner: '21:15', lunch: 'mezzogiorno' }, water: 'tante' } })
+    expect(out.reminders.meals).toMatchObject({ dinner: '21:15', lunch: '13:00' })
+    expect(out.reminders.water).toEqual(DEFAULT_PREFERENCES.reminders.water)
+  })
 })
