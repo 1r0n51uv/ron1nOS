@@ -183,7 +183,7 @@ Accettazione:
 
 #### DASH-010 · Griglia dell'iPhone
 
-Stato: proposto · Richiesto dall'app iOS (IOS-020…024 di
+Stato: pianificato (#208) · Richiesto dall'app iOS (IOS-020…024 di
 [ron1nos-ios](https://github.com/1r0n51uv/ron1nos-ios/blob/main/docs/specs/home.md))
 
 Il layout `iphone` oggi riusa la griglia del desktop con i widget alla

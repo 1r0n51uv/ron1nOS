@@ -296,7 +296,7 @@ Accettazione:
 
 #### NUT-026 · Dati da Apple Salute
 
-Stato: proposto · Origine: nuovo · Serve a NUT-018 (IOS-040 dell'app iOS)
+Stato: pianificato (#209) · Origine: nuovo · Serve a NUT-018 (IOS-040 dell'app iOS)
 
 Le rotte con cui l'app iOS manda al backend ciò che legge da Salute.
 
@@ -321,7 +321,7 @@ Accettazione:
 
 #### NUT-027 · Orari dei promemoria
 
-Stato: proposto · Origine: nuovo · Serve a NUT-019 (IOS-041 dell'app iOS)
+Stato: pianificato (#210) · Origine: nuovo · Serve a NUT-019 (IOS-041 dell'app iOS)
 
 Accettazione:
 
