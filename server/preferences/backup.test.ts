@@ -102,6 +102,16 @@ describe('backup della configurazione (SET-011)', () => {
     expect((await a.prefs()).appearance.background).toBe('brace')
   })
 
+  it('un backup senza promemoria (prima di NUT-027) li riporta ai predefiniti', async () => {
+    const a = api()
+    await a.patch({ reminders: { meals: { lunch: '12:00' } } })
+    const backup = (await a.export()).body
+    const { reminders: _, ...old } = backup.preferences
+    const res = await a.import({ ...backup, preferences: old }, true)
+    expect(res.body.changes).toEqual(['Promemoria'])
+    expect((await a.prefs()).reminders.meals.lunch).toBe('13:00')
+  })
+
   it('rifiuta file non validi con un messaggio chiaro', async () => {
     const a = api()
     expect((await a.import('non json')).body).toMatchObject({ message: 'Il file non è un JSON valido' })

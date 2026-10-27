@@ -4,6 +4,7 @@
 import { z } from 'zod'
 
 import { MODULES } from '../dashboard/catalog.ts'
+import { SLOTS } from '../nutrition/schemas.ts'
 
 export const BACKGROUNDS = ['brace', 'nebbia', 'grafite', 'nero', 'image'] as const
 export const GLASS = ['light', 'medium', 'strong'] as const
@@ -23,6 +24,32 @@ const TimeZone = z.string().refine((tz) => {
 
 const unique = <T>(list: readonly T[]) => new Set(list).size === list.length
 
+// Orari dei promemoria (NUT-027): `HH:MM`, 24 ore. Le notifiche le programma
+// l'app iOS; il backend salva solo gli orari.
+const Time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Orario non valido, atteso HH:MM')
+
+export const Reminders = z.object({
+  meals: z.object(
+    Object.fromEntries(SLOTS.map((slot) => [slot, Time])) as Record<(typeof SLOTS)[number], typeof Time>,
+  ),
+  water: z
+    .array(Time)
+    .max(12)
+    .refine(unique, 'Orari ripetuti')
+    .transform((list) => [...list].sort()),
+})
+
+export const DEFAULT_REMINDERS: z.infer<typeof Reminders> = {
+  meals: {
+    breakfast: '07:30',
+    morning_snack: '10:30',
+    lunch: '13:00',
+    afternoon_snack: '16:30',
+    dinner: '20:00',
+  },
+  water: ['10:00', '13:00', '16:00', '19:00'],
+}
+
 export const Preferences = z.object({
   appearance: z.object({
     background: z.enum(BACKGROUNDS),
@@ -38,6 +65,7 @@ export const Preferences = z.object({
     weightUnit: z.enum(['kg', 'lb']),
     energyUnit: z.enum(['kcal', 'kJ']),
   }),
+  reminders: Reminders,
 })
 
 export type Preferences = z.infer<typeof Preferences>
@@ -49,6 +77,10 @@ export const PreferencesPatch = z
     disabledModules: Preferences.shape.disabledModules,
     navOrder: Preferences.shape.navOrder,
     formats: Preferences.shape.formats.partial(),
+    reminders: z
+      .object({ meals: Reminders.shape.meals.partial().strict(), water: Reminders.shape.water })
+      .partial()
+      .strict(),
   })
   .partial()
   .strict()
@@ -60,6 +92,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   disabledModules: [],
   navOrder: [...NAV_ITEMS],
   formats: { timeZone: 'Europe/Rome', weightUnit: 'kg', energyUnit: 'kcal' },
+  reminders: DEFAULT_REMINDERS,
 }
 
 export function applyPatch(current: Preferences, patch: PreferencesPatch): Preferences {
@@ -68,6 +101,10 @@ export function applyPatch(current: Preferences, patch: PreferencesPatch): Prefe
     disabledModules: patch.disabledModules ?? current.disabledModules,
     navOrder: patch.navOrder ?? current.navOrder,
     formats: { ...current.formats, ...patch.formats },
+    reminders: {
+      meals: { ...current.reminders.meals, ...patch.reminders?.meals },
+      water: patch.reminders?.water ?? current.reminders.water,
+    },
   }
 }
 
@@ -81,6 +118,8 @@ export function normalize(saved: unknown): Preferences {
   }
   const appearance = (raw.appearance ?? {}) as Record<string, unknown>
   const formats = (raw.formats ?? {}) as Record<string, unknown>
+  const reminders = (raw.reminders ?? {}) as Record<string, unknown>
+  const meals = (reminders.meals ?? {}) as Record<string, unknown>
   const d = DEFAULT_PREFERENCES
   const known = (Array.isArray(raw.navOrder) ? raw.navOrder : []).filter(
     (id, i, list): id is (typeof NAV_ITEMS)[number] =>
@@ -98,6 +137,12 @@ export function normalize(saved: unknown): Preferences {
       timeZone: pick(TimeZone, formats.timeZone, d.formats.timeZone),
       weightUnit: pick(z.enum(['kg', 'lb']), formats.weightUnit, d.formats.weightUnit),
       energyUnit: pick(z.enum(['kcal', 'kJ']), formats.energyUnit, d.formats.energyUnit),
+    },
+    reminders: {
+      meals: Object.fromEntries(
+        SLOTS.map((slot) => [slot, pick(Time, meals[slot], d.reminders.meals[slot])]),
+      ) as Preferences['reminders']['meals'],
+      water: pick(Reminders.shape.water, reminders.water, d.reminders.water),
     },
   }
 }

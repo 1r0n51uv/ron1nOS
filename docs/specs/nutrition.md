@@ -321,18 +321,20 @@ Accettazione:
 
 #### NUT-027 · Orari dei promemoria
 
-Stato: pianificato (#210) · Origine: nuovo · Serve a NUT-019 (IOS-041 dell'app iOS)
+Stato: fatto (#212) · Origine: nuovo · Serve a NUT-019 (IOS-041 dell'app iOS)
 
 Accettazione:
 
-- [ ] Le preferenze (SET-002) hanno una sezione `reminders`: orario
+- [x] Le preferenze (SET-002) hanno una sezione `reminders`: orario
       `HH:MM` per ognuno dei 5 slot e un elenco di orari per l'acqua.
-- [ ] Predefiniti: colazione 07:30, spuntino 10:30, pranzo 13:00,
+- [x] Predefiniti: colazione 07:30, spuntino 10:30, pranzo 13:00,
       merenda 16:30, cena 20:00; acqua 10:00, 13:00, 16:00, 19:00.
-- [ ] `PATCH /preferences` valida gli orari; `api/openapi.yaml`
+- [x] `PATCH /preferences` valida gli orari; `api/openapi.yaml`
       aggiornato, con test.
-- [ ] Le notifiche le programma solo l'app: il backend salva gli orari e
+- [x] Le notifiche le programma solo l'app: il backend salva gli orari e
       basta.
+- [x] Gli orari viaggiano nel backup della configurazione (SET-011); un
+      backup di prima non li ha e riporta i predefiniti.
 
 ### YAZIO
 

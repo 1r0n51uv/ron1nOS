@@ -3673,6 +3673,34 @@ components:
         timeZone: { type: string, description: "Fuso IANA, es. Europe/Rome." }
         weightUnit: { type: string, enum: [kg, lb] }
         energyUnit: { type: string, enum: [kcal, kJ] }
+    ReminderTime:
+      type: string
+      pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+      description: Orario `HH:MM`, 24 ore.
+    PreferencesReminders:
+      type: object
+      additionalProperties: false
+      description: >-
+        Orari dei promemoria (NUT-027). Le notifiche le programma solo l'app
+        iOS: il backend salva gli orari e basta. In PATCH ogni pasto è
+        facoltativo e `water` sostituisce l'elenco.
+      properties:
+        meals:
+          type: object
+          additionalProperties: false
+          description: "Predefiniti: 07:30, 10:30, 13:00, 16:30, 20:00."
+          properties:
+            breakfast: { $ref: "#/components/schemas/ReminderTime" }
+            morning_snack: { $ref: "#/components/schemas/ReminderTime" }
+            lunch: { $ref: "#/components/schemas/ReminderTime" }
+            afternoon_snack: { $ref: "#/components/schemas/ReminderTime" }
+            dinner: { $ref: "#/components/schemas/ReminderTime" }
+        water:
+          type: array
+          maxItems: 12
+          uniqueItems: true
+          description: "Avvisi dell'acqua, salvati in ordine. Predefiniti: 10:00, 13:00, 16:00, 19:00."
+          items: { $ref: "#/components/schemas/ReminderTime" }
     PreferencesNavOrder:
       type: array
       description: Tutte le voci spostabili della barra, una volta ciascuna.
@@ -3688,7 +3716,7 @@ components:
       uniqueItems: true
     Preferences:
       type: object
-      required: [appearance, disabledModules, navOrder, formats]
+      required: [appearance, disabledModules, navOrder, formats, reminders]
       properties:
         appearance:
           allOf:
@@ -3700,6 +3728,10 @@ components:
           allOf:
             - $ref: "#/components/schemas/PreferencesFormats"
             - required: [timeZone, weightUnit, energyUnit]
+        reminders:
+          allOf:
+            - $ref: "#/components/schemas/PreferencesReminders"
+            - required: [meals, water]
     PreferencesPatch:
       type: object
       additionalProperties: false
@@ -3708,6 +3740,7 @@ components:
         disabledModules: { $ref: "#/components/schemas/PreferencesDisabledModules" }
         navOrder: { $ref: "#/components/schemas/PreferencesNavOrder" }
         formats: { $ref: "#/components/schemas/PreferencesFormats" }
+        reminders: { $ref: "#/components/schemas/PreferencesReminders" }
     PreferencesResponse:
       allOf:
         - $ref: "#/components/schemas/Preferences"

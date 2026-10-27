@@ -66,6 +66,19 @@ describe('rotte delle preferenze (SET-002)', () => {
     expect(read.formats.energyUnit).toBe('kJ')
   })
 
+  it('salva gli orari dei promemoria e rifiuta quelli non validi (NUT-027)', async () => {
+    const res = await api().patch({ reminders: { meals: { dinner: '20:30' }, water: ['11:00', '09:00'] } })
+    expect(res.status).toBe(200)
+    expect(res.body.reminders).toEqual({
+      meals: { ...DEFAULT_PREFERENCES.reminders.meals, dinner: '20:30' },
+      water: ['09:00', '11:00'],
+    })
+    expect((await api().get()).body.reminders.water).toEqual(['09:00', '11:00'])
+    const bad = await api().patch({ reminders: { meals: { dinner: '8 di sera' } } })
+    expect(bad.status).toBe(400)
+    expect(bad.body.message).toMatch(/reminders\.meals\.dinner/)
+  })
+
   it('rifiuta con 400 valori non previsti, senza salvare', async () => {
     const res = await api().patch({ appearance: { glass: 'opaco' } })
     expect(res).toEqual({
