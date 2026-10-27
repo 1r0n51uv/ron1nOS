@@ -46,6 +46,8 @@ export type DocumentSummary = {
   holder: string
   expiresOn: string | null
   expiry: Expiry
+  // I preavvisi attivi, per gli avvisi locali dell'app iOS (DOC-017).
+  warnings: number[]
   tags: string[]
   pinnedAt: string | null
   files: number
@@ -212,6 +214,7 @@ export async function listDocuments(
     holder: r.holder,
     expiresOn: r.expires_on,
     expiry: expiryOf(r.expires_on, r.warnings, now),
+    warnings: r.warnings,
     tags: r.tags,
     pinnedAt: r.pinned_at?.toISOString() ?? null,
     files: r.files,

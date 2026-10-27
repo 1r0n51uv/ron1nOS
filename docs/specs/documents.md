@@ -271,6 +271,19 @@ Accettazione:
       dice quanti lo usano.
 - [ ] Un campo nuovo non obbliga a compilare i documenti esistenti.
 
+#### DOC-017 · Preavvisi nell'elenco
+
+Stato: pianificato (#215)
+
+Serve agli avvisi di scadenza dell'app iOS (IOS-065), che sono notifiche
+locali: una per ogni preavviso attivo.
+
+Accettazione:
+
+- [ ] L'elenco dei documenti porta `warnings` per ogni documento, come il
+      dettaglio.
+- [ ] Nessun valore dei campi in più: l'elenco resta solo dati in chiaro.
+
 ### Sicurezza
 
 #### DOC-015 · Cifratura a riposo

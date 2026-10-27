@@ -199,6 +199,15 @@ describe('elenco, ricerca ed evidenza (DOC-002, DOC-008, DOC-010)', () => {
       'Solo 7': { status: 'ok', daysLeft: 29 },
     })
   })
+
+  it("l'elenco porta i preavvisi attivi (DOC-017)", async () => {
+    await post('/documents', { title: 'Tutti', expiresOn: '2027-01-10' })
+    await post('/documents', { title: 'Solo 7', expiresOn: '2027-01-10', warnings: [7] })
+    const byTitle = Object.fromEntries(
+      (await get('/documents')).body.map((d: { title: string; warnings: number[] }) => [d.title, d.warnings]),
+    )
+    expect(byTitle).toEqual({ Tutti: [90, 30, 7], 'Solo 7': [7] })
+  })
 })
 
 describe('allegati (DOC-011, DOC-012, DOC-014)', () => {
