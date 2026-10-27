@@ -94,3 +94,30 @@ export async function ensureFood(db: Queryable, c: FoodCandidate): Promise<Food>
 export function normalizeName(name: string) {
   return name.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').replace(/\s+/g, ' ').trim()
 }
+
+// Alimenti usati di recente nei pasti (NUT-028): servono all'app iOS, che
+// nel foglio di ricerca li mostra con il campo ancora vuoto. Senza
+// doppioni: di ogni alimento conta l'ultima volta che è stato registrato.
+// Con uno slot, prima quelli registrati in quello slot.
+export async function recentFoods(
+  db: Queryable,
+  options: { slot?: string; limit?: number } = {},
+): Promise<Food[]> {
+  const limit = options.limit ?? 12
+  const { rows } = await db.query<Food>(
+    `select ${FOOD_COLUMNS} from foods f
+       join (
+         select i.food_id,
+                max(i.created_at) as used_at,
+                max(i.created_at) filter (where $1::text is not null and e.slot::text = $1) as slot_at
+           from meal_entry_items i
+           join meal_entries e on e.id = i.meal_entry_id
+          where i.food_id is not null
+          group by i.food_id
+       ) u on u.food_id = f.id
+      order by (u.slot_at is not null) desc, coalesce(u.slot_at, u.used_at) desc, f.id
+      limit $2`,
+    [options.slot ?? null, limit],
+  )
+  return rows
+}

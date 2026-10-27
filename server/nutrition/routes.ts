@@ -18,6 +18,7 @@ import { deletePlan, setPlan, setPlanStatus } from './plans.ts'
 import { createRecipe, deleteRecipe, getRecipe, listRecipes, updateRecipe } from './recipes.ts'
 import { countUnmatched, listUnmatched, setEquivalent } from './matching.ts'
 import { getReport } from './report.ts'
+import { recentFoods } from './foods.ts'
 import { findBarcode, searchFoods } from './search.ts'
 import { yazioSearch } from './yaziosearch.ts'
 import {
@@ -307,6 +308,13 @@ export function nutritionRoutes({
     const yc = (await yazioActive(db)) ? sync.client(db) : null
     const extra = yc ? [{ source: 'yazio' as const, search: yazioSearch(yc) }] : []
     return c.json(await searchFoods({ db, external, extra }, q, { italy }))
+  })
+
+  // Alimenti usati di recente (NUT-028): l'app li mostra con il campo di
+  // ricerca ancora vuoto.
+  app.get('/foods/recent', async (c) => {
+    const slot = c.req.query('slot')
+    return c.json({ results: await recentFoods(c.get('db'), { slot: slot ? check(Slot, slot) : undefined }) })
   })
 
   // Codice a barre, scritto a mano o letto dalla fotocamera (NUT-005).

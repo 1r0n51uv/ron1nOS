@@ -336,6 +336,21 @@ Accettazione:
 - [x] Gli orari viaggiano nel backup della configurazione (SET-011); un
       backup di prima non li ha e riporta i predefiniti.
 
+#### NUT-028 · Alimenti recenti
+
+Stato: fatto (#214) · Origine: nuovo · Serve a IOS-031 dell'app iOS
+
+La ricerca (NUT-004) vuole almeno 2 caratteri: con il campo vuoto il
+foglio di ricerca dell'app non ha niente da mostrare.
+
+Accettazione:
+
+- [x] `GET /nutrition/foods/recent` dà gli alimenti usati di recente nei
+      pasti, dal più recente, senza doppioni, al massimo 12.
+- [x] Con `?slot=breakfast` vengono prima quelli usati in quello slot.
+- [x] Ogni voce ha la forma di `Food`, come i risultati della ricerca.
+- [x] Rotta in `api/openapi.yaml`, con test.
+
 ### YAZIO
 
 #### NUT-020 · Collegamento all'account YAZIO
