@@ -5,7 +5,7 @@ import { z } from 'zod'
 
 import type { Queryable } from '../db.ts'
 import type { Device } from '../dashboard/layout.ts'
-import { DEVICES, getLayout, Layout, putLayout, validateLayout } from '../dashboard/layout.ts'
+import { DEVICES, getLayout, Layout, migrateIphone, putLayout, validateLayout } from '../dashboard/layout.ts'
 import { InvalidRequestError } from '../nutrition/http.ts'
 import { hasBackground } from './background.ts'
 import type { Preferences as PreferencesType } from './schema.ts'
@@ -68,7 +68,12 @@ export function readBackup(raw: unknown): Backup {
   }
   for (const device of DEVICES) {
     const layout = result.data.layouts[device]
-    if (layout) validateLayout(layout)
+    // Un backup di prima di DASH-010 ha l'iPhone sulla griglia del desktop.
+    if (layout)
+      result.data.layouts[device] = validateLayout(
+        device === 'iphone' ? migrateIphone(layout) : layout,
+        device,
+      )
   }
   return result.data
 }

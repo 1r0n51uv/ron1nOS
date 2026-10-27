@@ -5,6 +5,7 @@ import { z } from 'zod'
 import type { Database } from '../db.ts'
 import { DatabaseUnavailableError } from '../db.ts'
 import { check, readJson } from '../nutrition/http.ts'
+import { GRID_COLUMNS, IPHONE_COLUMNS, IPHONE_SIZES, WIDGET_CATALOG } from './catalog.ts'
 import {
   defaultLayout,
   deleteLayout,
@@ -20,6 +21,18 @@ const Device = z.enum(DEVICES)
 export function dashboardRoutes({ database }: { database: Database }) {
   const app = new Hono()
 
+  // Il catalogo dei widget (DASH-001, DASH-010) per i client che non lo
+  // importano, come l'app iOS: misure, varianti e opzioni di ogni widget.
+  app.get('/catalog', (c) =>
+    c.json({
+      grids: {
+        desktop: { columns: GRID_COLUMNS },
+        iphone: { columns: IPHONE_COLUMNS, sizes: IPHONE_SIZES },
+      },
+      widgets: WIDGET_CATALOG,
+    }),
+  )
+
   // Senza database si legge il layout predefinito e non si salva nulla:
   // `stored: false` dice al client di avvisare.
   app.get('/layouts/:device', async (c) => {
@@ -32,7 +45,7 @@ export function dashboardRoutes({ database }: { database: Database }) {
 
   app.put('/layouts/:device', async (c) => {
     const device = check(Device, c.req.param('device'))
-    const layout = validateLayout(await readJson(c, Layout))
+    const layout = validateLayout(await readJson(c, Layout), device)
     if (database.status() !== 'ok' || !database.db) throw new DatabaseUnavailableError('database non pronto')
     return c.json({ device, ...(await putLayout(database.db, device, layout)), stored: true })
   })

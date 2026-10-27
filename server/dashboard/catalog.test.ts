@@ -1,7 +1,15 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 
-import { MODULES, WIDGET_CATALOG, catalogEntry, optionsError, resolveOptions } from './catalog.ts'
+import {
+  IPHONE_SIZES,
+  MODULES,
+  WIDGET_CATALOG,
+  catalogEntry,
+  iphoneSize,
+  optionsError,
+  resolveOptions,
+} from './catalog.ts'
 
 describe('catalogo dei widget', () => {
   it('ha id unici nella forma <modulo>.<nome>', () => {
@@ -45,5 +53,33 @@ describe('catalogo dei widget', () => {
     expect(resolveOptions(entry, { limit: 5 })).toEqual({ limit: 5 })
     expect(resolveOptions(entry, { limit: 0 })).toEqual({ limit: 3 })
     expect(optionsError(entry, { altro: 1 })).toBe('opzione sconosciuta altro')
+  })
+
+  it('dichiara misure iPhone senza ripetizioni per i primi widget dell’app (DASH-010)', () => {
+    const withIphone = WIDGET_CATALOG.filter((w) => w.iphone).map((w) => w.id)
+    expect(withIphone).toEqual([
+      'nutrition.summary',
+      'workout.summary',
+      'server.summary',
+      'downloads.summary',
+      'documents.summary',
+      'nutrition.calories',
+      'nutrition.next-meal',
+      'nutrition.supplements',
+      'server.metric',
+      'downloads.speed',
+    ])
+    for (const w of WIDGET_CATALOG) {
+      if (!w.iphone) continue
+      expect(w.iphone.length).toBeGreaterThan(0)
+      expect(new Set(w.iphone).size).toBe(w.iphone.length)
+    }
+  })
+
+  it('riconosce le misure iPhone dalla dimensione in celle', () => {
+    expect(IPHONE_SIZES.small).toEqual({ w: 2, h: 2 })
+    expect(iphoneSize(4, 2)).toBe('medium')
+    expect(iphoneSize(4, 4)).toBe('large')
+    expect(iphoneSize(2, 4)).toBeNull()
   })
 })

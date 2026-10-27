@@ -776,6 +776,8 @@ paths:
       description: >
         Il layout salvato, o quello predefinito se non ce n'è (DASH-008).
         Senza database risponde comunque con il predefinito e `stored: false`.
+        Un layout `iphone` salvato prima di DASH-010 arriva già convertito
+        alla griglia di 4 colonne: ogni widget `medium`, nell'ordine di prima.
       operationId: getDashboardLayout
       responses:
         "200":
@@ -790,6 +792,8 @@ paths:
         Il backend controlla il layout contro il catalogo dei widget: id noti e
         non ripetuti, dimensioni nei limiti, dentro le 24 colonne, niente
         sovrapposizioni, varianti e opzioni dichiarate dal widget.
+        Per `iphone` (DASH-010) la griglia ha 4 colonne e `w`×`h` deve essere
+        una delle misure che il widget ammette su iPhone.
       operationId: putDashboardLayout
       requestBody:
         required: true
@@ -823,6 +827,20 @@ paths:
               schema: { $ref: "#/components/schemas/DashboardLayoutResponse" }
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /dashboard/catalog:
+    get:
+      summary: Catalogo dei widget (DASH-001, DASH-010)
+      description: >
+        I widget che la dashboard può disporre, con dimensioni sul desktop,
+        misure ammesse su iPhone, varianti e opzioni. Serve ai client che non
+        importano `server/dashboard/catalog.ts`, come l'app iOS.
+      operationId: getDashboardCatalog
+      responses:
+        "200":
+          description: Il catalogo.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardCatalog" }
   /integrations:
     get:
       summary: Stato dei servizi esterni (SET-009)
@@ -3503,13 +3521,16 @@ components:
         size: { type: number, description: Byte selezionati per il download. }
     DashboardLayoutItem:
       type: object
-      description: Un widget nella griglia di 24 colonne, righe da 24px.
+      description: >-
+        Un widget nella griglia del dispositivo. Desktop: 24 colonne, righe da
+        24px. iPhone (DASH-010): 4 colonne, `w`×`h` è una delle misure
+        `small` 2×2, `medium` 4×2, `large` 4×4.
       required: [id, x, y, w, h]
       properties:
         id: { type: string, description: "Id del catalogo, `<modulo>.<nome>`." }
         x: { type: integer, minimum: 0 }
         y: { type: integer, minimum: 0 }
-        w: { type: integer, minimum: 1, maximum: 24 }
+        w: { type: integer, minimum: 1, maximum: 24, description: "Su iPhone al massimo 4." }
         h: { type: integer, minimum: 1 }
         variant: { type: string, enum: [compact, detailed] }
         options:
@@ -3528,6 +3549,64 @@ components:
           type: array
           maxItems: 60
           items: { $ref: "#/components/schemas/DashboardLayoutItem" }
+    IphoneSize:
+      type: string
+      enum: [small, medium, large]
+      description: "Misura iPhone (DASH-010): piccolo 2×2, medio 4×2, grande 4×4."
+    DashboardCatalog:
+      type: object
+      required: [grids, widgets]
+      properties:
+        grids:
+          type: object
+          required: [desktop, iphone]
+          properties:
+            desktop:
+              type: object
+              required: [columns]
+              properties:
+                columns: { type: integer, enum: [24] }
+            iphone:
+              type: object
+              required: [columns, sizes]
+              properties:
+                columns: { type: integer, enum: [4] }
+                sizes:
+                  type: object
+                  description: "Celle di ogni misura, `{ small: { w: 2, h: 2 }, … }`."
+                  additionalProperties:
+                    type: object
+                    required: [w, h]
+                    properties:
+                      w: { type: integer }
+                      h: { type: integer }
+        widgets:
+          type: array
+          items: { $ref: "#/components/schemas/DashboardCatalogEntry" }
+    DashboardCatalogEntry:
+      type: object
+      required: [id, module, size, variants]
+      properties:
+        id: { type: string, description: "`<modulo>.<nome>`." }
+        module: { type: string }
+        size:
+          type: object
+          description: Dimensioni sul desktop in celle, `min`, `default`, `max`, ognuna `{ w, h }`.
+          additionalProperties: true
+        variants:
+          type: array
+          description: La prima è la predefinita; vuoto se il widget ha un solo aspetto.
+          items: { type: string, enum: [compact, detailed] }
+        options:
+          type: array
+          description: >-
+            Dati mostrati (DASH-005): `{ key, label, type, default }` con
+            `type` `choice` o `multi` (e `choices`) oppure `count` (e `min`, `max`).
+          items: { type: object, additionalProperties: true }
+        iphone:
+          type: array
+          description: Misure ammesse su iPhone, la predefinita per prima. Assente se il widget non va sull'iPhone.
+          items: { $ref: "#/components/schemas/IphoneSize" }
     DashboardLayoutResponse:
       allOf:
         - $ref: "#/components/schemas/DashboardLayout"
