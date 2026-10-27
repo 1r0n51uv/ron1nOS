@@ -2867,6 +2867,7 @@ components:
           holder,
           expiresOn,
           expiry,
+          warnings,
           tags,
           pinnedAt,
           files,
@@ -2883,6 +2884,10 @@ components:
         holder: { type: string }
         expiresOn: { type: [string, "null"], format: date }
         expiry: { $ref: "#/components/schemas/DocumentExpiry" }
+        warnings:
+          type: array
+          description: Preavvisi attivi, per gli avvisi locali dell'app iOS (DOC-017).
+          items: { type: integer, enum: [90, 30, 7] }
         tags: { type: array, items: { type: string } }
         pinnedAt: { type: [string, "null"], format: date-time }
         files: { type: integer, description: Numero di allegati. }
