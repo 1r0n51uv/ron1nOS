@@ -176,6 +176,22 @@ describe('token per l’app iOS (AUTH-005)', () => {
     expect(JSON.stringify(list)).not.toContain(body.token)
   })
 
+  it('l’elenco segna il token della richiesta (AUTH-006)', async () => {
+    const a = app()
+    const { cookie, body } = await newToken(a)
+    await newToken(a, 'iPad')
+    type Elenco = { tokens: { name: string; current: boolean }[] }
+    const dalTelefono = (await (
+      await a.request('/api/v1/auth/tokens', { headers: bearer(body.token) })
+    ).json()) as Elenco
+    expect(dalTelefono.tokens.map((t) => [t.name, t.current])).toEqual([
+      ['iPad', false],
+      ['iPhone', true],
+    ])
+    const dalSito = (await (await a.request('/api/v1/auth/tokens', { headers: { cookie } })).json()) as Elenco
+    expect(dalSito.tokens.every((t) => !t.current)).toBe(true)
+  })
+
   it('un token inventato o revocato non apre nulla', async () => {
     const a = app()
     const { cookie, body } = await newToken(a)

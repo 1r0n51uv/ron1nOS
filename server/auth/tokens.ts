@@ -12,15 +12,23 @@ const TOUCH_AFTER_MS = 60 * 60_000
 
 const digest = (token: string) => createHash('sha256').update(token).digest('hex')
 
-export type TokenInfo = { id: string; name: string; createdAt: string; lastUsedAt: string | null }
+export type TokenInfo = {
+  id: string
+  name: string
+  createdAt: string
+  lastUsedAt: string | null
+  // Il token di questa richiesta (AUTH-006): l'app segna il suo telefono.
+  current: boolean
+}
 
-type Row = { id: string; name: string; created_at: Date; last_used_at: Date | null }
+type Row = { id: string; name: string; created_at: Date; last_used_at: Date | null; token_hash?: string }
 
-const info = (r: Row): TokenInfo => ({
+const info = (r: Row, currentHash?: string): TokenInfo => ({
   id: r.id,
   name: r.name,
   createdAt: r.created_at.toISOString(),
   lastUsedAt: r.last_used_at?.toISOString() ?? null,
+  current: currentHash !== undefined && r.token_hash === currentHash,
 })
 
 export async function createToken(db: Queryable, name: string, now = new Date()) {
@@ -48,11 +56,12 @@ export async function checkToken(db: Queryable, token: string, now = new Date())
   return true
 }
 
-export async function listTokens(db: Queryable): Promise<TokenInfo[]> {
+export async function listTokens(db: Queryable, currentToken?: string): Promise<TokenInfo[]> {
   const { rows } = await db.query<Row>(
-    'select id, name, created_at, last_used_at from auth_tokens order by created_at desc',
+    'select id, name, created_at, last_used_at, token_hash from auth_tokens order by created_at desc',
   )
-  return rows.map(info)
+  const currentHash = currentToken?.startsWith(TOKEN_PREFIX) ? digest(currentToken) : undefined
+  return rows.map((r) => info(r, currentHash))
 }
 
 // true se il token c'era.

@@ -80,6 +80,19 @@ Accettazione:
 - [x] Elenco dei token con ultimo uso (aggiornato al più una volta l'ora)
       e revoca.
 
+#### AUTH-006 · Token di questo telefono
+
+Stato: pianificato (#217)
+
+L'app iOS segna nell'elenco il token del telefono e lo revoca con `Esci da
+questo iPhone` (IOS-092).
+
+Accettazione:
+
+- [ ] `GET /auth/tokens` segna con `current: true` il token della
+      richiesta (`Authorization: Bearer`); dal sito, con il cookie, tutti
+      `false`.
+
 ## Decisioni
 
 Prese il 2026-10-22.
