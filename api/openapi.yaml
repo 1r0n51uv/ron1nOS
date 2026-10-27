@@ -150,8 +150,8 @@ paths:
       summary: Token dell'app iOS (AUTH-005, SET-008)
       description: >
         Il più recente prima, con l'ultimo uso (aggiornato al più una volta
-        l'ora). Il token non esce mai da qui. Con il login spento l'elenco è
-        vuoto.
+        l'ora) e `current` sul token della richiesta (AUTH-006). Il token non
+        esce mai da qui. Con il login spento l'elenco è vuoto.
       operationId: getTokens
       responses:
         "200":
@@ -3671,12 +3671,15 @@ components:
         current: { type: boolean, description: "La sessione di questa richiesta." }
     AppToken:
       type: object
-      required: [id, name, createdAt, lastUsedAt]
+      required: [id, name, createdAt, lastUsedAt, current]
       properties:
         id: { type: string }
         name: { type: string }
         createdAt: { type: string, format: date-time }
         lastUsedAt: { type: [string, "null"], format: date-time }
+        current:
+          type: boolean
+          description: Il token di questa richiesta (AUTH-006); false dal sito e alla creazione.
     Integration:
       type: object
       required: [id, name, state, message, checkedAt, env]

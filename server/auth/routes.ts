@@ -191,10 +191,11 @@ export function createAuth({
   })
 
   // Token per l'app iOS (AUTH-005, SET-008). Il token si vede solo nella
-  // risposta che lo crea.
+  // risposta che lo crea; `current` segna quello della richiesta (AUTH-006).
   routes.get('/tokens', async (c) => {
     if (!enabled || !database.db) return c.json({ tokens: [] })
-    return c.json({ tokens: await listTokens(database.db) })
+    const bearer = c.req.header('authorization')?.match(/^Bearer (.+)$/)?.[1]
+    return c.json({ tokens: await listTokens(database.db, bearer) })
   })
 
   routes.post('/tokens', async (c) => {
