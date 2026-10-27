@@ -82,14 +82,14 @@ Accettazione:
 
 #### AUTH-006 · Token di questo telefono
 
-Stato: pianificato (#217)
+Stato: fatto (#218)
 
 L'app iOS segna nell'elenco il token del telefono e lo revoca con `Esci da
 questo iPhone` (IOS-092).
 
 Accettazione:
 
-- [ ] `GET /auth/tokens` segna con `current: true` il token della
+- [x] `GET /auth/tokens` segna con `current: true` il token della
       richiesta (`Authorization: Bearer`); dal sito, con il cookie, tutti
       `false`.
 
