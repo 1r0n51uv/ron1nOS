@@ -321,7 +321,7 @@ Accettazione:
 
 #### NUT-027 · Orari dei promemoria
 
-Stato: fatto (#PR) · Origine: nuovo · Serve a NUT-019 (IOS-041 dell'app iOS)
+Stato: fatto (#212) · Origine: nuovo · Serve a NUT-019 (IOS-041 dell'app iOS)
 
 Accettazione:
 
