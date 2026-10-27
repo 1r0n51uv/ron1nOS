@@ -1973,6 +1973,32 @@ paths:
                     items: { type: string, enum: [openfoodfacts] }
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/foods/recent:
+    get:
+      summary: Alimenti usati di recente nei pasti (NUT-028)
+      description: >
+        Dal più recente, senza doppioni, al massimo 12. Serve all'app iOS,
+        che li mostra nel foglio di ricerca con il campo ancora vuoto.
+      operationId: recentFoods
+      parameters:
+        - name: slot
+          in: query
+          description: Se c'è, vengono prima gli alimenti usati in quello slot.
+          schema: { $ref: "#/components/schemas/MealSlot" }
+      responses:
+        "200":
+          description: Gli alimenti, nella stessa forma dei risultati della ricerca.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [results]
+                properties:
+                  results:
+                    type: array
+                    items: { $ref: "#/components/schemas/Food" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/foods/search:
     get:
       summary: Ricerca alimenti su catalogo locale, OpenFoodFacts, USDA e YAZIO (NUT-004, NUT-021)
