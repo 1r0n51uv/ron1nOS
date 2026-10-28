@@ -49,8 +49,9 @@ Accettazione:
       comando fallisce il tassello torna com'era e compare il messaggio.
 - [ ] Un dispositivo non raggiungibile è in grigio con `non disponibile` e
       non si può toccare.
-- [ ] In testata il numero di dispositivi accesi (`3 accesi`); il link
-      `Tutti` apre la pagina Casa (CASA-002).
+- [ ] Sotto i tasselli il numero di dispositivi accesi e la potenza totale
+      (`3 accesi · 1.982 W in casa`); il link `Tutti` in testata apre la
+      pagina Casa (CASA-002).
 - [ ] Senza Home Assistant configurato mostra `Home Assistant non collegato`
       con il link alle Impostazioni › Integrazioni.
 - [ ] Senza preferiti mostra i primi 6 dispositivi controllabili.
@@ -264,6 +265,9 @@ controlli, scene; poi i widget e i Controlli di iOS (Centro di Controllo)
 per i preferiti, se xtool li compila.
 
 ## Note
+
+Mockup: [canvas ron1nOS · Modulo Casa](https://claude.ai/artifact/Y4YRbF1WXw9U4nXX1qhYSD)
+(widget, pagina, dettaglio, conferma).
 
 ### Architettura
 
