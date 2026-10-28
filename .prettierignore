@@ -5,3 +5,5 @@ package-lock.json
 docs/*.png
 playwright-report
 test-results
+.claude/skills
+skills-lock.json
