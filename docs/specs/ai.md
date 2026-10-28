@@ -12,6 +12,11 @@ Il modulo porta in ron1nOS due cose:
   strumenti consentiti, avviati a mano o a orario. "Alle 21 riepiloga la
   giornata alimentare", "avvisami se il disco supera il 90%".
 
+Il motore degli agenti è [Mastra](https://mastra.ai), framework
+TypeScript open source (nucleo Apache-2.0) che gira dentro il backend
+Hono. Le stesse funzionalità si offrono anche ad altri client AI con un
+server MCP nostro.
+
 Sicurezza zero trust: assistente e agenti non ereditano mai i permessi
 dell'utente. Ognuno è un'identità a sé con i suoi permessi, concessi uno
 per uno; tutto ciò che non è concesso è negato, e ogni chiamata si verifica
@@ -22,12 +27,13 @@ operazioni di `/api/v1` che usano la dashboard e l'app iOS, scelte e
 descritte in `api/openapi.yaml`. La logica sta nel backend, come per gli
 altri moduli; il browser mostra la chat e le conferme.
 
-Tutto è gratuito (regola del progetto): il motore predefinito è un modello
-locale con Ollama sul mini PC; un'API esterna con piano gratuito è
-facoltativa e non riceve mai i dati sensibili.
+Tutto è gratuito (regola del progetto): un router sul server salta da un
+servizio online gratuito all'altro finché hanno quota e chiude sul modello
+locale con Ollama sul mini PC. I dati sensibili vanno solo al modello
+locale.
 
 Non fa, per ora: voce, ricerca sul web, lettura degli allegati (immagini e
-PDF, serve l'OCR, rimandato anche in Documenti), agenti avviati da eventi dei moduli, server MCP, parità iOS
+PDF, serve l'OCR, rimandato anche in Documenti), webhook da servizi esterni, parità iOS
 (seconda fase, requisiti `IOS-1xx` in ron1nos-ios).
 
 **Stato del documento: in revisione dal 2026-10-28 (zero trust), mockup da
@@ -38,28 +44,28 @@ Le scelte sono in fondo, in "Decisioni".
 
 ### Motore
 
-#### AI-001 · Motore configurabile
+#### AI-001 · Motori attraverso un router
 
 Stato: proposto
 
 Accettazione:
 
-- [ ] Il backend parla con il motore attraverso un'unica interfaccia
-      compatibile OpenAI (chat completions con `tools` e streaming), così
-      locale ed esterno si scambiano senza toccare il codice.
-- [ ] Motore locale: Ollama, indirizzo e modello da `AI_LOCAL_URL` e
-      `AI_LOCAL_MODEL` (predefinito un modello piccolo con tool calling,
-      per esempio `qwen3:4b`).
-- [ ] Motore esterno facoltativo con piano gratuito: Groq o Gemini, chiave
-      in `AI_CLOUD_API_KEY`, fornitore e modello in `AI_CLOUD_PROVIDER` e
-      `AI_CLOUD_MODEL`. Senza chiave l'opzione non compare.
+- [ ] Il backend parla con un solo indirizzo compatibile OpenAI (chat
+      completions con `tools` e streaming): il router LiteLLM (AI-002),
+      open source e ospitato sul server, senza parti a pagamento.
+- [ ] Il router espone due modelli logici:
+  - `ron1n-locale`: solo Ollama;
+  - `ron1n-gratis`: la catena dei servizi online gratuiti (AI-018), che
+    chiude su Ollama.
+- [ ] Chiavi dei servizi online solo nel `.env` del router; un servizio
+      senza chiave è saltato.
 - [ ] `Impostazioni › Moduli › AI` mostra lo stato di ogni motore
-      (raggiungibile, modello, ultimo errore) e permette di scegliere il
-      motore predefinito della chat. Le chiavi restano nel `.env`.
+      (raggiungibile, modello, quota del giorno, ultimo errore) e il
+      modello logico predefinito della chat.
 - [ ] Senza alcun motore raggiungibile il modulo si mostra spento, con il
       motivo.
 
-#### AI-002 · Ollama sul server
+#### AI-002 · Ollama e router sul server
 
 Stato: proposto · Repo: ron1n
 
@@ -68,10 +74,36 @@ Accettazione:
 - [ ] Stack `infra/ollama/compose.yaml` nell'hub, immagine con tag
       esplicito, modelli in un volume su `/srv`, limite di memoria (6 GB)
       e di CPU perché non soffochi gli altri servizi.
-- [ ] Non pubblicato da Caddy né dal tunnel: solo sulla rete Docker
-      condivisa con `ron1nos`.
-- [ ] `infra.sh` lo avvia prima di `ron1nos`; il bootstrap scarica il
-      modello predefinito, il cleanup lo toglie insieme ai dati.
+- [ ] Stack `infra/ai-router/compose.yaml` con LiteLLM (tag esplicito) e
+      la sua configurazione versionata: catena, limiti per servizio,
+      tempi di attesa dopo un 429.
+- [ ] Nessuno dei due è pubblicato da Caddy né dal tunnel: solo sulla rete
+      Docker condivisa con `ron1nos`; il router chiede una chiave interna
+      generata da `make_envs`.
+- [ ] `infra.sh` li avvia prima di `ron1nos`; il bootstrap chiede le
+      chiavi facoltative e scarica il modello predefinito, il cleanup
+      toglie stack e dati.
+
+#### AI-028 · Mastra nel backend
+
+Stato: proposto
+
+Accettazione:
+
+- [ ] `@mastra/core` (e i pacchetti che servono: `@mastra/pg`,
+      `@mastra/mcp`) con versione fissata, montato nel backend Hono sotto
+      `/api/v1/ai`. Solo parti Apache-2.0: niente codice delle cartelle
+      `ee/`, che hanno una licenza a parte.
+- [ ] Ogni agente di ron1nOS è un `Agent` di Mastra creato al volo dalla
+      sua definizione in database (AI-013), con i soli strumenti concessi
+      (AI-021).
+- [ ] Modelli tramite il provider compatibile OpenAI dell'AI SDK, puntato
+      sul router (AI-001).
+- [ ] Memoria e storia delle conversazioni nello storage Postgres di
+      Mastra, nel Postgres condiviso, schema `ai`.
+- [ ] Le esecuzioni a più passi degli agenti (trigger, conferme in attesa,
+      ripresa dopo la conferma) usano i workflow di Mastra con
+      sospensione e ripresa.
 
 #### AI-003 · Dati sensibili solo in locale
 
@@ -264,7 +296,8 @@ Stato: proposto
 
 Accettazione:
 
-- [ ] Tabelle `ai_conversations` e `ai_messages` (migrazione nuova).
+- [ ] Conversazioni e messaggi nella memoria di Mastra (AI-028), legati
+      all'agente `Assistente`.
 - [ ] Titolo generato dalla prima domanda, rinomina, eliminazione.
 - [ ] Il contesto inviato al modello si tronca alle ultime battute che
       stanno nel limite del motore.
@@ -330,7 +363,8 @@ Accettazione:
 
 - [ ] Espressione cron per agente, eseguita dallo scheduler del backend
       nel fuso `Europe/Rome`.
-- [ ] Una sola esecuzione alla volta (coda): il mini PC non ha GPU.
+- [ ] Una sola esecuzione locale alla volta (coda): il mini PC non ha
+      GPU. Le esecuzioni sulla catena online possono andare in parallelo.
 - [ ] Limiti per esecuzione: al massimo 8 chiamate a strumenti e 5 minuti;
       oltre, l'esecuzione termina con errore leggibile.
 
@@ -360,31 +394,101 @@ Accettazione:
   - Settimana di allenamento (domenica sera): sedute, volume, confronto con
     la settimana prima.
 
-#### AI-018 · Limiti del piano gratuito
+#### AI-018 · Catena gratuita
 
 Stato: proposto
 
 Accettazione:
 
-- [ ] Il backend conta le richieste al motore esterno del giorno e le
-      mostra in Impostazioni.
-- [ ] Su limite raggiunto (HTTP 429) la chat avvisa e propone il motore
-      locale; gli agenti ripiegano sul locale da soli.
+- [ ] `ron1n-gratis` prova i servizi in un ordine configurabile (per
+      partire: Groq, Cerebras, Gemini, Mistral, modelli `:free` di
+      OpenRouter) e alla fine Ollama.
+- [ ] Su 429 o quota finita il router passa al successivo e lascia a
+      riposo quel servizio fino al reset; su rifiuto per contenuto non
+      ritenta altrove.
+- [ ] Ogni servizio ha limiti per minuto e per giorno impostati sotto la
+      quota vera, per non farsi bloccare.
+- [ ] La chat mostra quale servizio ha risposto; Impostazioni mostra le
+      richieste del giorno per servizio.
+- [ ] Nessun piano a pagamento né credito prepagato: un servizio che
+      chiede una carta per la quota gratuita non entra nella catena.
+
+#### AI-026 · Trigger da eventi
+
+Stato: proposto
+
+Accettazione:
+
+- [ ] Un agente può partire anche da un evento di un modulo, scelto da un
+      elenco: download finito, disco oltre soglia, container fermo,
+      documento che entra in preavviso, pasto registrato, seduta
+      importata, sincronizzazione YAZIO fallita. Casa aggiunge i suoi
+      quando esisterà.
+- [ ] Ascoltare un evento è un permesso dell'agente come gli strumenti
+      (AI-021): senza concessione l'evento non lo avvia.
+- [ ] I dati dell'evento arrivano al modello come dati non fidati
+      (AI-023).
+- [ ] Antirimbalzo per agente: al massimo un avvio per evento ogni N
+      minuti, configurabile; gli eventi in eccesso si contano e si
+      riassumono nell'avvio successivo.
+- [ ] Gli eventi passano dalla stessa coda delle esecuzioni (AI-015).
+
+#### AI-027 · Prova dei modelli locali
+
+Stato: proposto
+
+Accettazione:
+
+- [ ] Script `scripts/ai-bench` che, sul server, prova i modelli candidati
+      (per esempio `qwen3:4b`, `qwen3:8b`, `llama3.2:3b`, `gemma3:4b`) con
+      domande fisse in italiano che richiedono strumenti dei moduli.
+- [ ] Misura per ogni modello: tempo alla prima parola, token al secondo,
+      RAM usata, chiamate a strumenti corrette, risposte accettabili.
+- [ ] Risultati in `docs/ai-bench.md`; il modello predefinito di
+      `ron1n-locale` si sceglie da lì, prima di costruire la chat.
+
+### Server MCP
+
+#### AI-029 · Server MCP di ron1n
+
+Stato: proposto
+
+Accettazione:
+
+- [ ] `MCPServer` di `@mastra/mcp` su `/api/v1/mcp` (HTTP in streaming),
+      con gli stessi strumenti del registro (AI-004): un client AI esterno
+      (Claude Code, un'app desktop) usa le funzionalità di ron1n come
+      l'assistente.
+- [ ] Zero trust anche qui: ogni client MCP è un'identità con i suoi
+      permessi (AI-019, AI-021) e un token proprio `r1m_`, creato e
+      revocato da `/ai/agenti`. Senza concessioni il client non vede
+      nessuno strumento.
+- [ ] Le scritture con conferma di un client MCP finiscono nella casella
+      (AI-016); i dati sensibili non si concedono a client MCP, che usano
+      modelli fuori dal server.
+- [ ] Raggiungibile solo dietro Cloudflare Access: dall'esterno serve
+      anche un service token di Access, come per l'app iOS.
+- [ ] Ogni chiamata nel registro per agente (AI-024).
 
 ## Note
 
 ### Architettura
 
 ```text
-Web / iOS ── /api/v1/ai ──► server/ai
-                             ├─ engine.ts     interfaccia OpenAI-compatibile
-                             │                 (Ollama locale, Groq/Gemini)
-                             ├─ tools.ts      registro da x-ai-tool
-                             │                 + esecuzione via app.request
-                             ├─ chat.ts       turni, streaming SSE, conferme
-                             ├─ agents.ts     definizioni, esecuzioni, cron
-                             ├─ policy.ts     concessioni, vincoli, token r1a_
-                             └─ actions.ts    registro e azioni in attesa
+Web / iOS ── /api/v1/ai ──┐
+Client MCP ── /api/v1/mcp ┤
+                          ▼
+                    server/ai (Mastra dentro Hono)
+                     ├─ agents.ts    Agent Mastra dalle definizioni in db
+                     ├─ tools.ts     createTool da x-ai-tool, esecuzione
+                     │               via app.request con token r1a_/r1m_
+                     ├─ policy.ts    concessioni, vincoli, limiti, token
+                     ├─ workflows.ts trigger, conferme, ripresa
+                     ├─ mcp.ts       MCPServer con gli stessi strumenti
+                     └─ actions.ts   registro e azioni in attesa
+                          │
+                          ▼
+             router LiteLLM ── catena gratuita online ──► Ollama locale
 ```
 
 Ciclo di un'esecuzione: token `r1a_` con i permessi dell'agente → modello
@@ -400,13 +504,17 @@ memoria 5 minuti dopo l'ultimo uso (`OLLAMA_KEEP_ALIVE`), poi si libera.
 
 ### Piani gratuiti esterni
 
-Verificati il 2026-10-28, cambiano spesso: i numeri veri sono nella
-console di ogni servizio.
+Indicativi, verificati il 2026-10-28: cambiano spesso e i numeri veri sono
+nella console di ogni servizio. Nei piani gratuiti i dati possono essere
+usati per l'addestramento, per questo i dati sensibili restano in locale.
 
-| Servizio | Limiti indicativi                                                   | Note                                                     |
-| -------- | ------------------------------------------------------------------- | -------------------------------------------------------- |
-| Groq     | ~1000 richieste/giorno sui modelli grandi, di più su quelli piccoli | molto veloce, tool calling                               |
-| Gemini   | ~20-250 richieste/giorno sui modelli Flash                          | nel piano gratuito i dati possono essere usati da Google |
+| Servizio   | Limiti indicativi                                   | Note                                |
+| ---------- | --------------------------------------------------- | ----------------------------------- |
+| Groq       | ~1000 richieste/giorno sui modelli grandi           | molto veloce, tool calling          |
+| Cerebras   | quota giornaliera in token                          | molto veloce                        |
+| Gemini     | ~20-250 richieste/giorno sui modelli Flash          | quote ridotte più volte nel 2025-26 |
+| Mistral    | piano gratuito di prova, limiti bassi               | da verificare                       |
+| OpenRouter | modelli `:free`, ~50 richieste/giorno senza credito | il credito è a pagamento: escluso   |
 
 ### Strumenti iniziali
 
@@ -451,29 +559,36 @@ Tutte le rotte sono relative a `/api/v1/ai`.
 2. **Mockup** di chat, conferma, agenti e casella, rivisti con la skill
    `apple-design`.
 3. **Issue** con label `mod:ai`, una per requisito.
-4. **Base**: Ollama nell'hub (AI-002), motore e registro (AI-001, 003,
-   004).
-5. **Assistente**: chat, conferme, registro, widget.
-6. **Agenti**: definizioni, esecuzioni, pianificazione, casella, agenti
-   pronti.
-7. **iOS**: parità nella seconda fase.
+4. **Base**: Ollama e router nell'hub (AI-002), Mastra, motori e registro
+   (AI-028, 001, 003, 004, 018), identità e permessi (AI-019…025).
+5. **Prova dei modelli locali** sul server (AI-027), insieme, prima di
+   scegliere il modello predefinito.
+6. **Assistente**: chat, conferme, registro, widget.
+7. **Server MCP** (AI-029) sugli stessi strumenti e permessi.
+8. **Agenti**: definizioni, permessi, esecuzioni, pianificazione,
+   eventi, casella, agenti pronti.
+9. **iOS**: parità nella seconda fase.
 
 ## Decisioni
 
 Prese il 2026-10-28.
 
-1. **Motore.** Ibrido: Ollama locale predefinito, API esterna gratuita
-   facoltativa.
-2. **Strumenti.** Registro generato da `/api/v1` con `x-ai-tool`; server
-   MCP in una fase successiva.
+1. **Motore.** Ibrido: catena di servizi online gratuiti fino a
+   esaurimento quota, poi Ollama locale, attraverso il router LiteLLM sul
+   server; i modelli locali si provano sul server prima della scelta
+   (precisato il 2026-10-28).
+2. **Strumenti.** Registro generato da `/api/v1` con `x-ai-tool`, usato
+   dagli agenti Mastra e da un server MCP nostro (precisato il
+   2026-10-28: Mastra come framework, MCP nel modulo).
 3. **Autonomia.** Letture libere, scritture con conferma, distruttive
    escluse, tutto nel registro.
-4. **Trigger.** Manuali e pianificati; gli eventi dopo.
+4. **Trigger.** Manuali, pianificati ed eventi dei moduli (precisato il
+   2026-10-28).
 5. **Privacy.** Tutto leggibile, ma solo dal modello locale: dati
    sanitari e documenti, compresi i campi decifrati, non vanno mai al
    motore esterno. Gli allegati restano fuori in ogni caso.
 6. **Zero trust.** Ogni agente, compreso l'assistente, è un'identità con
    permessi propri concessi uno per uno, token per esecuzione e verifica
-   a ogni chiamata (richiesto il 2026-10-28). La modalità `scrittura
-senza conferma` precisa la decisione 3: si concede solo per agente e
-   per strumento.
+   a ogni chiamata (richiesto il 2026-10-28). Precisa la decisione 3: la
+   scrittura senza conferma esiste solo come concessione per agente e per
+   strumento.
