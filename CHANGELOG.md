@@ -7,6 +7,7 @@ Il server segue il tag `main` dell'immagine; per tornare indietro c'è
 
 ## 2026-10-28
 
+- Specifiche del modulo Casa, dispositivi smart con Home Assistant (CASA) ([#226](https://github.com/1r0n51uv/ron1nOS/pull/226))
 - CHANGELOG del repo ([#222](https://github.com/1r0n51uv/ron1nOS/pull/222))
 - Skill apple-design nel repo ([#220](https://github.com/1r0n51uv/ron1nOS/pull/220))
 
