@@ -52,16 +52,16 @@ Accettazione:
 
 #### DES-002 · Movimento ridotto
 
-Stato: proposto
+Stato: fatto (#234)
 
 Accettazione:
 
-- [ ] Con `prefers-reduced-motion: reduce` le animazioni e le transizioni
+- [x] Con `prefers-reduced-motion: reduce` le animazioni e le transizioni
       sono azzerate: dialoghi, tooltip, menu, scheletri e anelli di
       caricamento restano fermi o appaiono di colpo.
-- [ ] Il movimento non è mai l'unico modo per capire che qualcosa sta
+- [x] Il movimento non è mai l'unico modo per capire che qualcosa sta
       caricando: lo scheletro e il testo restano.
-- [ ] Uno scenario e2e con il movimento ridotto apre un dialogo e lo
+- [x] Uno scenario e2e con il movimento ridotto apre un dialogo e lo
       trova senza animazione.
 
 #### DES-003 · Trasparenza ridotta e contrasto alto
