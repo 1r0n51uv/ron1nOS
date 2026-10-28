@@ -101,8 +101,8 @@ Stato: proposto
 Accettazione:
 
 - [ ] I pulsanti `+` e `−` di Acqua e Caffeina hanno un nome accessibile
-      che dice l'effetto, per esempio `Aggiungi 250 ml` e `Togli
-    l'ultima voce`, e lo stesso testo come tooltip.
+      che dice l'effetto, per esempio «Aggiungi 250 ml» e «Togli l'ultima
+      voce», e lo stesso testo come tooltip.
 - [ ] La riga di aiuto sotto i pulsanti resta.
 
 ### Pasti
