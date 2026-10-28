@@ -168,7 +168,7 @@ export function ExercisePage() {
     <>
       <Link
         to="/allenamenti"
-        className="self-start text-[13px] text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
+        className="hit-area self-start text-[13px] text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
       >
         Allenamenti
       </Link>

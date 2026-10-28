@@ -85,15 +85,15 @@ Accettazione:
 
 #### DES-004 · Aree cliccabili da 28px
 
-Stato: proposto
+Stato: fatto (#236)
 
 Accettazione:
 
-- [ ] I link e i pulsanti di testo nelle card (`Dettagli`, `Gestisci`,
+- [x] I link e i pulsanti di testo nelle card (`Dettagli`, `Gestisci`,
       `Tutti`, `+ Nuova`, `importa il CSV`) hanno un'area cliccabile di
       almeno 28px di altezza, senza cambiare dimensione o posizione del
       testo.
-- [ ] Un test misura le aree dei controlli della Home e fallisce sotto i
+- [x] Un test misura le aree dei controlli della Home e fallisce sotto i
       28px.
 
 #### DES-005 · Pulsanti che dicono cosa fanno

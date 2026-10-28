@@ -30,7 +30,7 @@ export function AboutSection() {
                 href={`${REPOSITORY_URL}/commit/${commit}`}
                 target="_blank"
                 rel="noreferrer"
-                className="font-mono text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
+                className="hit-area font-mono text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
               >
                 {commit.slice(0, 7)}
               </a>
@@ -83,7 +83,7 @@ export function AboutSection() {
               href={REPOSITORY_URL}
               target="_blank"
               rel="noreferrer"
-              className="text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
+              className="hit-area text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
             >
               Repository di ron1nOS
             </a>
@@ -93,7 +93,7 @@ export function AboutSection() {
               href={SPEC_URL}
               target="_blank"
               rel="noreferrer"
-              className="text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
+              className="hit-area text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
             >
               Specifica delle impostazioni
             </a>
