@@ -441,7 +441,8 @@ Stato: proposto
 Accettazione:
 
 - [ ] Script `scripts/ai-bench` che, sul server, prova i modelli candidati
-      (per esempio `qwen3:4b`, `qwen3:8b`, `llama3.2:3b`, `gemma3:4b`) con
+      (per esempio `qwen3:4b`, `qwen3:8b`, `llama3.2:3b`, `gemma3:4b`,
+      `hermes3:8b`) con
       domande fisse in italiano che richiedono strumenti dei moduli.
 - [ ] Misura per ogni modello: tempo alla prima parola, token al secondo,
       RAM usata, chiamate a strumenti corrette, risposte accettabili.
@@ -470,6 +471,41 @@ Accettazione:
 - [ ] Raggiungibile solo dietro Cloudflare Access: dall'esterno serve
       anche un service token di Access, come per l'app iOS.
 - [ ] Ogni chiamata nel registro per agente (AI-024).
+
+### AI personale
+
+#### AI-030 · Hermes Agent come AI personale
+
+Stato: proposto, da confermare
+
+[Hermes Agent](https://github.com/NousResearch/hermes-agent) di Nous
+Research è un agente personale open source (MIT, gratuito da ospitare):
+memoria tra le sessioni, abilità che impara da solo, attività pianificate
+e un gateway verso app di messaggi come Telegram. Si inserisce come
+client del server MCP di ron1n, non al posto di Mastra: Mastra resta il
+motore degli agenti della dashboard, con un'identità e permessi per
+agente; Hermes è un'identità sola con i suoi permessi.
+
+Accettazione:
+
+- [ ] Stack `infra/hermes/compose.yaml` nell'hub (immagine
+      `nousresearch/hermes-agent` con tag esplicito, dati in un volume su
+      `/srv`), non pubblicato da Caddy né dal tunnel.
+- [ ] Strumenti solo dal server MCP di ron1n (AI-029), con un token `r1m_`
+      e permessi concessi da `/ai/agenti` come per ogni client. Terminale,
+      browser, esecuzione di codice e MCP esterni spenti: Hermes non tocca
+      il server se non attraverso `/api/v1`.
+- [ ] Modelli dal router (AI-001), modello logico `ron1n-gratis`. Hermes
+      chiede almeno 64k token di contesto: sul Ryzen 5300U senza GPU un
+      modello locale con quel contesto è troppo lento, quindi di fatto usa
+      la catena online e non riceve permessi su dati sensibili.
+- [ ] Le sue scritture con conferma vanno nella casella (AI-016); le sue
+      attività pianificate compaiono nel registro (AI-024) con la sua
+      identità.
+- [ ] Gateway Telegram facoltativo per parlargli dal telefono: gratuito,
+      ma i messaggi passano dai server di Telegram, quindi vale la stessa
+      regola dei dati sensibili.
+- [ ] Scrittura in memoria con approvazione (`memory.write_approval`).
 
 ## Esempi di utilizzo
 
