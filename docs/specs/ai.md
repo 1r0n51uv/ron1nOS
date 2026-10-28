@@ -37,8 +37,8 @@ PDF, serve l'OCR, rimandato anche in Documenti), webhook da servizi
 esterni, parità iOS
 (seconda fase, requisiti `IOS-1xx` in ron1nos-ios).
 
-**Stato del documento: in revisione dal 2026-10-28 (zero trust), mockup da
-fare.**
+**Stato del documento: in revisione dal 2026-10-28, mockup da approvare.**
+Mockup: [canvas Modulo AI](https://claude.ai/artifact/ToiJx6bxpZie9ZeXKM4Hn2).
 Le scelte sono in fondo, in "Decisioni".
 
 ## Requisiti
