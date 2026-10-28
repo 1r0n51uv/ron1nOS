@@ -76,7 +76,9 @@ function ImportCsv({ onDone }: { onDone: (summary: ImportSummary) => void }) {
         )}
         <span className="text-[13px] text-ink-muted">
           {file ? null : 'oppure '}
-          <span className="text-brand-text">{file ? 'scegli un altro file' : 'scegli dal disco'}</span>
+          <span className="text-ink underline decoration-ink/40 underline-offset-4">
+            {file ? 'scegli un altro file' : 'scegli dal disco'}
+          </span>
           {' · fino a 5 MB'}
         </span>
         <input

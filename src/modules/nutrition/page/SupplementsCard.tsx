@@ -38,7 +38,10 @@ export function SupplementsCard({ day }: { day: Day }) {
         ) : (
           <p className="m-0 text-[13px] text-ink-muted">
             Nessun integratore.{' '}
-            <Link to="/impostazioni/moduli/nutrizione" className="text-brand-text">
+            <Link
+              to="/impostazioni/moduli/nutrizione"
+              className="text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
+            >
               Aggiungili in Impostazioni
             </Link>
           </p>

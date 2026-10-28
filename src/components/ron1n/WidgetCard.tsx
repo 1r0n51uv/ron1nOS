@@ -28,7 +28,7 @@ export function WidgetCard({
             {action.to ? (
               <Link
                 to={action.to}
-                className="text-[13px] leading-[18px] text-brand-text no-underline hover:underline"
+                className="text-[13px] leading-[18px] text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
               >
                 {action.label}
               </Link>
@@ -36,7 +36,7 @@ export function WidgetCard({
               <button
                 type="button"
                 onClick={action.onClick}
-                className="cursor-pointer border-0 bg-transparent p-0 text-[13px] leading-[18px] text-brand-text hover:underline"
+                className="cursor-pointer border-0 bg-transparent p-0 text-[13px] leading-[18px] text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
               >
                 {action.label}
               </button>

@@ -66,7 +66,10 @@ export function WorkoutWidget({ className }: { className?: string }) {
       <WidgetCard title="Allenamento" action={ACTION} className={className}>
         <div className="text-sm text-ink-muted">
           Nessun allenamento ·{' '}
-          <Link to="/allenamenti" className="text-brand-text no-underline hover:underline">
+          <Link
+            to="/allenamenti"
+            className="text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
+          >
             importa il CSV di Liftin’
           </Link>
         </div>

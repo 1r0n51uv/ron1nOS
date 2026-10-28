@@ -12,7 +12,7 @@ const buttonVariants = cva(
         default: 'bg-primary text-primary-foreground shadow-glow hover:brightness-110',
         glass: 'font-medium glass-chip hover:bg-glass-hover',
         ghost: 'hover:bg-glass-strong',
-        link: 'text-brand-text underline-offset-4 hover:underline',
+        link: 'text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink',
       },
       size: {
         default: 'min-h-12 px-[22px]',

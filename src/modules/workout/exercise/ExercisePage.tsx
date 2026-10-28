@@ -166,7 +166,10 @@ export function ExercisePage() {
 
   return (
     <>
-      <Link to="/allenamenti" className="self-start text-[13px] text-brand-text no-underline hover:underline">
+      <Link
+        to="/allenamenti"
+        className="self-start text-[13px] text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
+      >
         Allenamenti
       </Link>
       {!data && error ? (

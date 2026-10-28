@@ -23,7 +23,10 @@ export function ModuleGate({
       <WidgetCard title="Modulo spento" className="max-w-xl">
         <p className="m-0 text-sm leading-[1.6] text-ink-muted">
           I dati restano. Si riaccende da{' '}
-          <Link to="/impostazioni/moduli" className="text-brand-text">
+          <Link
+            to="/impostazioni/moduli"
+            className="text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
+          >
             Impostazioni › Moduli
           </Link>
           .

@@ -6,7 +6,7 @@ export function ProgressRing({
   value,
   max = 100,
   size = 132,
-  tone = 'brand',
+  tone = 'ink',
   label,
   sublabel,
   caption,
