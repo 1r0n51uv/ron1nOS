@@ -40,15 +40,15 @@ accende o spegne con un tocco.
 
 Accettazione:
 
-- [ ] Fino a 6 tasselli `ToggleTile` in griglia da 2: nome, stato breve
-      (`142 W`, `24 °C · freddo`, `60%`) e interruttore.
+- [ ] Fino a 6 tasselli in griglia da 3: l'icona del tipo (CASA-014), il
+      nome e una sola parola o numero di stato (`24° · freddo`, `60%`,
+      `1.840 W`, `Spenta`). Tutto il tassello è il pulsante.
 - [ ] Il tocco cambia subito il tassello e il server conferma; se il
       comando fallisce il tassello torna com'era e compare il messaggio.
 - [ ] Un dispositivo non raggiungibile è in grigio con `non disponibile` e
       non si può toccare.
-- [ ] Sotto i tasselli il numero di dispositivi accesi e la potenza totale
-      (`3 accesi · 1.982 W in casa`); il link `Tutti` in testata apre la
-      pagina Casa (CASA-002).
+- [ ] Il link `Tutti` in testata apre la pagina Casa (CASA-002); niente
+      altri numeri nel widget.
 - [ ] Senza Home Assistant configurato mostra `Home Assistant non collegato`
       con il link alle Impostazioni › Integrazioni.
 - [ ] Senza preferiti mostra i primi 6 dispositivi controllabili.
@@ -62,16 +62,18 @@ Una pagina `/casa` (oggi `ComingSoon`) con tutti i dispositivi.
 
 Accettazione:
 
-- [ ] In alto una riga di riepilogo: dispositivi accesi, potenza totale
-      delle prese che la misurano (CASA-003), temperatura e umidità di
-      casa se c'è un sensore (CASA-006).
+- [ ] Sotto il titolo una sola riga: dispositivi accesi e temperatura di
+      casa se c'è un sensore (`5 accesi · dentro 23,8 °C`).
 - [ ] I dispositivi sono raggruppati per stanza, con le aree di Home
       Assistant; quelli senza area vanno in `Altro`.
-- [ ] Filtri per tipo: `Tutti`, `Prese`, `Clima`, `Luci`, `Sensori`.
-- [ ] Ogni dispositivo è una card con il controllo del suo tipo
-      (CASA-003…006); un clic sul nome apre il dettaglio (CASA-012).
-- [ ] Le scene e gli script stanno in una fila in alto (CASA-007).
-- [ ] Ricerca per nome.
+- [ ] Filtri per tipo, con l'icona: `Tutti`, `Prese`, `Clima`, `Luci`,
+      `Sensori`.
+- [ ] Ogni dispositivo è un tassello grande, come nella Casa di iOS:
+      icona animata (CASA-014), nome e una riga di stato. Il tocco accende
+      o spegne; la pressione lunga, o il clic destro, apre il dettaglio
+      (CASA-012) con gli altri controlli.
+- [ ] Le scene e gli script stanno in una fila in alto, come icone tonde
+      con il nome sotto (CASA-007).
 - [ ] Ogni stanza ha il suo skeleton; un errore di Home Assistant mostra
       un messaggio unico in alto senza svuotare la pagina.
 
@@ -87,8 +89,8 @@ Accettazione:
 
 - [ ] Acceso o spento con un interruttore.
 - [ ] Se la presa misura i consumi (un sensore di potenza dello stesso
-      dispositivo), la card mostra i watt attuali e i kWh di oggi in
-      `font-mono`.
+      dispositivo), il tassello acceso mostra solo i watt attuali; kWh di
+      oggi e grafico stanno nel dettaglio (CASA-012).
 - [ ] Nessuna conferma prima di spegnere, neanche per la presa del
       server (decisione 6).
 
@@ -100,15 +102,15 @@ Entità `climate` (condizionatori, pompe di calore, termostati).
 
 Accettazione:
 
-- [ ] Acceso o spento; modalità tra quelle che il dispositivo supporta
-      (`freddo`, `caldo`, `deumidifica`, `ventola`, `auto`).
-- [ ] Temperatura impostata con `−` e `+` al passo del dispositivo (di
-      solito 0,5 o 1 °C) e la temperatura attuale della stanza.
-- [ ] Velocità della ventola e oscillazione, se il dispositivo le ha.
+- [ ] Il tassello è largo il doppio: accende e spegne, mostra la
+      modalità e la temperatura della stanza in una riga, e ha `−` e `+`
+      per la temperatura impostata, al passo del dispositivo (di solito
+      0,5 o 1 °C).
+- [ ] Nel dettaglio (CASA-012): modalità tra quelle che il dispositivo
+      supporta (`freddo`, `caldo`, `deumidifica`, `ventola`, `auto`),
+      velocità della ventola e oscillazione, se le ha.
 - [ ] I comandi ravvicinati si uniscono: premere `+` tre volte manda un
       solo comando dopo 800 ms.
-- [ ] La card usa il rosso `brand` solo quando il clima è acceso, come
-      segnale; il resto resta neutro.
 
 #### CASA-005 · Luci
 
@@ -119,9 +121,9 @@ Entità `light`.
 Accettazione:
 
 - [ ] Accesa o spenta.
-- [ ] Luminosità con un cursore, se la luce la supporta.
-- [ ] Temperatura del bianco, se la luce la supporta. Il colore RGB resta
-      in Home Assistant.
+- [ ] Il tassello acceso mostra la luminosità; il cursore della
+      luminosità e la temperatura del bianco, se la luce le supporta,
+      stanno nel dettaglio. Il colore RGB resta in Home Assistant.
 
 #### CASA-006 · Sensori
 
@@ -132,8 +134,8 @@ energia, porta o finestra aperta, movimento, batteria.
 
 Accettazione:
 
-- [ ] Solo lettura: valore con unità in `font-mono` e da quanto è
-      aggiornato.
+- [ ] Solo lettura: un tassello con l'icona e il valore con unità in
+      `font-mono`; da quanto è aggiornato sta nel dettaglio.
 - [ ] I sensori di potenza ed energia di una presa si mostrano dentro la
       card della presa, non da soli.
 - [ ] Batteria sotto il 15%: il valore è in rosso `brand`.
@@ -149,8 +151,8 @@ casa`: spegne luci e clima).
 
 Accettazione:
 
-- [ ] Una fila di pulsanti con il nome; un clic avvia la scena o lo
-      script.
+- [ ] Una fila di icone tonde con il nome sotto; un clic avvia la scena o
+      lo script.
 - [ ] Il pulsante mostra l'attesa e poi `fatto` o l'errore.
 - [ ] Le scene si creano e si modificano solo in Home Assistant.
 
@@ -175,14 +177,43 @@ Stato: proposto
 
 Accettazione:
 
-- [ ] Un pannello laterale con stato, stanza, marca e modello (dal
-      registro dei dispositivi di Home Assistant) e ultima modifica.
+- [ ] Un pannello laterale con l'icona grande del dispositivo, che è anche
+      l'interruttore, il nome e lo stato; sotto i controlli del tipo
+      (CASA-004, CASA-005) e le scelte di CASA-008. Pochi dati: niente
+      marca, modello o id.
 - [ ] Per prese con consumi e sensori numerici: grafico delle ultime 24
       ore, con scelta 24 ore o 7 giorni, dallo storico di Home Assistant.
 - [ ] Per i condizionatori: grafico della temperatura della stanza e dei
       periodi di accensione nelle ultime 24 ore.
 - [ ] Lo storico non si copia in Postgres: si chiede a Home Assistant,
       che lo tiene per 10 giorni.
+
+#### CASA-014 · Icone e animazioni
+
+Stato: proposto
+
+Meno numeri e più immagini: ogni tipo ha la sua icona e accendere o
+spegnere si vede.
+
+Accettazione:
+
+- [ ] Un'icona a tratto per tipo: presa, clima, luce, ventilatore, TV,
+      sensore di temperatura, finestra o porta, scena. In un cerchio di
+      vetro da spento, in un cerchio chiaro (`ink`) con l'icona scura da
+      acceso.
+- [ ] Accensione: il tassello e il cerchio passano a chiaro in circa 400
+      ms, con un alone. Ogni tipo ha il suo movimento: la luce si accende
+      con un alone più ampio, il clima soffia (linee d'aria che scorrono),
+      il ventilatore gira, la presa fa comparire un piccolo fulmine, la TV
+      accende lo schermo con uno sfarfallio breve.
+- [ ] Spegnimento: le stesse transizioni al contrario, senza movimento
+      continuo.
+- [ ] Il tocco schiaccia appena il tassello (scala 0,97).
+- [ ] Con `prefers-reduced-motion` (DES-002) restano solo i cambi di
+      colore, senza movimento.
+- [ ] Niente rosso per lo stato acceso: il rosso `brand` resta un segnale
+      (DES-001), per esempio la batteria scarica (CASA-006).
+- [ ] Le icone sono SVG nel codice, senza immagini da scaricare.
 
 ### Server
 
@@ -263,7 +294,7 @@ per i preferiti, se xtool li compila.
 ## Note
 
 Mockup: [canvas ron1nOS · Modulo Casa](https://claude.ai/artifact/Y4YRbF1WXw9U4nXX1qhYSD)
-(widget, pagina, dettaglio).
+(widget, pagina, dettaglio; i tasselli si accendono e spengono in Play).
 
 ### Architettura
 
@@ -311,7 +342,8 @@ Esempio di comando:
    Assistant e crea il token.
 2. **Base** (CASA-010, CASA-009): client REST e WebSocket, cache,
    integrazione nelle Impostazioni, `GET /devices`.
-3. **Pagina** (CASA-002) con prese (CASA-003) e sensori (CASA-006).
+3. **Pagina** (CASA-002) con tasselli, icone e animazioni (CASA-014),
+   prese (CASA-003) e sensori (CASA-006).
 4. **Clima** (CASA-004), poi **luci** (CASA-005).
 5. **Preferiti** (CASA-008), poi **widget** (CASA-001).
 6. **Scene** (CASA-007), poi **dettaglio e storico** (CASA-012).
@@ -337,3 +369,5 @@ Prese nel thread il 2026-10-28:
 5. **Consumi e storico.** Watt, kWh di oggi e grafico da Home Assistant.
 6. **Conferme.** Nessuna: ogni interruttore agisce subito, senza prese
    protette.
+7. **Aspetto.** Meno densità di dati, icone grandi e animazioni di
+   accensione e spegnimento (CASA-014), chiesto il 2026-10-28.
