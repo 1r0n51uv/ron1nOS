@@ -40,7 +40,7 @@ export function SupplementsCard({ day }: { day: Day }) {
             Nessun integratore.{' '}
             <Link
               to="/impostazioni/moduli/nutrizione"
-              className="text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
+              className="hit-area text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
             >
               Aggiungili in Impostazioni
             </Link>

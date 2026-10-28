@@ -25,7 +25,7 @@ export function ModuleGate({
           I dati restano. Si riaccende da{' '}
           <Link
             to="/impostazioni/moduli"
-            className="text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
+            className="hit-area text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
           >
             Impostazioni › Moduli
           </Link>

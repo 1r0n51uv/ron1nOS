@@ -173,6 +173,13 @@
   backdrop-filter: blur(var(--blur-bar)) saturate(180%);
 }
 
+/* Area cliccabile di almeno 28px (DES-004) per i link di testo, senza muovere il testo. */
+@utility hit-area {
+  display: inline-block;
+  padding-block: 6px;
+  margin-block: -6px;
+}
+
 @utility eyebrow {
   font-family: var(--font-mono);
   font-size: 12px;
