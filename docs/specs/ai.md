@@ -12,6 +12,11 @@ Il modulo porta in ron1nOS due cose:
   strumenti consentiti, avviati a mano o a orario. "Alle 21 riepiloga la
   giornata alimentare", "avvisami se il disco supera il 90%".
 
+Sicurezza zero trust: assistente e agenti non ereditano mai i permessi
+dell'utente. Ognuno è un'identità a sé con i suoi permessi, concessi uno
+per uno; tutto ciò che non è concesso è negato, e ogni chiamata si verifica
+di nuovo nel backend, non nel modello (sezione "Identità e permessi").
+
 Assistente e agenti non hanno logica propria sui dati: usano le stesse
 operazioni di `/api/v1` che usano la dashboard e l'app iOS, scelte e
 descritte in `api/openapi.yaml`. La logica sta nel backend, come per gli
@@ -25,7 +30,8 @@ Non fa, per ora: voce, ricerca sul web, lettura degli allegati (immagini e
 PDF, serve l'OCR, rimandato anche in Documenti), agenti avviati da eventi dei moduli, server MCP, parità iOS
 (seconda fase, requisiti `IOS-1xx` in ron1nos-ios).
 
-**Stato del documento: decisioni prese il 2026-10-28, mockup da fare.**
+**Stato del documento: in revisione dal 2026-10-28 (zero trust), mockup da
+fare.**
 Le scelte sono in fondo, in "Decisioni".
 
 ## Requisiti
@@ -98,9 +104,10 @@ Accettazione:
       parametri e dai body dell'OpenAPI; un test verifica che ogni
       `x-ai-tool` punti a una rotta esistente con schema valido.
 - [ ] Lo strumento si esegue chiamando la rotta dentro il processo, con
-      la stessa validazione zod e la stessa sessione dell'utente: nessuna
-      scorciatoia sul database.
-- [ ] Le operazioni distruttive (eliminazioni) non sono strumenti.
+      la stessa validazione zod e con il token dell'esecuzione (AI-020),
+      mai con la sessione dell'utente: nessuna scorciatoia sul database.
+- [ ] Le operazioni distruttive (eliminazioni) e le rotte del modulo AI
+      stesso (`/api/v1/ai/*`) non sono strumenti.
 
 #### AI-005 · Strumenti iniziali
 
@@ -118,8 +125,9 @@ Stato: proposto
 
 Accettazione:
 
-- [ ] Una chiamata `write` non parte: crea un'azione in attesa con
-      strumento, argomenti leggibili e chi l'ha chiesta.
+- [ ] Una chiamata `write` concessa in modalità `con conferma` (AI-021)
+      non parte: crea un'azione in attesa con strumento, argomenti
+      leggibili e l'agente che l'ha chiesta.
 - [ ] Nella chat compare una scheda con il riepilogo e i pulsanti
       `Conferma` e `Annulla`; dagli agenti l'azione va nella casella
       (AI-016).
@@ -137,6 +145,103 @@ Accettazione:
       `errore`), orario.
 - [ ] Pagina `/ai/registro` con filtro per origine e stato. Le letture si
       registrano solo come conteggio per turno, le scritture una per una.
+
+### Identità e permessi
+
+Principi: nessuna fiducia implicita, permesso minimo, verifica a ogni
+chiamata, tutto registrato, revoca immediata. Il modello è trattato come
+non fidato: può chiedere qualsiasi cosa, decide il backend.
+
+#### AI-019 · Un'identità per agente
+
+Stato: proposto
+
+Accettazione:
+
+- [ ] Ogni agente, compreso `Assistente`, è un principale distinto
+      dall'utente, con un id stabile.
+- [ ] Un agente nuovo nasce senza permessi: senza concessioni non vede
+      nessuno strumento.
+
+#### AI-020 · Token per esecuzione
+
+Stato: proposto
+
+Accettazione:
+
+- [ ] Ogni esecuzione (un turno di chat o un avvio di agente) riceve un
+      token `r1a_` legato ad agente ed esecuzione, valido al massimo per la
+      durata dell'esecuzione (5 minuti) e revocato alla fine.
+- [ ] Il token porta solo i permessi concessi in quel momento; un permesso
+      tolto durante l'esecuzione vale dalla chiamata successiva.
+- [ ] Il middleware di autenticazione di `/api/v1` lo accetta solo sulle
+      rotte concesse; il resto risponde 403, anche se il modello inventa
+      una chiamata.
+
+#### AI-021 · Permessi per strumento
+
+Stato: proposto
+
+Accettazione:
+
+- [ ] Una concessione lega un agente a uno strumento con una modalità:
+      `lettura`, `scrittura con conferma` o `scrittura senza conferma`.
+- [ ] Una concessione può avere vincoli sui parametri: valori ammessi,
+      massimi o risorse precise (per esempio solo un tipo di documento,
+      solo certi container, quantità massima di un alimento).
+- [ ] Una concessione può avere una scadenza.
+- [ ] Le concessioni su dati sensibili valgono solo con il motore locale:
+      un agente sul motore esterno non può riceverle.
+- [ ] Limiti per agente: chiamate per esecuzione, esecuzioni al giorno,
+      durata massima.
+
+#### AI-022 · Solo l'utente concede
+
+Stato: proposto
+
+Accettazione:
+
+- [ ] Permessi e agenti si cambiano solo da `/ai/agenti` con la sessione
+      dell'utente, mai con un token `r1a_` o `r1n_`.
+- [ ] Concedere un permesso di scrittura chiede di nuovo la password.
+- [ ] Nessun agente crea agenti, cambia permessi, legge le esecuzioni di
+      altri agenti o li avvia.
+
+#### AI-023 · Isolamento
+
+Stato: proposto
+
+Accettazione:
+
+- [ ] Ogni agente ha la sua storia e la sua memoria; un'esecuzione vede
+      solo i propri messaggi e gli esiti dei propri strumenti.
+- [ ] Gli esiti degli strumenti arrivano al modello come dati, marcati
+      come non fidati: un testo letto (nome di un torrent, campo di un
+      documento, nome di un alimento) non può cambiare i permessi né le
+      istruzioni dell'agente.
+
+#### AI-024 · Registro per agente
+
+Stato: proposto
+
+Accettazione:
+
+- [ ] Ogni chiamata, consentita o negata, si registra con agente,
+      esecuzione, token, concessione usata, argomenti ed esito.
+- [ ] Le chiamate negate compaiono in evidenza nella pagina dell'agente.
+
+#### AI-025 · Revoca e blocco
+
+Stato: proposto
+
+Accettazione:
+
+- [ ] Spegnere un agente o togliergli un permesso revoca subito i token
+      attivi e interrompe l'esecuzione in corso.
+- [ ] Pulsante `Ferma tutto` che spegne tutti gli agenti e revoca tutti i
+      token `r1a_`.
+- [ ] Dopo 3 chiamate negate nella stessa esecuzione l'esecuzione si
+      ferma e l'agente si segnala nella casella.
 
 ### Assistente
 
@@ -201,9 +306,12 @@ Stato: proposto
 
 Accettazione:
 
-- [ ] Un agente ha nome, istruzioni, strumenti consentiti (sottoinsieme
-      del registro), motore, pianificazione facoltativa e stato attivo.
-- [ ] Si crea, modifica e spegne da `/ai/agenti`.
+- [ ] Un agente ha nome, istruzioni, permessi (AI-021), motore,
+      pianificazione facoltativa e stato attivo.
+- [ ] Si crea, modifica e spegne da `/ai/agenti`; ogni agente ha la sua
+      pagina con permessi, esecuzioni e registro.
+- [ ] L'assistente della chat è anch'esso un agente, `Assistente`, con
+      permessi propri modificabili come gli altri.
 
 #### AI-014 · Avvio manuale
 
@@ -275,12 +383,16 @@ Web / iOS ── /api/v1/ai ──► server/ai
                              │                 + esecuzione via app.request
                              ├─ chat.ts       turni, streaming SSE, conferme
                              ├─ agents.ts     definizioni, esecuzioni, cron
+                             ├─ policy.ts     concessioni, vincoli, token r1a_
                              └─ actions.ts    registro e azioni in attesa
 ```
 
-Ciclo di un turno: messaggio dell'utente → modello con gli strumenti
-consentiti → per ogni chiamata, `read` si esegue subito, `write` diventa
-un'azione in attesa → esiti al modello → risposta finale.
+Ciclo di un'esecuzione: token `r1a_` con i permessi dell'agente → modello
+con i soli strumenti concessi → per ogni chiamata il backend verifica
+concessione, vincoli e limiti; `lettura` e `scrittura senza conferma` si
+eseguono, `scrittura con conferma` diventa un'azione in attesa, il resto è
+negato e registrato → esiti al modello come dati non fidati → risposta →
+token revocato.
 
 Risorse: con un modello da 4B quantizzato Ollama usa 3-5 GB di RAM e
 risponde a 8-10 token al secondo sul Ryzen 5300U. Il modello resta in
@@ -326,6 +438,8 @@ console di ogni servizio.
 | `GET /actions?status=`                              | registro e azioni in attesa  | 007, 016  |
 | `POST /actions/{id}/confirm`, `/cancel`             | conferma o annulla           | 006       |
 | `GET`/`POST /agents`, `PATCH`/`DELETE /agents/{id}` | definizioni                  | 013       |
+| `GET`/`PUT /agents/{id}/grants`                     | permessi dell'agente         | 021, 022  |
+| `POST /agents/stop-all`                             | ferma tutto                  | 025       |
 | `POST /agents/{id}/run`                             | avvio manuale                | 014       |
 | `GET /runs`, `GET /runs/{id}`, `PATCH /runs/{id}`   | esecuzioni, segna come letta | 014, 016  |
 
@@ -358,3 +472,8 @@ Prese il 2026-10-28.
 5. **Privacy.** Tutto leggibile, ma solo dal modello locale: dati
    sanitari e documenti, compresi i campi decifrati, non vanno mai al
    motore esterno. Gli allegati restano fuori in ogni caso.
+6. **Zero trust.** Ogni agente, compreso l'assistente, è un'identità con
+   permessi propri concessi uno per uno, token per esecuzione e verifica
+   a ogni chiamata (richiesto il 2026-10-28). La modalità `scrittura
+senza conferma` precisa la decisione 3: si concede solo per agente e
+   per strumento.
