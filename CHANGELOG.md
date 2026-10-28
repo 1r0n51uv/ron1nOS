@@ -7,6 +7,7 @@ Il server segue il tag `main` dell'immagine; per tornare indietro c'è
 
 ## 2026-10-28
 
+- Tooltip sui pulsanti a icona di Acqua e Caffeina (DES-005) ([#237](https://github.com/1r0n51uv/ron1nOS/pull/237))
 - Aree cliccabili da 28px per i link e i pulsanti di testo nelle card (DES-004) ([#236](https://github.com/1r0n51uv/ron1nOS/pull/236))
 - Trasparenza ridotta e contrasto alto: vetro opaco e bordi più chiari su richiesta del sistema (DES-003) ([#235](https://github.com/1r0n51uv/ron1nOS/pull/235))
 - Movimento ridotto: senza animazioni con la preferenza del sistema (DES-002) ([#234](https://github.com/1r0n51uv/ron1nOS/pull/234))
