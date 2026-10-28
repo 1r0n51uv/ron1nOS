@@ -332,7 +332,6 @@ Prese nel thread il 2026-10-28:
 1. **Ponte.** Home Assistant in Docker sul server, controllo locale.
 2. **Dispositivi.** Li aggiunge il proprietario in Home Assistant; il
    modulo non dipende dalle marche.
-
 3. **Interfaccia di Home Assistant.** Su `ha.DOMINIO` dietro Access.
 4. **Widget.** Preferiti scelti a mano.
 5. **Consumi e storico.** Watt, kWh di oggi e grafico da Home Assistant.
