@@ -21,13 +21,12 @@ Tutto è gratuito (regola del progetto): il motore predefinito è un modello
 locale con Ollama sul mini PC; un'API esterna con piano gratuito è
 facoltativa e non riceve mai i dati sensibili.
 
-Non fa, per ora: voce, ricerca sul web, lettura del contenuto dei
-documenti, agenti avviati da eventi dei moduli, server MCP, parità iOS
+Non fa, per ora: voce, ricerca sul web, lettura degli allegati (immagini e
+PDF, serve l'OCR, rimandato anche in Documenti), agenti avviati da eventi dei moduli, server MCP, parità iOS
 (seconda fase, requisiti `IOS-1xx` in ron1nos-ios).
 
-**Stato del documento: proposto il 2026-10-28.** Le scelte sono in fondo,
-in "Decisioni": oggi riportano le opzioni consigliate, in attesa di
-conferma.
+**Stato del documento: decisioni prese il 2026-10-28, mockup da fare.**
+Le scelte sono in fondo, in "Decisioni".
 
 ## Requisiti
 
@@ -75,12 +74,14 @@ Stato: proposto
 Accettazione:
 
 - [ ] Ogni strumento dichiara se tocca dati sensibili (Nutrizione, Peso,
-      Allenamento, metadati dei Documenti).
+      Allenamento, Documenti).
 - [ ] Una conversazione o un agente sul motore esterno non riceve gli
       strumenti sensibili; se la domanda li richiede, la chat propone di
       continuare in locale.
-- [ ] Il contenuto dei documenti (campi cifrati e allegati) non è mai uno
-      strumento: l'AI vede solo nome, tipo, tag e scadenze.
+- [ ] Il modello locale legge anche il contenuto dei documenti: il backend
+      decifra i campi (di tipo e liberi) come fa per la dashboard. Gli
+      allegati restano fuori: nessun file passa al modello.
+- [ ] Il motore esterno non vede nulla di Documenti, neanche i nomi.
 
 ### Strumenti
 
@@ -247,7 +248,7 @@ Accettazione:
   - Controllo server (ogni ora): disco oltre il 90%, container fermi,
     temperatura alta; scrive nella casella solo se c'è qualcosa.
   - Scadenze documenti (ogni lunedì): documenti in scadenza nei prossimi
-    90 giorni, solo metadati.
+    90 giorni.
   - Settimana di allenamento (domenica sera): sedute, volume, confronto con
     la settimana prima.
 
@@ -306,6 +307,7 @@ console di ogni servizio.
 | Peso        | ultime misure                   | read  | sì        |
 | Allenamento | ultime sedute e statistiche     | read  | sì        |
 | Documenti   | elenco con tipo, tag e scadenze | read  | sì        |
+| Documenti   | dettaglio con i campi decifrati | read  | sì        |
 | Download    | elenco torrent e velocità       | read  | no        |
 | Download    | aggiungi magnet                 | write | no        |
 | Download    | pausa e ripresa                 | write | no        |
@@ -344,7 +346,7 @@ Tutte le rotte sono relative a `/api/v1/ai`.
 
 ## Decisioni
 
-In attesa di conferma; per ora valgono le opzioni consigliate.
+Prese il 2026-10-28.
 
 1. **Motore.** Ibrido: Ollama locale predefinito, API esterna gratuita
    facoltativa.
@@ -353,5 +355,6 @@ In attesa di conferma; per ora valgono le opzioni consigliate.
 3. **Autonomia.** Letture libere, scritture con conferma, distruttive
    escluse, tutto nel registro.
 4. **Trigger.** Manuali e pianificati; gli eventi dopo.
-5. **Privacy.** Dei documenti solo i metadati; i dati sanitari solo al
-   modello locale.
+5. **Privacy.** Tutto leggibile, ma solo dal modello locale: dati
+   sanitari e documenti, compresi i campi decifrati, non vanno mai al
+   motore esterno. Gli allegati restano fuori in ogni caso.
