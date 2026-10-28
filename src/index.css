@@ -247,3 +247,47 @@
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * Trasparenza ridotta (DES-003): il vetro diventa opaco, senza sfocatura.
+ * Vale per ogni intensità scelta in Impostazioni, per questo i selettori
+ * ripetono quelli di `data-glass`.
+ */
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  :root[data-glass='light'],
+  :root[data-glass='strong'] {
+    --glass: #161618;
+    --glass-strong: #1f1f22;
+    --glass-hover: #2a2a2e;
+    --glass-bar: #1c1c1e;
+    --blur-panel: 0px;
+    --blur-bar: 0px;
+    --blur-chip: 0px;
+  }
+  .glass-panel,
+  .glass-chip,
+  .glass-bar,
+  [data-slot='dialog-content'],
+  [data-slot='dropdown-menu-content'] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  [data-slot='dialog-content'],
+  [data-slot='dropdown-menu-content'] {
+    background-color: #161618 !important;
+  }
+}
+
+/*
+ * Contrasto alto (DES-003): bordi più chiari e testo secondario pieno.
+ */
+@media (prefers-contrast: more) {
+  :root,
+  :root[data-glass='light'],
+  :root[data-glass='strong'] {
+    --ink-muted: var(--ink);
+    --glass-border: rgba(255, 255, 255, 0.55);
+    --track: rgba(255, 255, 255, 0.28);
+  }
+}

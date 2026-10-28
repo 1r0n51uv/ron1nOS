@@ -66,18 +66,20 @@ Accettazione:
 
 #### DES-003 · Trasparenza ridotta e contrasto alto
 
-Stato: proposto
+Stato: fatto (#235)
 
 Accettazione:
 
-- [ ] Con `prefers-reduced-transparency: reduce` il vetro diventa opaco:
+- [x] Con `prefers-reduced-transparency: reduce` il vetro diventa opaco:
       nessuna sfocatura, riempimento pieno scuro, bordo invariato.
-- [ ] Con `prefers-contrast: more` i bordi sono più chiari e `ink-muted`
+- [x] Con `prefers-contrast: more` i bordi sono più chiari e `ink-muted`
       diventa `ink`.
-- [ ] Le due regole valgono per tutte le intensità del vetro scelte in
+- [x] Le due regole valgono per tutte le intensità del vetro scelte in
       Impostazioni (SET-003) e sono nei token di `src/index.css`.
-- [ ] Uno scenario e2e per ciascuna preferenza controlla che le superfici
-      non abbiano `backdrop-filter`.
+- [x] Gli scenari e2e controllano che con la trasparenza ridotta carte e
+      dialoghi non abbiano `backdrop-filter` e che il dialogo sia opaco, e
+      che con il contrasto alto il testo secondario sia `ink` e il bordo
+      più chiaro.
 
 ### Controlli
 
