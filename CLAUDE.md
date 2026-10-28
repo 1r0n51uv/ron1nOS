@@ -25,6 +25,8 @@ italiano.
   Non disattivare né saltare test per far passare la CI.
 - Stile: lo decide Prettier (`npm run format`), non a mano. ESLint con zero
   warning.
+- Ogni PR aggiunge in cima a `CHANGELOG.md` una riga su cosa cambia, con il
+  link alla PR, sotto la sezione del giorno (`## AAAA-MM-GG`).
 - Prima di consegnare: `npm run check` pulito (formato, lint, typecheck,
   unit, build, e2e).
 - Per rivedere un'interfaccia, una schermata o una PR con UI usa la skill
