@@ -7,6 +7,7 @@ import {
   isDay,
   mondayOf,
   stripDays,
+  stripWeeks,
   todayRome,
   weekdayShort,
   weekRange,
@@ -40,6 +41,18 @@ describe('giorni del diario', () => {
 })
 
 describe('settimane', () => {
+  it('la striscia si raggruppa per settimana da lunedì (DES-006)', () => {
+    const weeks = stripWeeks('2026-10-21')
+    expect(weeks.map((w) => [w.monday, w.days.length])).toEqual([
+      ['2026-10-05', 1],
+      ['2026-10-12', 7],
+      ['2026-10-19', 7],
+      ['2026-10-26', 7],
+      ['2026-11-02', 2],
+    ])
+    expect(weeks.flatMap((w) => w.days)).toEqual(stripDays('2026-10-21'))
+  })
+
   it('lunedì della settimana e intervallo', () => {
     expect(mondayOf('2026-10-21')).toBe('2026-10-19')
     expect(mondayOf('2026-10-25')).toBe('2026-10-19')

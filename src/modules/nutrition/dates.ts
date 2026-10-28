@@ -38,6 +38,18 @@ export function stripDays(today: string) {
   return Array.from({ length: 24 }, (_, i) => addDays(today, i - 10))
 }
 
+// Gli stessi giorni raggruppati per settimana, da lunedì (DES-006).
+export function stripWeeks(today: string) {
+  const weeks: { monday: string; days: string[] }[] = []
+  for (const day of stripDays(today)) {
+    const monday = mondayOf(day)
+    const last = weeks.at(-1)
+    if (last?.monday === monday) last.days.push(day)
+    else weeks.push({ monday, days: [day] })
+  }
+  return weeks
+}
+
 export function mondayOf(day: string) {
   const w = at(day).getUTCDay()
   return addDays(day, w === 0 ? -6 : 1 - w)
