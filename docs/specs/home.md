@@ -24,9 +24,8 @@ chiavetta radio sul server), telecamere, serrature e allarmi, comandi
 vocali, Nabu Casa (a pagamento, non serve: l'accesso da fuori passa da
 Cloudflare Access).
 
-**Stato del documento: proposto il 2026-10-28.** Le scelte del thread sono
-in "Decisioni"; manca solo la risposta sull'interfaccia di Home Assistant
-(decisione 3), per ora con l'opzione consigliata.
+**Stato del documento: proposto il 2026-10-28**, con le scelte del thread
+in "Decisioni".
 
 ## Requisiti
 
@@ -334,9 +333,7 @@ Prese nel thread il 2026-10-28:
 2. **Dispositivi.** Li aggiunge il proprietario in Home Assistant; il
    modulo non dipende dalle marche.
 
-3. **Interfaccia di Home Assistant.** Pubblica su `ha.DOMINIO` dietro
-   Access (consigliata, in attesa di risposta; in alternativa solo in LAN
-   su `http://IP-del-server:8123`).
+3. **Interfaccia di Home Assistant.** Su `ha.DOMINIO` dietro Access.
 4. **Widget.** Preferiti scelti a mano.
 5. **Consumi e storico.** Watt, kWh di oggi e grafico da Home Assistant.
 6. **Conferme.** Nessuna: ogni interruttore agisce subito, senza prese
