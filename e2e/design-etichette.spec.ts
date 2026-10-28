@@ -14,3 +14,14 @@ test('i pulsanti più e meno di Acqua e Caffeina hanno nome e tooltip', async ({
   await expect(caffeine.getByRole('button', { name: /^Aggiungi un espresso/ })).toBeVisible()
   await expect(caffeine.getByRole('button', { name: 'Annulla l’ultima caffeina' })).toBeVisible()
 })
+
+// DES-006: la striscia dei Pasti è raggruppata per settimana.
+test('i giorni dei Pasti sono per settimana e quella di oggi si riconosce', async ({ page }) => {
+  await page.goto('/pasti')
+  const strip = page.getByRole('navigation', { name: 'Giorni' })
+  // 24 giorni coprono 4 o 5 settimane, secondo il giorno della settimana di oggi.
+  await expect(strip.getByRole('group').first()).toBeVisible()
+  expect(await strip.getByRole('group').count()).toBeGreaterThanOrEqual(4)
+  const current = strip.getByRole('group', { name: 'Questa settimana' })
+  await expect(current.getByRole('link', { name: 'Oggi' })).toBeVisible()
+})

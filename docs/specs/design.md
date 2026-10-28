@@ -112,14 +112,14 @@ Accettazione:
 
 #### DES-006 · Settimane nel calendario dei Pasti
 
-Stato: proposto
+Stato: fatto (#238)
 
 Accettazione:
 
-- [ ] I 21 giorni della striscia sono raggruppati per settimana, con uno
+- [x] I 24 giorni della striscia sono raggruppati per settimana, con uno
       spazio sottile tra una settimana e l'altra.
-- [ ] La settimana di oggi si riconosce, oltre al giorno evidenziato.
-- [ ] La selezione da tastiera e il giorno attivo non cambiano.
+- [x] La settimana di oggi si riconosce, oltre al giorno evidenziato.
+- [x] La selezione da tastiera e il giorno attivo non cambiano.
 
 ## Decisioni
 
