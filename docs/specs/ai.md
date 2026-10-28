@@ -33,7 +33,8 @@ locale con Ollama sul mini PC. I dati sensibili vanno solo al modello
 locale.
 
 Non fa, per ora: voce, ricerca sul web, lettura degli allegati (immagini e
-PDF, serve l'OCR, rimandato anche in Documenti), webhook da servizi esterni, parità iOS
+PDF, serve l'OCR, rimandato anche in Documenti), webhook da servizi
+esterni, parità iOS
 (seconda fase, requisiti `IOS-1xx` in ron1nos-ios).
 
 **Stato del documento: in revisione dal 2026-10-28 (zero trust), mockup da
