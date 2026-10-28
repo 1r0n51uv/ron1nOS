@@ -20,6 +20,7 @@ https://github.com/1r0n51uv/ron1n/blob/main/docs/flusso-sviluppo.md.
 | Allenamento  | [workout.md](workout.md)     | `GYM`       | `mod:workout`   |
 | Dashboard    | [dashboard.md](dashboard.md) | `DASH`      | `mod:dashboard` |
 | Impostazioni | [settings.md](settings.md)   | `SET`       | `mod:settings`  |
+| Design       | [design.md](design.md)       | `DES`       | `mod:design`    |
 
 Gli altri moduli (`src/modules/*`) hanno per ora solo il mock dell'MVP; la
 loro specifica arriva quando si collegano a una sorgente vera.
