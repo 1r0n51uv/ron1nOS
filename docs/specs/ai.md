@@ -471,6 +471,49 @@ Accettazione:
       anche un service token di Access, come per l'app iOS.
 - [ ] Ogni chiamata nel registro per agente (AI-024).
 
+## Esempi di utilizzo
+
+Casi pensati per i moduli che esistono oggi. Tra parentesi i permessi che
+servono; dove non è detto, basta la lettura.
+
+### Assistente
+
+- **"Cosa mangio stasera per chiudere le proteine?"** Legge totali del
+  giorno e obiettivi, propone due o tre pasti con alimenti già usati e, se
+  ne scegli uno, lo aggiunge al pasto (scrittura con conferma, Nutrizione).
+  La sincronizzazione con YAZIO fa il resto.
+- **"Ho mangiato 150 g di pollo e 80 g di riso a pranzo."** Cerca gli
+  alimenti e prepara le voci; tu confermi (scrittura con conferma).
+- **"Come va la panca rispetto a un mese fa?"** 1RM stimato, volume e
+  sedute a confronto, in due righe.
+- **"Il peso scende come dovrebbe?"** Tendenza del peso confrontata con la
+  media delle calorie delle ultime settimane.
+- **"Quando scade la patente? Dammi il numero della carta d'identità."**
+  Legge i documenti, campi decifrati compresi (solo modello locale).
+- **"Perché il server è lento?"** CPU, RAM, temperatura, container e
+  download attivi; propone di mettere in pausa i download (scrittura con
+  conferma, Download).
+- **"Scarica questo magnet."** Lo aggiunge a qBittorrent dopo la conferma.
+- **Dal terminale, con Claude Code e il server MCP:** "com'è il disco del
+  server?" oppure "segna la colazione", con i permessi dati a quel client.
+
+### Agenti
+
+| Agente                | Quando                                     | Cosa fa                                                                          | Permessi                                               |
+| --------------------- | ------------------------------------------ | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Briefing del mattino  | ogni giorno alle 7:30                      | obiettivi del giorno, allenamento della settimana, scadenze vicine, stato server | lettura su più moduli, solo locale                     |
+| Coach serale          | ogni giorno alle 21                        | riepilogo di calorie e macro, un consiglio per domani                            | lettura Nutrizione                                     |
+| Guardiano del server  | eventi disco oltre soglia, container fermo | diagnosi in una riga e azione proposta                                           | lettura Server e Download, pausa download con conferma |
+| Download finito       | evento download finito                     | nome, dimensione, spazio rimasto; se il disco è stretto propone cosa togliere    | lettura Download e Server                              |
+| Scadenze documenti    | evento documento in preavviso              | cosa scade, quando, cosa serve per rinnovare                                     | lettura Documenti, solo locale                         |
+| Settimana in palestra | domenica alle 20                           | sedute, volume per gruppo muscolare, gruppi trascurati                           | lettura Allenamento                                    |
+| Controllo YAZIO       | evento sincronizzazione fallita            | legge l'errore e dice cosa fare (per esempio versione dell'API bloccata)         | lettura Nutrizione e stato integrazioni                |
+| Spesa della settimana | a mano                                     | dalla settimana tipo prepara la lista della spesa                                | lettura Nutrizione, scrittura lista con conferma       |
+
+Ogni agente vede solo i suoi strumenti: il Coach serale, per esempio, non
+può leggere i documenti né toccare i download, anche se il modello ci
+provasse.
+
 ## Note
 
 ### Architettura
