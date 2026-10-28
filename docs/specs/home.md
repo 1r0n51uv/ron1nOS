@@ -202,8 +202,8 @@ Accettazione:
       visibile, come i download; la risposta esce dalla copia in memoria,
       senza chiamate a Home Assistant.
 - [ ] Se il WebSocket cade, il backend riprova con attesa crescente fino a
-      un minuto e intanto risponde con l'ultimo stato e `aggiornato alle
-    HH:MM`.
+      un minuto e intanto risponde con l'ultimo stato e l'ora
+      dell'ultimo aggiornamento (`aggiornato alle HH:MM`).
 - [ ] Un dispositivo cambiato dall'app della marca o da Home Assistant si
       aggiorna in ron1nOS entro 5 secondi.
 
