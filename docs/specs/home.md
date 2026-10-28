@@ -24,11 +24,9 @@ chiavetta radio sul server), telecamere, serrature e allarmi, comandi
 vocali, Nabu Casa (a pagamento, non serve: l'accesso da fuori passa da
 Cloudflare Access).
 
-**Stato del documento: proposto il 2026-10-28.** Già deciso nel thread:
-Home Assistant in Docker come ponte, dispositivi aggiunti dal proprietario
-in Home Assistant. Le scelte ancora aperte sono nelle schede del thread; il
-testo segue le opzioni consigliate, in "Decisioni", e si aggiorna con le
-risposte.
+**Stato del documento: proposto il 2026-10-28.** Le scelte del thread sono
+in "Decisioni"; manca solo la risposta sull'interfaccia di Home Assistant
+(decisione 3), per ora con l'opzione consigliata.
 
 ## Requisiti
 
@@ -92,8 +90,8 @@ Accettazione:
 - [ ] Se la presa misura i consumi (un sensore di potenza dello stesso
       dispositivo), la card mostra i watt attuali e i kWh di oggi in
       `font-mono`.
-- [ ] Una presa marcata come `protetta` (CASA-008), per esempio quella del
-      server o del router, chiede conferma prima di spegnersi.
+- [ ] Nessuna conferma prima di spegnere, neanche per la presa del
+      server (decisione 6).
 
 #### CASA-004 · Condizionatori e clima
 
@@ -157,15 +155,14 @@ Accettazione:
 - [ ] Il pulsante mostra l'attesa e poi `fatto` o l'errore.
 - [ ] Le scene si creano e si modificano solo in Home Assistant.
 
-#### CASA-008 · Preferiti, nomi e dispositivi nascosti
+#### CASA-008 · Preferiti e dispositivi nascosti
 
 Stato: proposto
 
 Accettazione:
 
 - [ ] Dalla card di un dispositivo: `Preferito` (va nel widget, CASA-001),
-      `Nascondi` (non compare più in ron1nOS) e `Protetto` (chiede
-      conferma prima di spegnersi, CASA-003).
+      e `Nascondi` (non compare più in ron1nOS).
 - [ ] L'ordine dei preferiti si cambia trascinando, nella pagina.
 - [ ] Il nome è quello di Home Assistant; si cambia lì.
 - [ ] Le scelte stanno in Postgres, legate all'id dell'entità, e valgono
@@ -267,7 +264,7 @@ per i preferiti, se xtool li compila.
 ## Note
 
 Mockup: [canvas ron1nOS · Modulo Casa](https://claude.ai/artifact/Y4YRbF1WXw9U4nXX1qhYSD)
-(widget, pagina, dettaglio, conferma).
+(widget, pagina, dettaglio).
 
 ### Architettura
 
@@ -287,8 +284,7 @@ Gli altri domini si ignorano.
 
 Tabella proposta:
 
-- `home_entities`: id dell'entità, preferito, posizione, nascosto,
-  protetto.
+- `home_entities`: id dell'entità, preferito, posizione, nascosto.
 
 ### Endpoint proposti
 
@@ -299,7 +295,7 @@ Sotto `/api/v1/home`, dietro il login:
 | `GET /summary`                     | preferiti, accesi, potenza, temperatura | 001       |
 | `GET /devices`                     | stanze, dispositivi e stato             | 002…006   |
 | `POST /devices/{id}/actions`       | comando validato per tipo               | 003…005   |
-| `PATCH /devices/{id}`              | preferito, nascosto, protetto           | 008       |
+| `PATCH /devices/{id}`              | preferito, nascosto                     | 008       |
 | `PUT /favorites`                   | ordine dei preferiti                    | 008       |
 | `GET /devices/{id}/history?range=` | storico 24 ore o 7 giorni               | 012       |
 | `GET /scenes`                      | scene e script                          | 007       |
@@ -332,20 +328,16 @@ Tapo e Shelly in LAN, Matter via Wi‑Fi).
 
 ### Decisioni
 
-Già prese nel thread il 2026-10-28:
+Prese nel thread il 2026-10-28:
 
 1. **Ponte.** Home Assistant in Docker sul server, controllo locale.
 2. **Dispositivi.** Li aggiunge il proprietario in Home Assistant; il
    modulo non dipende dalle marche.
 
-Proposte il 2026-10-28, in attesa delle risposte nelle schede del thread:
-
 3. **Interfaccia di Home Assistant.** Pubblica su `ha.DOMINIO` dietro
-   Access (consigliata; in alternativa solo in LAN su
-   `http://IP-del-server:8123`).
-4. **Widget.** Preferiti scelti a mano (consigliata; in alternativa tutti
-   i dispositivi accesi, o una stanza).
-5. **Consumi e storico.** Watt, kWh di oggi e grafico da Home Assistant
-   (consigliata; in alternativa solo stato e watt attuali).
-6. **Prese protette.** Conferma prima di spegnere le prese marcate
-   (consigliata; in alternativa nessuna conferma).
+   Access (consigliata, in attesa di risposta; in alternativa solo in LAN
+   su `http://IP-del-server:8123`).
+4. **Widget.** Preferiti scelti a mano.
+5. **Consumi e storico.** Watt, kWh di oggi e grafico da Home Assistant.
+6. **Conferme.** Nessuna: ogni interruttore agisce subito, senza prese
+   protette.
