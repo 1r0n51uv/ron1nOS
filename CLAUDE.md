@@ -27,3 +27,7 @@ italiano.
   warning.
 - Prima di consegnare: `npm run check` pulito (formato, lint, typecheck,
   unit, build, e2e).
+- Per rivedere un'interfaccia, una schermata o una PR con UI usa la skill
+  `apple-design` in `.claude/skills/`. Dove non concorda con il design
+  system (per esempio il tema solo scuro) vince il design system. Non si
+  formatta né si linta; si aggiorna con `npx skills update -p`.

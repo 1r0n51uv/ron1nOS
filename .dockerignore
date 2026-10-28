@@ -6,3 +6,5 @@ docs
 playwright-report
 test-results
 coverage
+.claude
+skills-lock.json
