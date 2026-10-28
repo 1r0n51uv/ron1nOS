@@ -476,7 +476,7 @@ Accettazione:
 
 #### AI-030 · Hermes Agent come AI personale
 
-Stato: proposto, da confermare
+Stato: proposto
 
 [Hermes Agent](https://github.com/NousResearch/hermes-agent) di Nous
 Research è un agente personale open source (MIT, gratuito da ospitare):
@@ -672,3 +672,6 @@ Prese il 2026-10-28.
    a ogni chiamata (richiesto il 2026-10-28). Precisa la decisione 3: la
    scrittura senza conferma esiste solo come concessione per agente e per
    strumento.
+7. **AI personale.** Hermes Agent di Nous Research come client del server
+   MCP, con permessi suoi; Mastra resta il motore degli agenti della
+   dashboard (scelto il 2026-10-28).
