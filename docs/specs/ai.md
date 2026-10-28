@@ -476,7 +476,7 @@ Accettazione:
 
 #### AI-030 · Hermes Agent come AI personale
 
-Stato: proposto
+Stato: proposto · rimandato a quando modulo e server MCP sono in funzione
 
 [Hermes Agent](https://github.com/NousResearch/hermes-agent) di Nous
 Research è un agente personale open source (MIT, gratuito da ospitare):
@@ -647,7 +647,8 @@ Tutte le rotte sono relative a `/api/v1/ai`.
 7. **Server MCP** (AI-029) sugli stessi strumenti e permessi.
 8. **Agenti**: definizioni, permessi, esecuzioni, pianificazione,
    eventi, casella, agenti pronti.
-9. **iOS**: parità nella seconda fase.
+9. **Hermes** (AI-030), se serve ancora.
+10. **iOS**: parità nella seconda fase.
 
 ## Decisioni
 
@@ -674,4 +675,6 @@ Prese il 2026-10-28.
    strumento.
 7. **AI personale.** Hermes Agent di Nous Research come client del server
    MCP, con permessi suoi; Mastra resta il motore degli agenti della
-   dashboard (scelto il 2026-10-28).
+   dashboard (scelto il 2026-10-28). Rimandato: si collega dopo che modulo
+   e server MCP sono in funzione, perché in gran parte doppia l'assistente
+   e senza modello locale non vedrebbe i dati sensibili.
