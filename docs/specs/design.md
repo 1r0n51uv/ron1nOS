@@ -98,14 +98,15 @@ Accettazione:
 
 #### DES-005 · Pulsanti che dicono cosa fanno
 
-Stato: proposto
+Stato: fatto (#237)
 
 Accettazione:
 
-- [ ] I pulsanti `+` e `−` di Acqua e Caffeina hanno un nome accessibile
-      che dice l'effetto, per esempio «Aggiungi 250 ml» e «Togli l'ultima
-      voce», e lo stesso testo come tooltip.
-- [ ] La riga di aiuto sotto i pulsanti resta.
+- [x] I pulsanti `+` e `−` di Acqua e Caffeina hanno già un nome
+      accessibile che dice l'effetto, per esempio «Aggiungi 250 ml» e
+      «Togli l'ultima voce»: ora lo stesso testo compare anche come
+      tooltip.
+- [x] La riga di aiuto sotto i pulsanti resta.
 
 ### Pasti
 
