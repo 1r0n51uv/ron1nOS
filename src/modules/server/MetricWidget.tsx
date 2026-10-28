@@ -52,7 +52,7 @@ export function ServerMetricWidget({ className, variant, options }: WidgetProps)
           value={value}
           aria-label={`${title} ${value}%${alert ? ', sopra soglia' : ''}`}
           // Rosso solo sopra soglia, come gli anelli del summary (SRV-005).
-          className={alert ? undefined : '[&>[data-slot=progress-indicator]]:bg-ink'}
+          tone={alert ? 'alert' : 'ink'}
         />
       )}
     </WidgetCard>

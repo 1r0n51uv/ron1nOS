@@ -23,7 +23,7 @@ revisione). Le scelte sono in fondo, in "Decisioni".
 
 #### DES-001 · Il rosso è solo un segnale
 
-Stato: pianificato
+Stato: fatto (#233)
 
 Oggi il rosso indica sei cose insieme (allarme, stato acceso, progresso,
 andamento, link, azione primaria) e l'allarme vero si perde. Il rosso resta
@@ -32,19 +32,19 @@ per gli allarmi e per l'azione primaria; il resto passa all'inchiostro
 
 Accettazione:
 
-- [ ] `Progress` e gli anelli e le barre dei widget sono `ink`; diventano
+- [x] `Progress` e gli anelli e le barre dei widget sono `ink`; diventano
       rossi solo con un tono `alert` esplicito, usato quando il valore
       supera una soglia.
-- [ ] La linea di andamento (`Sparkline`, peso) è `ink`.
-- [ ] Il tassello di Casa (`ToggleTile`) acceso ha fondo e bordo chiari e
+- [x] La linea di andamento (`Sparkline`, peso) è `ink`.
+- [x] Il tassello di Casa (`ToggleTile`) acceso ha fondo e bordo chiari e
       un punto pieno `ink`; spento ha il punto vuoto. Lo stato resta
       leggibile senza colore (`aria-pressed`).
-- [ ] I link nelle card e nel testo sono `ink` sottolineati, non rossi;
+- [x] I link nelle card e nel testo sono `ink` sottolineati, non rossi;
       non si riconoscono dal solo colore.
-- [ ] Restano rossi: il pulsante primario, il quadratino di problema
+- [x] Restano rossi: il pulsante primario, il quadratino di problema
       (`StatusDot` alert), la riga di avviso (`AlertRow`), il bordo del
       campo in errore e il segmento in corso dei passi.
-- [ ] Il testo rosso su vetro usa `brand-text`, mai `brand`; un test
+- [x] Il testo rosso su vetro usa `brand-text`, mai `brand`; un test
       controlla che nessun componente usi la classe `text-brand`, salvo il
       logotipo.
 

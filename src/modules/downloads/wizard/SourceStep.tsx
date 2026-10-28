@@ -70,7 +70,7 @@ export function SourceStep({
           )}
           <span className="text-[13px] text-ink-muted">
             {value.file ? null : 'oppure '}
-            <span className="text-brand-text">
+            <span className="text-ink underline decoration-ink/40 underline-offset-4">
               {value.file ? 'scegli un altro file' : 'scegli dal disco'}
             </span>
             {' · un file, fino a 10 MB'}

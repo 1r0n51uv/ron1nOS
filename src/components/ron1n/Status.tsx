@@ -86,14 +86,14 @@ export function ToggleTile({
       onClick={() => onChange(!on)}
       className={cn(
         'flex min-h-24 w-full cursor-pointer flex-col items-start gap-2.5 rounded-tile border p-3.5 text-left font-sans text-ink shadow-[inset_0_1px_0_var(--glass-highlight)] transition-colors',
-        on ? 'border-brand-line bg-brand-tint' : 'border-glass-border bg-glass hover:bg-glass-strong',
+        on ? 'border-ink/35 bg-glass-strong' : 'border-glass-border bg-glass hover:bg-glass-strong',
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
           'size-2.5 rounded-full',
-          on ? 'bg-brand' : 'bg-glass-hover shadow-[inset_0_0_0_1px_var(--ink-muted)]',
+          on ? 'bg-ink' : 'bg-glass-hover shadow-[inset_0_0_0_1px_var(--ink-muted)]',
         )}
       />
       <span className="text-sm leading-[18px] font-semibold">{name}</span>

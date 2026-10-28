@@ -30,7 +30,7 @@ export function AboutSection() {
                 href={`${REPOSITORY_URL}/commit/${commit}`}
                 target="_blank"
                 rel="noreferrer"
-                className="font-mono text-brand-text no-underline hover:underline"
+                className="font-mono text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
               >
                 {commit.slice(0, 7)}
               </a>
@@ -79,12 +79,22 @@ export function AboutSection() {
       <WidgetCard title="Link">
         <ul className="m-0 flex list-none flex-col gap-2 p-0 text-sm">
           <li>
-            <a href={REPOSITORY_URL} target="_blank" rel="noreferrer" className="text-brand-text">
+            <a
+              href={REPOSITORY_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
+            >
               Repository di ron1nOS
             </a>
           </li>
           <li>
-            <a href={SPEC_URL} target="_blank" rel="noreferrer" className="text-brand-text">
+            <a
+              href={SPEC_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-ink underline decoration-ink/40 underline-offset-4 hover:decoration-ink"
+            >
               Specifica delle impostazioni
             </a>
           </li>

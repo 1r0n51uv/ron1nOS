@@ -7,8 +7,9 @@ function Progress({
   className,
   value,
   glow,
+  tone = 'ink',
   ...props
-}: React.ComponentProps<typeof ProgressPrimitive.Root> & { glow?: boolean }) {
+}: React.ComponentProps<typeof ProgressPrimitive.Root> & { glow?: boolean; tone?: 'ink' | 'alert' }) {
   return (
     <ProgressPrimitive.Root
       data-slot="progress"
@@ -23,7 +24,8 @@ function Progress({
       <ProgressPrimitive.Indicator
         data-slot="progress-indicator"
         className={cn(
-          'h-full rounded-bar bg-brand transition-[width]',
+          'h-full rounded-bar transition-[width]',
+          tone === 'alert' ? 'bg-brand' : 'bg-ink',
           glow && 'shadow-[0_0_12px_var(--brand-glow-soft)]',
         )}
         style={{ width: `${value ?? 0}%` }}

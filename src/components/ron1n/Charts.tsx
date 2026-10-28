@@ -81,7 +81,7 @@ export function Sparkline({
         strokeLinecap="round"
         strokeLinejoin="round"
         vectorEffect="non-scaling-stroke"
-        className="stroke-brand"
+        className="stroke-ink"
       />
     </svg>
   )
