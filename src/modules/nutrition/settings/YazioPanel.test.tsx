@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderWithProviders } from '@/test/render'
 import type * as data from '../data'
 import type { YazioLink } from '../data'
-import { useSetYazioSync, useSyncYazio, useYazio } from '../data'
+import { useImportYazioRecipes, useSetYazioSync, useSyncYazio, useYazio } from '../data'
 import { YazioPanel } from './YazioPanel'
 
 vi.mock('../data', async (importOriginal) => ({
@@ -12,10 +12,12 @@ vi.mock('../data', async (importOriginal) => ({
   useYazio: vi.fn(),
   useSetYazioSync: vi.fn(),
   useSyncYazio: vi.fn(),
+  useImportYazioRecipes: vi.fn(),
 }))
 
 const toggle = vi.fn()
 const sync = vi.fn()
+const importRecipes = vi.fn()
 const mutation = (mutate: unknown, extra = {}) =>
   ({ mutate, isPending: false, error: null, ...extra }) as never
 
@@ -39,8 +41,10 @@ function show(value: YazioLink) {
 beforeEach(() => {
   toggle.mockReset()
   sync.mockReset()
+  importRecipes.mockReset()
   vi.mocked(useSetYazioSync).mockReturnValue(mutation(toggle))
   vi.mocked(useSyncYazio).mockReturnValue(mutation(sync))
+  vi.mocked(useImportYazioRecipes).mockReturnValue(mutation(importRecipes))
 })
 
 describe('YazioPanel (NUT-020)', () => {
@@ -52,6 +56,30 @@ describe('YazioPanel (NUT-020)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sincronizza ora' }))
     expect(sync).toHaveBeenCalled()
     expect(screen.getByText('Credenziali nel file .env del server.')).toBeInTheDocument()
+  })
+
+  it('Importa ricette preferite parte al clic e mostra l’esito', () => {
+    show(link())
+    fireEvent.click(screen.getByRole('button', { name: 'Importa ricette preferite' }))
+    expect(importRecipes).toHaveBeenCalled()
+  })
+
+  it('l’esito dell’import dice nuove, aggiornate, saltate e tolte dai preferiti', () => {
+    vi.mocked(useImportYazioRecipes).mockReturnValue(
+      mutation(importRecipes, {
+        data: {
+          created: 2,
+          updated: 1,
+          skipped: [{ yazioId: 'x', reason: 'no_items' }],
+          skippedItems: 0,
+          removedUpstream: 3,
+        },
+      }),
+    )
+    show(link())
+    expect(
+      screen.getByText('Ricette · 2 nuove · 1 aggiornata · 1 saltata · 3 non più nei preferiti'),
+    ).toBeInTheDocument()
   })
 
   it('dice quante righe sono in coda e quanti alimenti senza equivalente', () => {

@@ -121,3 +121,25 @@ export const ProductSchema = z.object({
   language: z.string().nullish(),
 })
 export type Product = z.infer<typeof ProductSchema> & { id: string }
+
+// Ricetta dei preferiti (prova del 2026-11-09): gli ingredienti stanno in
+// `servings`, sempre in grammi; `nutrients` è per l'intera ricetta e si
+// ricalcola dagli ingredienti, quindi qui non serve.
+export const RecipeSchema = z.object({
+  id: z.string().min(1),
+  name: z.string(),
+  portion_count: z.number().default(1),
+  servings: z
+    .array(
+      z.object({
+        product_id: uuid,
+        name: z.string(),
+        amount: z.number(),
+        base_unit: z.string().default('g'),
+      }),
+    )
+    .default([]),
+})
+export type Recipe = z.infer<typeof RecipeSchema>
+
+export const RecipeIdsSchema = z.array(z.string().min(1))

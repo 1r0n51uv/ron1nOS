@@ -5,8 +5,8 @@ import { ApiError } from '@/lib/api'
 import { num, shortDay } from '@/lib/format'
 import { useFormats } from '@/preferences/data'
 import type { YazioLink } from '../data'
-import { useSetYazioSync, useSyncYazio, useYazio } from '../data'
-import { goalLine, whenLine } from '../format'
+import { useImportYazioRecipes, useSetYazioSync, useSyncYazio, useYazio } from '../data'
+import { goalLine, importLine, whenLine } from '../format'
 
 const errorText = (error: unknown) =>
   error instanceof ApiError ? error.message : error ? 'Backend non raggiungibile' : null
@@ -24,6 +24,7 @@ export function YazioPanel() {
   const { data, error } = useYazio()
   const toggle = useSetYazioSync()
   const sync = useSyncYazio()
+  const importRecipes = useImportYazioRecipes()
   const { timeZone } = useFormats()
 
   if (!data && error) {
@@ -35,7 +36,7 @@ export function YazioPanel() {
   }
   if (!data) return <WidgetSkeleton title="YAZIO" />
 
-  const message = errorText(toggle.error ?? sync.error)
+  const message = errorText(toggle.error ?? sync.error ?? importRecipes.error)
   return (
     <section aria-label="YAZIO">
       <WidgetCard title="YAZIO">
@@ -86,6 +87,19 @@ export function YazioPanel() {
                   {sync.isPending ? 'Sincronizzo…' : 'Sincronizza ora'}
                 </Button>
                 <span className="text-xs text-ink-muted">Credenziali nel file .env del server.</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="glass"
+                  size="sm"
+                  disabled={importRecipes.isPending}
+                  onClick={() => importRecipes.mutate()}
+                >
+                  {importRecipes.isPending ? 'Importo…' : 'Importa ricette preferite'}
+                </Button>
+                <span aria-live="polite" className="font-mono text-xs text-ink-muted">
+                  {importRecipes.data ? `Ricette · ${importLine(importRecipes.data)}` : null}
+                </span>
               </div>
             </>
           ) : (

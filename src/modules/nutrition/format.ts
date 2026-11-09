@@ -49,3 +49,20 @@ export function plannedLine(day: Day, fmt: FormatTools = KCAL) {
   const what = planned.recipeName ?? planned.items.map((i) => i.name).join(', ')
   return `${what} · ${energyText(planned.kcal, fmt)}`
 }
+
+// Esito dell'import dei preferiti YAZIO, in una riga.
+export function importLine(r: {
+  created: number
+  updated: number
+  skipped: unknown[]
+  removedUpstream: number
+}) {
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+  const parts = [
+    plural(r.created, 'nuova', 'nuove'),
+    plural(r.updated, 'aggiornata', 'aggiornate'),
+    r.skipped.length ? plural(r.skipped.length, 'saltata', 'saltate') : null,
+    r.removedUpstream ? `${r.removedUpstream} non più nei preferiti` : null,
+  ]
+  return parts.filter((x) => x !== null).join(' · ')
+}

@@ -13,6 +13,7 @@ import type {
   Goals,
   Product,
   ProductSearchResult,
+  Recipe,
   Weight,
 } from './schemas.ts'
 import {
@@ -22,6 +23,8 @@ import {
   GoalsSchema,
   ProductSchema,
   ProductSearchResultSchema,
+  RecipeIdsSchema,
+  RecipeSchema,
   TokenSchema,
   WaterSchema,
   WeightSchema,
@@ -270,6 +273,18 @@ export function createYazioClient(opts: Options) {
         ProductSearchResultSchema.array(),
         `/products/search?${q({ query, sex: 'male', countries: countries.join(','), locales: locales.join(',') })}`,
       ),
+
+    // Gli id delle ricette preferite (prova del 2026-11-09: /user/recipes).
+    recipeIds: (): Promise<string[]> => get(RecipeIdsSchema, '/user/recipes'),
+
+    async recipe(id: string): Promise<Recipe | null> {
+      try {
+        return await get(RecipeSchema, `/recipes/${encodeURIComponent(id)}`)
+      } catch (err) {
+        if (err instanceof YazioRequestError && err.status === 404) return null
+        throw err
+      }
+    },
 
     async product(id: string): Promise<Product | null> {
       try {
