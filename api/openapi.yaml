@@ -1825,6 +1825,46 @@ paths:
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/recipes/yazio/import:
+    post:
+      summary: Importa i preferiti YAZIO tra le ricette (NUT-008)
+      description: >
+        Legge le ricette preferite dell'account YAZIO e le salva come ricette,
+        con gli alimenti in grammi (il prodotto YAZIO già nel catalogo si
+        riusa, gli altri entrano con fonte `yazio`). Ripetibile: la ricetta si
+        riconosce dall'id YAZIO, quindi un nuovo giro aggiorna nome e alimenti
+        senza duplicare e senza toccare le note. Una ricetta tolta dai
+        preferiti resta qui e viene solo contata in `removedUpstream`. Gli
+        ingredienti non in grammi o con prodotto sparito si lasciano fuori
+        (`skippedItems`); una ricetta rimasta senza alimenti non si importa.
+      operationId: importYazioRecipes
+      responses:
+        "200":
+          description: Esito dell'import.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [created, updated, skipped, skippedItems, removedUpstream]
+                properties:
+                  created: { type: integer }
+                  updated: { type: integer }
+                  skipped:
+                    type: array
+                    items:
+                      type: object
+                      required: [yazioId, reason]
+                      properties:
+                        yazioId: { type: string }
+                        reason: { type: string, enum: [not_found, no_items] }
+                  skippedItems: { type: integer }
+                  removedUpstream: { type: integer }
+        "409":
+          description: "`yazio_not_configured`: mancano le variabili YAZIO_*."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/recipes/{id}:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }

@@ -33,6 +33,7 @@ riga `ok` / `NO` per ogni prova.
 | ricerca per nome nel catalogo IT    | qualità dei risultati italiani (NUT-021)                       |
 | codice a barre                      | se esiste un modo di cercare per EAN (NUT-023)                 |
 | acqua, ultimo peso, storico peso    | NUT-012, NUT-017, NUT-024                                      |
+| elenchi ricette e dettaglio         | quale elenco sono i preferiti, forma di ingredienti e porzioni |
 | con `--write`: voce da 1 g          | scrittura con id nostro, rilettura e cancellazione (NUT-023)   |
 | con `--write`: acqua                | scrittura dello stesso totale di oggi, quindi nessuna modifica |
 

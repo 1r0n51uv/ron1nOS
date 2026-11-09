@@ -30,6 +30,13 @@ export type FakeProduct = {
   countries?: string[]
 }
 
+export type FakeRecipe = {
+  id: string
+  name: string
+  // Ingredienti in grammi (`servings` nell'API vera).
+  items: { productId: string; grams: number; unit?: string }[]
+}
+
 export type FakeYazioState = {
   online: boolean
   password: string
@@ -46,6 +53,8 @@ export type FakeYazioState = {
   consumeActivity: boolean
   weights: { date: string; value: number }[]
   products: FakeProduct[]
+  // Le ricette preferite, nell'ordine in cui le dà /user/recipes.
+  recipes: FakeRecipe[]
   tokens: Record<string, { refresh: string; expiresAt: number }>
   calls: { method: string; path: string }[]
 }
@@ -91,6 +100,7 @@ export function initialFakeYazioState(): FakeYazioState {
     consumeActivity: true,
     weights: [],
     products: FAKE_PRODUCTS.map((p) => ({ ...p })),
+    recipes: [],
     tokens: {},
     calls: [],
   }
@@ -236,6 +246,38 @@ export function createFakeYazio(state: FakeYazioState = initialFakeYazioState())
     const start = c.req.query('start') ?? ''
     const end = c.req.query('end') ?? '9999'
     return c.json(state.weights.filter((w) => w.date.slice(0, 10) >= start && w.date.slice(0, 10) <= end))
+  })
+
+  api.use('/recipes/*', async (c, next) => {
+    const auth = c.req.header('authorization')?.replace(/^Bearer /, '') ?? ''
+    if (!state.tokens[auth]) return c.json({ error: 'unauthorized' }, 401)
+    await next()
+  })
+  api.get('/user/recipes', (c) => c.json(state.recipes.map((r) => r.id)))
+  api.get('/recipes/:id', (c) => {
+    const r = state.recipes.find((x) => x.id === c.req.param('id'))
+    if (!r) return c.json({ error: 'not_found' }, 404)
+    return c.json({
+      id: r.id,
+      yazio_id: null,
+      name: r.name,
+      portion_count: 1,
+      servings: r.items.map((i) => {
+        const p = state.products.find((x) => x.id === i.productId)
+        return {
+          producer: p?.producer ?? null,
+          name: p?.name ?? '?',
+          amount: i.grams,
+          serving: null,
+          serving_quantity: null,
+          base_unit: i.unit ?? 'g',
+          note: null,
+          product_id: i.productId,
+        }
+      }),
+      instructions: [],
+      is_yazio_recipe: false,
+    })
   })
 
   api.get('/products/search', (c) => {

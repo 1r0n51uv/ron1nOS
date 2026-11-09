@@ -6,6 +6,7 @@ import { z } from 'zod'
 import type { Database, Db, Queryable } from '../db.ts'
 import { DatabaseUnavailableError } from '../db.ts'
 import type { YazioClient } from '../yazio/client.ts'
+import { YazioError } from '../yazio/client.ts'
 import { createCustom, deleteCustom, listCustom, updateCustom } from './custom.ts'
 import { addDays, localHour, today } from './dates.ts'
 import { getDay } from './day.ts'
@@ -20,6 +21,7 @@ import { countUnmatched, listUnmatched, setEquivalent } from './matching.ts'
 import { getReport } from './report.ts'
 import { recentFoods } from './foods.ts'
 import { findBarcode, searchFoods } from './search.ts'
+import { importYazioRecipes } from './yaziorecipes.ts'
 import { yazioSearch } from './yaziosearch.ts'
 import {
   createSupplement,
@@ -486,6 +488,23 @@ export function nutritionRoutes({
     const db = c.get('db')
     const id = await db.tx((tx) => createRecipe(tx, input))
     return c.json(await getRecipe(db, id), 201)
+  })
+
+  // Preferiti YAZIO tra le ricette: ripetibile, aggiorna senza duplicare.
+  app.post('/recipes/yazio/import', async (c) => {
+    const db = c.get('db')
+    const yc = sync.client(db)
+    if (!yc)
+      throw new ConflictError(
+        'yazio_not_configured',
+        'YAZIO non è configurato: servono le variabili nel .env del server',
+      )
+    try {
+      return c.json(await importYazioRecipes(db, yc))
+    } catch (err) {
+      if (err instanceof YazioError) throw new YazioUnavailableError('YAZIO non risponde')
+      throw err
+    }
   })
 
   app.put('/recipes/:id', async (c) => {

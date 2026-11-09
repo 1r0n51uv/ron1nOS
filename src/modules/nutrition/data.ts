@@ -462,7 +462,17 @@ export type YazioLink = {
   }
 }
 
+// Esito dell'import dei preferiti YAZIO tra le ricette (NUT-008).
+export type RecipeImport = {
+  created: number
+  updated: number
+  skipped: { yazioId: string; reason: 'not_found' | 'no_items' }[]
+  skippedItems: number
+  removedUpstream: number
+}
+
 export const yazioSource = {
+  importRecipes: () => api.post<RecipeImport>('/nutrition/recipes/yazio/import', {}),
   get: () => api.get<YazioLink>('/nutrition/yazio'),
   setSync: (enabled: boolean) => api.put<YazioLink>('/nutrition/yazio/sync', { enabled }),
   syncNow: () => api.post<YazioLink>('/nutrition/yazio/sync', {}),
@@ -485,6 +495,14 @@ function useYazioMutation<A>(fn: (args: A) => Promise<YazioLink>) {
 
 export const useSetYazioSync = () => useYazioMutation((enabled: boolean) => yazioSource.setSync(enabled))
 export const useSyncYazio = () => useYazioMutation(() => yazioSource.syncNow())
+
+export function useImportYazioRecipes() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () => yazioSource.importRecipes(),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['nutrition'] }),
+  })
+}
 
 // Senza equivalente YAZIO (/api/v1/nutrition/yazio/unmatched, NUT-023).
 export type Unmatched = {

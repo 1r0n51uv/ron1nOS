@@ -46,6 +46,13 @@ main()
 
 async function main() {
   // 1. Login: quale versione dell'API accetta le credenziali.
+  step('credenziali lette dal .env', true, {
+    // Solo lunghezze e sospetti, mai i valori.
+    username: inspect(env.YAZIO_USERNAME),
+    password: inspect(env.YAZIO_PASSWORD),
+    clientId: inspect(env.YAZIO_CLIENT_ID),
+    clientSecret: inspect(env.YAZIO_CLIENT_SECRET),
+  })
   for (const v of VERSIONS) {
     const res = await login(`${HOST}/${v}`)
     step(`login ${v}`, res.ok, res.info)
@@ -186,12 +193,103 @@ async function main() {
   const history = await get(`/user/bodyvalues/weight?start=${day(-90)}&end=${today}`)
   step('storico peso (non documentato)', history.ok, { status: history.status, shape: shape(history.json) })
 
+  // 11. Ricette: non si sa quale elenco siano i preferiti, quindi si provano
+  // le varianti note e poi si legge il dettaglio della prima ricetta trovata.
+  let recipeId = null
+  for (const path of [
+    '/user/recipes',
+    '/user/recipes/favorites',
+    '/user/recipe-favorites',
+    '/user/favorites/recipes',
+    '/recipes/favorites',
+    '/user/recipes/favourites',
+  ]) {
+    const l = await get(path)
+    const list = Array.isArray(l.json) ? l.json : []
+    const first = list[0]
+    recipeId ??= typeof first === 'string' ? first : (first?.id ?? first?.recipe_id ?? null)
+    step(`ricette ${path}`, l.ok, {
+      status: l.status,
+      results: Array.isArray(l.json) ? list.length : null,
+      shape: shape(l.json),
+    })
+  }
+  if (recipeId) {
+    const r = await get(`/recipes/${recipeId}`)
+    const j = r.json ?? {}
+    step('dettaglio ricetta', r.ok, {
+      status: r.status,
+      keys: Object.keys(j),
+      ingredients: Array.isArray(j.ingredients) ? j.ingredients.length : null,
+      shape: shape(j),
+    })
+  } else step('dettaglio ricetta', false, { note: 'nessuna ricetta trovata negli elenchi provati' })
+
+  // Tutte le ricette dei preferiti: unità degli ingredienti e kcal dichiarate
+  // contro quelle calcolate dai prodotti, per capire se `nutrients` è per
+  // porzione o per ricetta intera.
+  const favorites = (await get('/user/recipes')).json
+  if (Array.isArray(favorites)) {
+    const products = new Map()
+    const kcalOf = async (id) => {
+      if (!products.has(id)) {
+        const p = await get(`/products/${id}`)
+        products.set(id, p.ok ? p.json?.nutrients?.['energy.energy'] : null)
+      }
+      return products.get(id)
+    }
+    const recipes = []
+    const units = {}
+    const servings = {}
+    for (const id of favorites) {
+      const r = await get(`/recipes/${id}`)
+      if (!r.ok) {
+        recipes.push({ status: r.status })
+        continue
+      }
+      const items = r.json.servings ?? []
+      let computed = 0
+      let missing = 0
+      for (const it of items) {
+        units[it.base_unit] = (units[it.base_unit] ?? 0) + 1
+        const key = `${it.serving ?? 'null'}|${it.serving_quantity == null ? 'null' : 'num'}`
+        servings[key] = (servings[key] ?? 0) + 1
+        const k = await kcalOf(it.product_id)
+        if (typeof k === 'number') computed += k * it.amount
+        else missing++
+      }
+      recipes.push({
+        portions: r.json.portion_count,
+        ingredients: items.length,
+        withNote: items.filter((x) => x.note).length,
+        withServing: items.filter((x) => x.serving).length,
+        amountRange: [Math.min(...items.map((x) => x.amount)), Math.max(...items.map((x) => x.amount))],
+        declaredKcal: r.json.nutrients?.['energy.energy'],
+        computedKcal: Math.round(computed),
+        productsNotFound: missing,
+        instructions: r.json.instructions?.length ?? 0,
+        isYazio: r.json.is_yazio_recipe,
+        hasYazioId: r.json.yazio_id != null,
+      })
+    }
+    step(
+      'ricette preferite (riepilogo)',
+      recipes.every((x) => !x.status),
+      {
+        count: recipes.length,
+        baseUnits: units,
+        servingKinds: servings,
+        recipes,
+      },
+    )
+  }
+
   if (!WRITE) {
     step('scrittura', true, { note: 'saltata: rilancia con --write per provarla' })
     return
   }
 
-  // 11. Scrittura: 1 g di un prodotto con id scelto da noi, poi cancellazione.
+  // 12. Scrittura: 1 g di un prodotto con id scelto da noi, poi cancellazione.
   if (!writable) return step('scrittura', false, { note: 'nessun prodotto da usare' })
   const id = randomUUID()
   const add = await post(
@@ -221,7 +319,7 @@ async function main() {
   const gone = !(after.json?.products ?? []).some((x) => x.id === id)
   step('cancellazione', del.ok && gone, { status: del.status, gone })
 
-  // 12. Acqua: si riscrive lo stesso totale, quindi il diario non cambia.
+  // 13. Acqua: si riscrive lo stesso totale, quindi il diario non cambia.
   const ml = water.json?.water_intake
   if (typeof ml === 'number') {
     const w = await post(
@@ -301,6 +399,10 @@ function shape(v, depth = 0) {
   return Object.fromEntries(
     Object.entries(v).map(([k, x]) => [k, PRIVATE_KEYS.test(k) ? typeof x : shape(x, depth + 1)]),
   )
+}
+
+function inspect(v) {
+  return { length: v.length, edgeSpaces: v !== v.trim(), hasQuotes: /['"]/.test(v) }
 }
 
 function hasKey(v, re) {

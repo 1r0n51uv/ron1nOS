@@ -5,6 +5,10 @@ in alto. Ogni PR aggiunge la sua riga in cima, sotto il giorno del merge.
 Il server segue il tag `main` dell'immagine; per tornare indietro c'è
 `sha-<commit>`.
 
+## 2026-11-09
+
+- Import ripetibile dei preferiti YAZIO tra le ricette, da Impostazioni › Nutrizione (NUT-008) ([#239](https://github.com/1r0n51uv/ron1nOS/pull/239))
+
 ## 2026-10-28
 
 - Settimane distinte nella striscia dei giorni dei Pasti (DES-006) ([#238](https://github.com/1r0n51uv/ron1nOS/pull/238))

@@ -142,6 +142,12 @@ Accettazione:
 - [ ] Mostra kcal e macro totali.
 - [ ] Si usa per registrare (NUT-003) o pianificare (NUT-009) un pasto in
       un colpo.
+- [ ] I preferiti YAZIO si importano da Impostazioni › Nutrizione ›
+      YAZIO. L'import è ripetibile: la ricetta si riconosce dall'id YAZIO,
+      un nuovo giro aggiorna nome e alimenti senza duplicare né toccare le
+      note. Gli ingredienti sono in grammi e si legano al prodotto YAZIO
+      già nel catalogo; quelli in altre unità si lasciano fuori. Una
+      ricetta tolta dai preferiti resta qui.
 
 #### NUT-009 · Pianificare un pasto
 
@@ -524,7 +530,7 @@ sincronizzazione di ron1nOS parla direttamente con l'API.
 | Riepilogo    | `GET /user/widgets/daily-summary?date=`                                        | no                                           |
 | Acqua        | `GET /user/water-intake?date=`                                                 | `POST`, valore **cumulativo** del giorno     |
 | Prodotti     | `GET /products/search` (anche per EAN), `GET /products/{id}`                   | no (creare prodotti non è documentato)       |
-| Ricette      | `GET /user/recipes`, `GET /recipes/{id}`                                       | solo `DELETE`                                |
+| Ricette      | `GET /user/recipes` (id dei preferiti), `GET /recipes/{id}`                    | solo `DELETE`                                |
 | Obiettivi    | `GET /user/goals`                                                              | no                                           |
 | Peso         | `GET /user/bodyvalues/weight/last?date=`, storico `?start=&end=`               | no                                           |
 | Esercizi     | `GET /user/exercises?date=`                                                    | no                                           |
