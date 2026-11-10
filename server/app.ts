@@ -30,7 +30,15 @@ import {
   InvalidSelectionError,
   StartFailedError,
 } from './drafts.ts'
-import { toDownloads } from './downloads.ts'
+import {
+  InvalidActionError,
+  TorrentNotFoundError,
+  isDraft,
+  isInfohash,
+  parseAction,
+  toDetail,
+  toDownloads,
+} from './downloads.ts'
 import { fetchTorrent as defaultFetchTorrent, TorrentFetchError } from './fetch-torrent.ts'
 import type { GlancesClient } from './glances.ts'
 import { GlancesUnreachableError } from './glances.ts'
@@ -169,6 +177,28 @@ export function createApp({
 
   app.post('/api/v1/downloads/drafts/:id/retry', async (c) => c.json(await drafts.retry(c.req.param('id'))))
 
+  // Pausa, ripresa o eliminazione di uno o più torrent (DL-010). Le bozze del
+  // wizard non si toccano da qui.
+  app.post('/api/v1/downloads/actions', async (c) => {
+    const { action, hashes, deleteFiles } = parseAction(await c.req.json().catch(() => null))
+    const found = (await qbt.torrents({ hashes })).filter((t) => !isDraft(t)).map((t) => t.hash)
+    if (found.length === 0) throw new TorrentNotFoundError()
+    const joined = found.join('|')
+    if (action === 'pause') await qbt.stop(joined)
+    else if (action === 'resume') await qbt.start(joined)
+    else await qbt.delete(joined, deleteFiles)
+    return c.body(null, 204)
+  })
+
+  // Dettaglio di un torrent con i suoi file (DL-011).
+  app.get('/api/v1/downloads/:hash', async (c) => {
+    const hash = c.req.param('hash')
+    if (!isInfohash(hash)) throw new TorrentNotFoundError()
+    const [torrent] = (await qbt.torrents({ hashes: [hash] })).filter((t) => !isDraft(t))
+    if (!torrent) throw new TorrentNotFoundError()
+    return c.json(toDetail(torrent, (await qbt.files(torrent.hash)) ?? []))
+  })
+
   // Modulo Server (docs/specs/server.md): sola lettura da Glances.
   app.get('/api/v1/server/stats', async (c) => {
     if (!glances) throw new GlancesUnreachableError('Glances non configurato')
@@ -271,6 +301,12 @@ export function createApp({
         { error: 'torrent_fetch_failed', message: 'Impossibile scaricare il file torrent' },
         422,
       )
+    }
+    if (err instanceof TorrentNotFoundError) {
+      return c.json<ApiError>({ error: 'torrent_not_found', message: 'Torrent non trovato' }, 404)
+    }
+    if (err instanceof InvalidActionError) {
+      return c.json<ApiError>({ error: 'invalid_action', message: 'Azione o torrent non validi' }, 400)
     }
     if (err instanceof DraftNotFoundError) {
       return c.json<ApiError>({ error: 'draft_not_found', message: 'Bozza non trovata' }, 404)

@@ -1,6 +1,6 @@
 // Dai dati grezzi di qBittorrent alla risposta di GET /api/v1/downloads.
 // Unità neutre (byte, secondi, frazioni): la formattazione la fa il client.
-import type { QbtTorrent, QbtTransferInfo } from './qbittorrent.ts'
+import type { QbtFile, QbtTorrent, QbtTransferInfo } from './qbittorrent.ts'
 
 export type TorrentState = 'downloading' | 'queued' | 'seeding' | 'stopped' | 'error'
 
@@ -76,4 +76,71 @@ export function toDownloads(transfer: QbtTransferInfo, list: QbtTorrent[]): Down
   // Prima per stato, poi i più vicini alla fine.
   torrents.sort((a, b) => order.indexOf(a.state) - order.indexOf(b.state) || b.progress - a.progress)
   return { downloadSpeed: transfer.dl_info_speed, torrents }
+}
+
+export type TorrentFile = {
+  index: number
+  name: string
+  size: number
+  progress: number // 0..1
+  selected: boolean // false se escluso dal download
+}
+
+export type TorrentDetail = Torrent & {
+  downloaded: number // byte
+  uploadSpeed: number // B/s
+  ratio: number
+  savePath: string
+  addedAt: string // ISO 8601, UTC
+  files: TorrentFile[]
+}
+
+export function toDetail(t: QbtTorrent, files: QbtFile[]): TorrentDetail {
+  const [base] = toDownloads({ dl_info_speed: 0 }, [t]).torrents
+  return {
+    ...base,
+    downloaded: t.downloaded ?? 0,
+    uploadSpeed: t.upspeed ?? 0,
+    ratio: t.ratio ?? 0,
+    savePath: t.save_path ?? '',
+    addedAt: new Date(t.added_on * 1000).toISOString(),
+    files: files.map((f) => ({
+      index: f.index,
+      name: f.name,
+      size: f.size,
+      progress: f.progress ?? 0,
+      selected: (f.priority ?? 1) > 0,
+    })),
+  }
+}
+
+export type TorrentAction = 'pause' | 'resume' | 'delete'
+
+export const MAX_ACTION_HASHES = 100
+
+// Infohash v1 (40 esadecimali) o v2 (64).
+export const isInfohash = (hash: string) => /^([0-9a-f]{40}|[0-9a-f]{64})$/i.test(hash)
+
+export class TorrentNotFoundError extends Error {}
+export class InvalidActionError extends Error {}
+
+// Corpo di POST /downloads/actions: azione, infohash (1..100) e, per
+// `delete`, se togliere anche i file.
+export function parseAction(body: unknown): {
+  action: TorrentAction
+  hashes: string[]
+  deleteFiles: boolean
+} {
+  const b = (body ?? {}) as { action?: unknown; hashes?: unknown; deleteFiles?: unknown }
+  if (b.action !== 'pause' && b.action !== 'resume' && b.action !== 'delete') throw new InvalidActionError()
+  if (
+    !Array.isArray(b.hashes) ||
+    b.hashes.length === 0 ||
+    b.hashes.length > MAX_ACTION_HASHES ||
+    !b.hashes.every((h) => typeof h === 'string' && isInfohash(h))
+  ) {
+    throw new InvalidActionError()
+  }
+  if (b.deleteFiles !== undefined && typeof b.deleteFiles !== 'boolean') throw new InvalidActionError()
+  return { action: b.action, hashes: b.hashes as string[], deleteFiles: b.deleteFiles === true }
 }

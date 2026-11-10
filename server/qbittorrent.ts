@@ -19,11 +19,22 @@ export type QbtTorrent = {
   num_seeds: number
   num_leechs: number
   added_on: number // secondi Unix
+  // Solo nel dettaglio (DL-011); i finti dei test possono ometterli.
+  save_path?: string
+  ratio?: number
+  downloaded?: number // byte
+  upspeed?: number // B/s
 }
 
 export type QbtTransferInfo = { dl_info_speed: number }
 
-export type QbtFile = { index: number; name: string; size: number }
+export type QbtFile = {
+  index: number
+  name: string
+  size: number
+  progress?: number // 0..1
+  priority?: number // 0 = escluso
+}
 
 export type QbtAdd = {
   magnet?: string
@@ -39,9 +50,11 @@ export type QbtClient = {
   // null se qBittorrent non conosce il torrent; [] finché mancano i metadati.
   files(hash: string): Promise<QbtFile[] | null>
   add(opts: QbtAdd): Promise<void>
+  // `hash` è uno o più infohash separati da `|`, come li vuole qBittorrent.
   delete(hash: string, deleteFiles: boolean): Promise<void>
   filePrio(hash: string, indexes: number[], priority: number): Promise<void>
   start(hash: string): Promise<void>
+  stop(hash: string): Promise<void>
   addTags(hash: string, tags: string): Promise<void>
   removeTags(hash: string, tags: string): Promise<void>
   freeSpace(): Promise<number>
@@ -167,6 +180,7 @@ export function createQbtClient({
     filePrio: (hash, indexes, priority) =>
       post('/api/v2/torrents/filePrio', { hash, id: indexes.join('|'), priority: String(priority) }),
     start: (hash) => post('/api/v2/torrents/start', { hashes: hash }),
+    stop: (hash) => post('/api/v2/torrents/stop', { hashes: hash }),
     addTags: (hash, tags) => post('/api/v2/torrents/addTags', { hashes: hash, tags }),
     removeTags: (hash, tags) => post('/api/v2/torrents/removeTags', { hashes: hash, tags }),
     async freeSpace() {

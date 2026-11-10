@@ -187,6 +187,36 @@ Accettazione:
 - [ ] Gli endpoint espongono solo le operazioni di questo modulo
       (elenco, aggiunta, lettura file, scelta file, avvio, annullamento).
 
+### DL-010 · Gestire i torrent (API)
+
+Stato: in corso
+
+Gli endpoint con cui un client mette in pausa, riprende ed elimina i
+torrent. Li usa l'app iOS (IOS-070); la dashboard web non cambia.
+
+Accettazione:
+
+- [ ] `POST /downloads/actions` con `{ action, hashes, deleteFiles? }`:
+      `pause`, `resume` o `delete` su 1…100 infohash. `delete` toglie i
+      file solo con `deleteFiles: true`. Risponde 204.
+- [ ] Gli infohash sconosciuti e le bozze del wizard si ignorano; se non
+      resta nessun torrent risponde 404 `torrent_not_found`. Azione o
+      infohash non validi: 400 `invalid_action`.
+- [ ] La rotta è nel contratto OpenAPI e dietro lo stesso gate del modulo
+      Download.
+
+### DL-011 · Dettaglio di un torrent (API)
+
+Stato: in corso
+
+Accettazione:
+
+- [ ] `GET /downloads/{hash}` restituisce il torrent dell'elenco più byte
+      scaricati, velocità di upload, rapporto di condivisione, cartella,
+      data di aggiunta e i file con avanzamento e se sono selezionati.
+- [ ] Infohash non valido o sconosciuto, e bozze del wizard: 404
+      `torrent_not_found`.
+
 ## Note
 
 ### Architettura dell'integrazione

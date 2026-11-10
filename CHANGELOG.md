@@ -5,6 +5,10 @@ in alto. Ogni PR aggiunge la sua riga in cima, sotto il giorno del merge.
 Il server segue il tag `main` dell'immagine; per tornare indietro c'è
 `sha-<commit>`.
 
+## 2026-11-10
+
+- API dei download: pausa, ripresa ed eliminazione di uno o più torrent e dettaglio di un torrent con i file (DL-010, DL-011) ([#240](https://github.com/1r0n51uv/ron1nOS/pull/240))
+
 ## 2026-11-09
 
 - Import ripetibile dei preferiti YAZIO tra le ricette, da Impostazioni › Nutrizione (NUT-008) ([#239](https://github.com/1r0n51uv/ron1nOS/pull/239))
