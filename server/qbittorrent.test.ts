@@ -154,6 +154,13 @@ describe('createQbtClient · scrittura', () => {
     expect(String(fetch.mock.calls[3][1]?.body)).toBe('hashes=h&deleteFiles=true')
   })
 
+  it('stop manda gli infohash a torrents/stop', async () => {
+    const { fetch, qbt } = logged(new Response(''))
+    await qbt.stop('h1|h2')
+    expect(String(fetch.mock.calls[1][0])).toContain('/api/v2/torrents/stop')
+    expect(String(fetch.mock.calls[1][1]?.body)).toBe('hashes=h1%7Ch2')
+  })
+
   it('legge lo spazio libero da sync/maindata', async () => {
     const { qbt } = logged(Response.json({ server_state: { free_space_on_disk: 123 } }))
     await expect(qbt.freeSpace()).resolves.toBe(123)

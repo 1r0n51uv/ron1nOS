@@ -457,6 +457,71 @@ paths:
       responses:
         "204":
           description: Bozza tolta, o già assente.
+  /downloads/actions:
+    post:
+      summary: Pausa, riprende o elimina uno o più torrent (DL-010)
+      description: >
+        Agisce sui torrent conosciuti da qBittorrent; gli infohash sconosciuti e
+        le bozze del wizard si ignorano. Se nessuno è valido risponde 404.
+      operationId: actOnDownloads
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action, hashes]
+              properties:
+                action: { type: string, enum: [pause, resume, delete] }
+                hashes:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items: { type: string, description: Infohash, 40 o 64 esadecimali. }
+                deleteFiles:
+                  type: boolean
+                  default: false
+                  description: Solo per `delete`. Toglie anche i file scaricati.
+      responses:
+        "204":
+          description: Azione eseguita.
+        "400":
+          description: Azione o infohash non validi (`invalid_action`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Nessun torrent trovato (`torrent_not_found`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503":
+          description: qBittorrent non raggiungibile.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /downloads/{hash}:
+    get:
+      summary: Dettaglio di un torrent con i suoi file (DL-011)
+      operationId: getDownload
+      parameters:
+        - { name: hash, in: path, required: true, schema: { type: string }, description: Infohash. }
+      responses:
+        "200":
+          description: Il torrent.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TorrentDetail" }
+        "404":
+          description: Infohash non valido o torrent sconosciuto (`torrent_not_found`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503":
+          description: qBittorrent non raggiungibile.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
   /documents/types:
     get:
       summary: Tipi di documento con i loro campi (DOC-003)
@@ -3590,6 +3655,29 @@ components:
           description: Secondi alla fine; null se non stimabile.
         downloadSpeed: { type: number, description: byte/s }
         size: { type: number, description: Byte selezionati per il download. }
+    TorrentDetail:
+      description: Un torrent con i dati in più e i suoi file.
+      allOf:
+        - $ref: "#/components/schemas/Torrent"
+        - type: object
+          required: [downloaded, uploadSpeed, ratio, savePath, addedAt, files]
+          properties:
+            downloaded: { type: number, description: Byte scaricati. }
+            uploadSpeed: { type: number, description: byte/s }
+            ratio: { type: number, description: Rapporto di condivisione. }
+            savePath: { type: string }
+            addedAt: { type: string, format: date-time }
+            files:
+              type: array
+              items:
+                type: object
+                required: [index, name, size, progress, selected]
+                properties:
+                  index: { type: integer }
+                  name: { type: string }
+                  size: { type: number, description: byte }
+                  progress: { type: number, minimum: 0, maximum: 1 }
+                  selected: { type: boolean, description: false se escluso dal download. }
     DashboardLayoutItem:
       type: object
       description: >-

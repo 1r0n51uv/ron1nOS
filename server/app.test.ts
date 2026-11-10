@@ -75,6 +75,78 @@ describe('API /api/v1', () => {
   })
 })
 
+describe('API /api/v1/downloads: gestione', () => {
+  const hash = 'a'.repeat(40)
+  const other = 'b'.repeat(40)
+  const post = (app: ReturnType<typeof createApp>, body: unknown) =>
+    app.request('/api/v1/downloads/actions', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+
+  it('mette in pausa e riprende più torrent insieme', async () => {
+    const qbt = fakeQbt({}, [qbtTorrent({ hash }), qbtTorrent({ hash: other })])
+    const app = createApp({ qbt })
+    expect((await post(app, { action: 'pause', hashes: [hash, other] })).status).toBe(204)
+    expect(qbt.stop).toHaveBeenCalledWith(`${hash}|${other}`)
+    expect((await post(app, { action: 'resume', hashes: [hash] })).status).toBe(204)
+    expect(qbt.start).toHaveBeenCalledWith(hash)
+  })
+
+  it('elimina con o senza i file', async () => {
+    const qbt = fakeQbt({}, [qbtTorrent({ hash })])
+    const app = createApp({ qbt })
+    await post(app, { action: 'delete', hashes: [hash] })
+    expect(qbt.delete).toHaveBeenLastCalledWith(hash, false)
+    await post(app, { action: 'delete', hashes: [hash], deleteFiles: true })
+    expect(qbt.delete).toHaveBeenLastCalledWith(hash, true)
+  })
+
+  it('ignora i torrent sconosciuti e le bozze del wizard', async () => {
+    const qbt = fakeQbt({}, [qbtTorrent({ hash }), qbtTorrent({ hash: other, tags: 'ron1nos-draft' })])
+    const app = createApp({ qbt })
+    expect((await post(app, { action: 'pause', hashes: [hash, other, 'c'.repeat(40)] })).status).toBe(204)
+    expect(qbt.stop).toHaveBeenCalledWith(hash)
+    const res = await post(app, { action: 'delete', hashes: [other] })
+    expect(res.status).toBe(404)
+    expect(await res.json()).toMatchObject({ error: 'torrent_not_found' })
+    expect(qbt.delete).not.toHaveBeenCalled()
+  })
+
+  it('rifiuta azioni non valide', async () => {
+    const res = await post(createApp({ qbt: fakeQbt() }), { action: 'reboot', hashes: [hash] })
+    expect(res.status).toBe(400)
+    expect(await res.json()).toMatchObject({ error: 'invalid_action' })
+  })
+
+  it('GET /downloads/:hash dà il dettaglio con i file', async () => {
+    const qbt = fakeQbt(
+      {
+        files: vi.fn(async () => [{ index: 0, name: 'debian.iso', size: 10, progress: 0.5, priority: 1 }]),
+      },
+      [qbtTorrent({ hash, save_path: '/downloads', ratio: 0.25 })],
+    )
+    const res = await createApp({ qbt }).request(`/api/v1/downloads/${hash}`)
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({
+      hash,
+      savePath: '/downloads',
+      ratio: 0.25,
+      files: [{ index: 0, name: 'debian.iso', size: 10, progress: 0.5, selected: true }],
+    })
+  })
+
+  it.each([
+    ['non è un infohash', 'space-x'],
+    ['è sconosciuto', 'c'.repeat(40)],
+  ])('GET /downloads/:hash risponde 404 se %s', async (_, value) => {
+    const res = await createApp({ qbt: fakeQbt() }).request(`/api/v1/downloads/${value}`)
+    expect(res.status).toBe(404)
+    expect(await res.json()).toMatchObject({ error: 'torrent_not_found' })
+  })
+})
+
 describe('API /api/v1/downloads/drafts', () => {
   function upload(app: ReturnType<typeof createApp>, bytes: Buffer, name = 'a.torrent') {
     const form = new FormData()
