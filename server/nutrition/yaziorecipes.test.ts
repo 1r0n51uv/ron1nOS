@@ -301,4 +301,34 @@ describe('preferiti YAZIO e procedimento (NUT-033)', () => {
     await api.post('/recipes/yazio/import')
     expect((await api.get(`/recipes/${ricetta.id}`)).body.notes).toBe('Le mie note')
   })
+
+  it("un prodotto senza nutrienti lascia fuori l'ingrediente e non ferma l'import", async () => {
+    const { api, fake } = setup()
+    fake.state.products.push({
+      id: 'p-vuoto',
+      name: 'Prodotto senza dati',
+      kcal: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      noNutrients: true,
+    })
+    fake.state.recipes = [
+      {
+        id: 'r-incompleta',
+        name: 'Con un prodotto rotto',
+        items: [
+          { productId: 'p-mela', grams: 100 },
+          { productId: 'p-vuoto', grams: 50 },
+        ],
+      },
+      { id: 'r-sana', name: 'Sana', items: [{ productId: 'p-mela', grams: 80 }] },
+    ]
+    const res = await api.post('/recipes/yazio/import')
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({ created: 2, skippedItems: 1 })
+    const { recipes } = (await api.get('/recipes')).body
+    const incompleta = recipes.find((r: { name: string }) => r.name === 'Con un prodotto rotto')
+    expect(incompleta.items).toHaveLength(1)
+  })
 })

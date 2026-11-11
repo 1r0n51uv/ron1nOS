@@ -407,6 +407,8 @@ Accettazione:
 - [ ] Le voci libere dei preferiti ("Sale e pepe, a piacere"), senza
       prodotto né quantità, non rompono l'import: entrano nelle note di una
       ricetta nuova (`Anche: …`) e non si contano tra gli esclusi.
+- [ ] Un prodotto la cui scheda non ha i nutrienti lascia fuori il solo
+      ingrediente (si conta tra gli esclusi): il resto dell'import va avanti.
 - [ ] Il procedimento di YAZIO (`instructions`) entra alla prima volta o
       se qui è ancora vuoto; quello già scritto o corretto non si sovrascrive,
       come le note.
