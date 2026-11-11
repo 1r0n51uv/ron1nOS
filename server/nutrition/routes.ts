@@ -8,7 +8,7 @@ import { DatabaseUnavailableError } from '../db.ts'
 import type { YazioClient } from '../yazio/client.ts'
 import { YazioError } from '../yazio/client.ts'
 import { createCustom, deleteCustom, listCustom, updateCustom } from './custom.ts'
-import { addDays, localHour, today } from './dates.ts'
+import { addDays, localHour, mondayOf, today } from './dates.ts'
 import { getDay } from './day.ts'
 import type { ExternalSearch } from './foodsearch.ts'
 import { addGoal, goalFor, goalHistory } from './goals.ts'
@@ -21,6 +21,7 @@ import { countUnmatched, listUnmatched, setEquivalent } from './matching.ts'
 import { getReport } from './report.ts'
 import { recentFoods } from './foods.ts'
 import { findBarcode, searchFoods } from './search.ts'
+import { getWeek } from './week.ts'
 import { importYazioRecipes } from './yaziorecipes.ts'
 import { yazioSearch } from './yaziosearch.ts'
 import {
@@ -41,6 +42,7 @@ import {
 } from './shopping.ts'
 import {
   applyTemplate,
+  scheduleTemplate,
   createTemplate,
   deleteTemplate,
   getTemplate,
@@ -146,6 +148,9 @@ const RecipeInput = z.object({
     (v) => (typeof v === 'string' && v.trim() === '' ? null : v),
     z.string().trim().max(2000).nullable().default(null),
   ),
+  // Il procedimento, un passo per elemento (NUT-030). Omesso in una modifica
+  // resta com'è: la dashboard web non lo conosce.
+  steps: z.array(z.string().trim().min(1).max(1000)).max(50).optional(),
   items: z
     .array(
       z.union([z.object({ foodId: z.uuid(), grams: Grams }), z.object({ food: Candidate, grams: Grams })]),
@@ -153,6 +158,10 @@ const RecipeInput = z.object({
     .min(1)
     .max(50),
 })
+
+// Programmazione di un template (NUT-031): da `from` fino a `until`, o fino
+// alla fine della settimana di `from`.
+const ScheduleInput = z.object({ from: Day, until: Day.nullable().optional() })
 
 // Alimento personale: i campi facoltativi accettano null o stringa vuota.
 const blank = (v: unknown) => (typeof v === 'string' && v.trim() === '' ? null : v)
@@ -275,6 +284,13 @@ export function nutritionRoutes({
     return c.json(await dayView(c.get('db'), day))
   })
 
+  // La settimana che parte da lunedì `from` (predefinita: questa), per la
+  // griglia dei client (NUT-032).
+  app.get('/week', async (c) => {
+    const from = c.req.query('from') ? check(Day, c.req.query('from')) : mondayOf(today(now()))
+    return c.json(await getWeek(c.get('db'), from))
+  })
+
   // Registra uno o più alimenti in uno slot di un giorno qualsiasi (NUT-003):
   // un alimento del catalogo (foodId) o un risultato esterno (food), che
   // entra nel catalogo adesso. Risponde con il giorno aggiornato.
@@ -368,6 +384,15 @@ export function nutritionRoutes({
   app.delete('/templates/:id', async (c) => {
     await deleteTemplate(c.get('db'), check(Id, c.req.param('id')))
     return c.body(null, 204)
+  })
+
+  // Programma il template da un giorno fino a una data, o per la sola
+  // settimana (NUT-031).
+  app.post('/templates/:id/schedule', async (c) => {
+    const id = check(Id, c.req.param('id'))
+    const input = await readJson(c, ScheduleInput)
+    const db = c.get('db')
+    return c.json(await db.tx((tx) => scheduleTemplate(tx, id, input)))
   })
 
   app.post('/templates/:id/apply', async (c) => {

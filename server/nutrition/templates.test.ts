@@ -190,3 +190,159 @@ describe('template con alimenti esterni', () => {
     expect(res.body.cells[0]).toMatchObject({ name: 'Apples, raw', kcal: 104, foodId: expect.any(String) })
   })
 })
+
+describe('programmazione di un template (NUT-031)', () => {
+  // 2026-10-21 è un mercoledì: lunedì 19, domenica 25.
+  const plan = {
+    name: 'Settimana tipo',
+    cells: [] as { weekday: number; slot: string; recipeId: string }[],
+  }
+
+  async function withTemplate() {
+    const { api, recipe } = await setup()
+    const res = await api.post('/templates', {
+      ...plan,
+      cells: [
+        { weekday: 1, slot: 'lunch', recipeId: recipe.id },
+        { weekday: 3, slot: 'dinner', recipeId: recipe.id },
+        { weekday: 5, slot: 'lunch', recipeId: recipe.id },
+      ],
+    })
+    return { api, template: res.body as { id: string } }
+  }
+
+  const planned = async (api: Awaited<ReturnType<typeof setup>>['api'], from: string) =>
+    (await api.get(`/week?from=${from}`)).body.days.map(
+      (d: { date: string; slots: { slot: string; state: string }[] }) => [
+        d.date,
+        d.slots.filter((s) => s.state !== 'empty').map((s) => `${s.slot}:${s.state}`),
+      ],
+    )
+
+  it('senza data vale fino a domenica della settimana di from', async () => {
+    const { api, template } = await withTemplate()
+    const res = await api.post(`/templates/${template.id}/schedule`, { from: '2026-10-21' })
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({
+      created: 2,
+      removed: 0,
+      kept: 0,
+      from: '2026-10-21',
+      until: '2026-10-25',
+    })
+    expect(await planned(api, '2026-10-19')).toEqual([
+      ['2026-10-19', []],
+      ['2026-10-20', []],
+      ['2026-10-21', ['dinner:planned']],
+      ['2026-10-22', []],
+      ['2026-10-23', ['lunch:planned']],
+      ['2026-10-24', []],
+      ['2026-10-25', []],
+    ])
+  })
+
+  it('con una data ripete la settimana fino a quel giorno compreso', async () => {
+    const { api, template } = await withTemplate()
+    const res = await api.post(`/templates/${template.id}/schedule`, {
+      from: '2026-10-19',
+      until: '2026-10-27',
+    })
+    // lun 19, mer 21, ven 23, lun 26 (il 27 è martedì: niente).
+    expect(res.body).toMatchObject({ created: 4, until: '2026-10-27' })
+    const next = await planned(api, '2026-10-26')
+    expect(next[0]).toEqual(['2026-10-26', ['lunch:planned']])
+    expect(next[1]).toEqual(['2026-10-27', []])
+  })
+
+  it('rifà i pianificati e lascia mangiati e saltati', async () => {
+    const { api, template } = await withTemplate()
+    await api.post(`/templates/${template.id}/schedule`, { from: '2026-10-19' })
+    const week = (await api.get('/week?from=2026-10-19')).body
+    const monday = week.days[0].slots.find((s: { slot: string }) => s.slot === 'lunch').plan
+    const friday = week.days[4].slots.find((s: { slot: string }) => s.slot === 'lunch').plan
+    await api.put(`/plans/${monday.id}/status`, { status: 'eaten' })
+    await api.put(`/plans/${friday.id}/status`, { status: 'skipped' })
+
+    const res = await api.post(`/templates/${template.id}/schedule`, { from: '2026-10-19' })
+    expect(res.body).toMatchObject({ removed: 1, created: 1, kept: 2 })
+    expect(await planned(api, '2026-10-19')).toEqual([
+      ['2026-10-19', ['lunch:eaten']],
+      ['2026-10-20', []],
+      ['2026-10-21', ['dinner:planned']],
+      ['2026-10-22', []],
+      ['2026-10-23', ['lunch:skipped']],
+      ['2026-10-24', []],
+      ['2026-10-25', []],
+    ])
+  })
+
+  it('toglie i pianificati che il nuovo piano non ha più', async () => {
+    const { api, template } = await withTemplate()
+    await api.post(`/templates/${template.id}/schedule`, { from: '2026-10-19' })
+    const { body: vuoto } = await api.post('/templates', { name: 'Vuoto', cells: [] })
+    await api.post(`/templates/${vuoto.id}/schedule`, { from: '2026-10-21' })
+    const days = await planned(api, '2026-10-19')
+    // Il 19 è prima di from: resta; dal 21 in poi è vuoto.
+    expect(days[0]).toEqual(['2026-10-19', ['lunch:planned']])
+    expect(days.slice(2).every(([, s]: [string, string[]]) => s.length === 0)).toBe(true)
+  })
+
+  it.each([
+    ['la data finale è prima', { from: '2026-10-21', until: '2026-10-20' }],
+    ['dura più di un anno', { from: '2026-10-21', until: '2027-12-01' }],
+    ['la data non è valida', { from: '2026-13-01' }],
+  ])('rifiuta se %s', async (_, body) => {
+    const { api, template } = await withTemplate()
+    const res = await api.post(`/templates/${template.id}/schedule`, body)
+    expect(res.status).toBe(400)
+  })
+
+  it('template sconosciuto: 404', async () => {
+    const { api } = await withTemplate()
+    const res = await api.post('/templates/00000000-0000-4000-8000-000000000000/schedule', {
+      from: '2026-10-21',
+    })
+    expect(res.status).toBe(404)
+  })
+})
+
+describe('settimana (NUT-032)', () => {
+  it('parte da lunedì e dà ricetta, stato e kcal di ogni pasto', async () => {
+    const { api, recipe } = await setup()
+    await api.put('/plans', {
+      date: '2026-10-21',
+      slot: 'lunch',
+      items: [{ recipeId: recipe.id, factor: 1 }],
+    })
+    const res = await api.get('/week?from=2026-10-19')
+    expect(res.status).toBe(200)
+    expect(res.body.days.map((d: { date: string }) => d.date)).toEqual([
+      '2026-10-19',
+      '2026-10-20',
+      '2026-10-21',
+      '2026-10-22',
+      '2026-10-23',
+      '2026-10-24',
+      '2026-10-25',
+    ])
+    const lunch = res.body.days[2].slots.find((s: { slot: string }) => s.slot === 'lunch')
+    expect(lunch).toMatchObject({
+      state: 'planned',
+      kcal: 445,
+      plan: { status: 'planned', recipeId: recipe.id, name: 'Riso e pollo' },
+    })
+    expect(res.body.days[2].plannedKcal).toBe(445)
+    expect(res.body.days[0].slots.every((s: { state: string }) => s.state === 'empty')).toBe(true)
+  })
+
+  it('senza from è la settimana corrente', async () => {
+    const { api } = await setup()
+    const res = await api.get('/week')
+    expect(res.body.from).toBe('2026-10-19')
+  })
+
+  it('rifiuta una data che non è lunedì', async () => {
+    const { api } = await setup()
+    expect((await api.get('/week?from=2026-10-21')).status).toBe(400)
+  })
+})

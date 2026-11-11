@@ -162,3 +162,41 @@ export async function applyTemplate(db: Queryable, id: string, monday: string) {
   }
   return result
 }
+
+// Il piano più lungo che si programma in un colpo: un anno.
+export const MAX_SCHEDULE_DAYS = 366
+
+// Programma il template dal giorno `from` fino a `until` compreso, ripetendo
+// la settimana tipo; senza `until` vale fino a domenica della settimana di
+// `from`. I pasti ancora pianificati di quei giorni si rifanno col template;
+// mangiati e saltati restano (NUT-031).
+export async function scheduleTemplate(
+  db: Queryable,
+  id: string,
+  { from, until = null }: { from: string; until?: string | null },
+) {
+  const end = until ?? addDays(from, 7 - weekday(from))
+  if (end < from) throw new InvalidRequestError('La data finale è prima di quella iniziale')
+  if (addDays(from, MAX_SCHEDULE_DAYS - 1) < end) {
+    throw new InvalidRequestError('Il piano può durare al massimo un anno')
+  }
+  const template = await getTemplate(db, id)
+  const { rowCount } = await db.query(
+    `delete from planned_meals where status = 'planned' and day between $1 and $2`,
+    [from, end],
+  )
+  const result = { created: 0, removed: rowCount ?? 0, kept: 0, from, until: end }
+  for (let day = from; day <= end; day = addDays(day, 1)) {
+    for (const c of template.cells.filter((cell) => cell.weekday === weekday(day))) {
+      const existing = await planBy(db, 'where day = $1 and slot = $2', [day, c.slot])
+      if (existing) {
+        result.kept++
+        continue
+      }
+      const item = c.recipeId ? { recipeId: c.recipeId, factor: 1 } : { foodId: c.foodId!, grams: c.grams! }
+      await setPlan(db, { day, slot: c.slot, items: [item] }, { templateId: id })
+      result.created++
+    }
+  }
+  return result
+}

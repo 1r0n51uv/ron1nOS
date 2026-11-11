@@ -5,6 +5,10 @@ in alto. Ogni PR aggiunge la sua riga in cima, sotto il giorno del merge.
 Il server segue il tag `main` dell'immagine; per tornare indietro c'è
 `sha-<commit>`.
 
+## 2026-11-11
+
+- Nutrizione per programmare: procedimento delle ricette, programmazione di una settimana tipo fino a una data e vista della settimana (NUT-030, NUT-031, NUT-032) ([#241](https://github.com/1r0n51uv/ron1nOS/pull/241))
+
 ## 2026-11-10
 
 - API dei download: pausa, ripresa ed eliminazione di uno o più torrent e dettaglio di un torrent con i file (DL-010, DL-011) ([#240](https://github.com/1r0n51uv/ron1nOS/pull/240))
