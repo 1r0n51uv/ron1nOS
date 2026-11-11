@@ -5,6 +5,7 @@
 // pianificate). Note e procedimento già scritti qui non si toccano.
 import type { Db, Queryable } from '../db.ts'
 import type { YazioClient } from '../yazio/client.ts'
+import { YazioFormatError } from '../yazio/client.ts'
 import type { Recipe } from '../yazio/schemas.ts'
 import { ensureFood } from './foods.ts'
 import { fromYazioDetail } from './yaziosearch.ts'
@@ -114,7 +115,14 @@ async function resolve(db: Queryable, client: YazioClient, productId: string) {
     [productId],
   )
   if (rows[0]) return rows[0]
-  const product = await client.product(productId)
+  // Una scheda senza nutrienti non si può usare: l'ingrediente resta fuori, il resto entra.
+  let product
+  try {
+    product = await client.product(productId)
+  } catch (err) {
+    if (err instanceof YazioFormatError) return null
+    throw err
+  }
   const candidate = product && fromYazioDetail(product)
   if (!candidate) return null
   const food = await ensureFood(db, candidate)

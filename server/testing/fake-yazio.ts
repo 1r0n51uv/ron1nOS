@@ -28,6 +28,8 @@ export type FakeProduct = {
   carbs: number
   fat: number
   countries?: string[]
+  // La scheda del prodotto non ha i nutrienti (succede nel catalogo vero).
+  noNutrients?: boolean
 }
 
 export type FakeRecipe = {
@@ -341,7 +343,7 @@ export function createFakeYazio(state: FakeYazioState = initialFakeYazioState())
       producer: p.producer ?? null,
       is_verified: true,
       base_unit: 'g',
-      nutrients: per1g(p),
+      nutrients: p.noNutrients ? {} : per1g(p),
       servings: [],
       eans: p.eans ?? [],
       countries: p.countries ?? [],
