@@ -117,7 +117,7 @@ describe('import dei preferiti YAZIO (NUT-008)', () => {
     ).toEqual({ n: 1 })
   })
 
-  it('salta gli ingredienti non in grammi e le ricette rimaste senza', async () => {
+  it('salta gli ingredienti in unità sconosciute e le ricette rimaste senza', async () => {
     const { api, fake } = setup()
     fake.state.recipes = [
       {
@@ -125,10 +125,10 @@ describe('import dei preferiti YAZIO (NUT-008)', () => {
         name: 'Misto',
         items: [
           { productId: 'p-mela', grams: 100 },
-          { productId: 'p-yogurt', grams: 100, unit: 'ml' },
+          { productId: 'p-yogurt', grams: 100, unit: 'pz' },
         ],
       },
-      { id: 'r-solo-ml', name: 'Solo ml', items: [{ productId: 'p-mela', grams: 100, unit: 'ml' }] },
+      { id: 'r-solo-ml', name: 'Solo pezzi', items: [{ productId: 'p-mela', grams: 100, unit: 'pz' }] },
     ]
     const res = await api.post('/recipes/yazio/import')
     expect(res.body).toMatchObject({
@@ -258,5 +258,47 @@ describe('preferiti YAZIO e procedimento (NUT-033)', () => {
     await api.post('/recipes/yazio/import')
     const id = ricetta.id
     expect((await api.get(`/recipes/${id}`)).body.imageUrl).toContain('recipe-244.jpg')
+  })
+
+  it('conta i millilitri come grammi: scartarli falserebbe le kcal', async () => {
+    const { api, fake } = setup()
+    fake.state.recipes = [
+      {
+        id: 'r-liquidi',
+        name: 'Yogurt e latte',
+        items: [
+          { productId: 'p-mela', grams: 100 },
+          { productId: 'p-yogurt', grams: 150, unit: 'ml' },
+        ],
+      },
+    ]
+    const res = await api.post('/recipes/yazio/import')
+    expect(res.body).toMatchObject({ created: 1, skippedItems: 0 })
+    const ricetta = (await api.get('/recipes')).body.recipes[0]
+    expect(ricetta.items.map((i: { grams: number }) => i.grams)).toEqual([100, 150])
+  })
+
+  it('le voci libere ("Sale e pepe, a piacere") non rompono l\'import e vanno nelle note di una ricetta nuova', async () => {
+    const { api, fake } = setup()
+    fake.state.recipes = [
+      {
+        id: 'r-libere',
+        name: 'Insalata',
+        favorite: true,
+        items: [{ productId: 'p-mela', grams: 100 }],
+        free: [{ name: 'Sale e pepe', note: 'a piacere' }, { name: 'Basilico' }],
+      },
+    ]
+    const res = await api.post('/recipes/yazio/import')
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({ created: 1, skippedItems: 0 })
+    const ricetta = (await api.get('/recipes')).body.recipes[0]
+    expect(ricetta.notes).toBe('Anche: Sale e pepe (a piacere), Basilico.')
+    expect(ricetta.items).toHaveLength(1)
+
+    // Un nuovo giro non tocca le note.
+    await db.query('update recipes set notes = $2 where id = $1', [ricetta.id, 'Le mie note'])
+    await api.post('/recipes/yazio/import')
+    expect((await api.get(`/recipes/${ricetta.id}`)).body.notes).toBe('Le mie note')
   })
 })

@@ -40,6 +40,8 @@ export type FakeRecipe = {
   portions?: number
   steps?: string[]
   image?: string | null
+  // Voci libere, senza prodotto né quantità ("Sale e pepe, a piacere").
+  free?: { name: string; note?: string }[]
 }
 
 export type FakeYazioState = {
@@ -275,19 +277,31 @@ export function createFakeYazio(state: FakeYazioState = initialFakeYazioState())
       yazio_id: null,
       name: r.name,
       portion_count: r.portions ?? 1,
-      servings: r.items.map((i) => {
-        const p = state.products.find((x) => x.id === i.productId)
-        return {
-          producer: p?.producer ?? null,
-          name: p?.name ?? '?',
-          amount: i.grams,
+      servings: [
+        ...r.items.map((i) => {
+          const p = state.products.find((x) => x.id === i.productId)
+          return {
+            producer: p?.producer ?? null,
+            name: p?.name ?? '?',
+            amount: i.grams,
+            serving: null,
+            serving_quantity: null,
+            base_unit: i.unit ?? 'g',
+            note: null,
+            product_id: i.productId,
+          }
+        }),
+        ...(r.free ?? []).map((f) => ({
+          producer: null,
+          name: f.name,
+          amount: null,
           serving: null,
           serving_quantity: null,
-          base_unit: i.unit ?? 'g',
-          note: null,
-          product_id: i.productId,
-        }
-      }),
+          base_unit: null,
+          note: f.note ?? null,
+          product_id: null,
+        })),
+      ],
       instructions: r.steps ?? [],
       image: r.image ?? null,
       is_yazio_recipe: false,

@@ -132,10 +132,12 @@ export const RecipeSchema = z.object({
   servings: z
     .array(
       z.object({
-        product_id: uuid,
+        // Le voci libere ("Sale e pepe, a piacere") non hanno prodotto, quantità né unità.
+        product_id: uuid.nullish(),
         name: z.string(),
-        amount: z.number(),
-        base_unit: z.string().default('g'),
+        amount: z.number().nullish(),
+        base_unit: z.string().nullish(),
+        note: z.string().nullish(),
       }),
     )
     .default([]),
