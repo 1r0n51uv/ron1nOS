@@ -33,8 +33,13 @@ export type FakeProduct = {
 export type FakeRecipe = {
   id: string
   name: string
-  // Ingredienti in grammi (`servings` nell'API vera).
+  // Ingredienti in grammi (`servings` nell'API vera), per tutte le porzioni.
   items: { productId: string; grams: number; unit?: string }[]
+  // Un preferito del catalogo, non una ricetta creata dall'utente.
+  favorite?: boolean
+  portions?: number
+  steps?: string[]
+  image?: string | null
 }
 
 export type FakeYazioState = {
@@ -53,7 +58,8 @@ export type FakeYazioState = {
   consumeActivity: boolean
   weights: { date: string; value: number }[]
   products: FakeProduct[]
-  // Le ricette preferite, nell'ordine in cui le dà /user/recipes.
+  // Le ricette, nell'ordine in cui le danno /user/recipes (create) e
+  // /user/favorites/recipe (preferiti).
   recipes: FakeRecipe[]
   tokens: Record<string, { refresh: string; expiresAt: number }>
   calls: { method: string; path: string }[]
@@ -253,7 +259,14 @@ export function createFakeYazio(state: FakeYazioState = initialFakeYazioState())
     if (!state.tokens[auth]) return c.json({ error: 'unauthorized' }, 401)
     await next()
   })
-  api.get('/user/recipes', (c) => c.json(state.recipes.map((r) => r.id)))
+  api.get('/user/recipes', (c) => c.json(state.recipes.filter((r) => !r.favorite).map((r) => r.id)))
+  api.get('/user/favorites/recipe', (c) =>
+    c.json(
+      state.recipes
+        .filter((r) => r.favorite)
+        .map((r) => ({ id: `f-${r.id}`, portion_count: r.portions ?? 1, recipe_id: r.id, yazio_id: '1' })),
+    ),
+  )
   api.get('/recipes/:id', (c) => {
     const r = state.recipes.find((x) => x.id === c.req.param('id'))
     if (!r) return c.json({ error: 'not_found' }, 404)
@@ -261,7 +274,7 @@ export function createFakeYazio(state: FakeYazioState = initialFakeYazioState())
       id: r.id,
       yazio_id: null,
       name: r.name,
-      portion_count: 1,
+      portion_count: r.portions ?? 1,
       servings: r.items.map((i) => {
         const p = state.products.find((x) => x.id === i.productId)
         return {
@@ -275,7 +288,8 @@ export function createFakeYazio(state: FakeYazioState = initialFakeYazioState())
           product_id: i.productId,
         }
       }),
-      instructions: [],
+      instructions: r.steps ?? [],
+      image: r.image ?? null,
       is_yazio_recipe: false,
     })
   })

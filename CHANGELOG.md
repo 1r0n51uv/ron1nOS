@@ -7,6 +7,8 @@ Il server segue il tag `main` dell'immagine; per tornare indietro c'è
 
 ## 2026-11-11
 
+- L'import YAZIO porta anche i preferiti del catalogo, con il procedimento e gli ingredienti per una porzione (NUT-033), e le foto delle ricette (NUT-034) ([#242](https://github.com/1r0n51uv/ron1nOS/pull/242))
+
 - Nutrizione per programmare: procedimento delle ricette, programmazione di una settimana tipo fino a una data e vista della settimana (NUT-030, NUT-031, NUT-032) ([#241](https://github.com/1r0n51uv/ron1nOS/pull/241))
 
 ## 2026-11-10

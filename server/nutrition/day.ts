@@ -3,6 +3,7 @@
 import type { Queryable } from '../db.ts'
 import { activityOf } from './fromyazio.ts'
 import { goalFor } from './goals.ts'
+import { recipeImage } from './images.ts'
 import type { Quota } from './quota.ts'
 import { quotaFor } from './quota.ts'
 import type { Slot } from './schemas.ts'
@@ -44,6 +45,7 @@ export type SlotDay = {
         status: 'planned' | 'eaten' | 'skipped'
         recipeId: string | null
         recipeName: string | null
+        recipeImage: string | null
         templateName: string | null
         items: PlannedItem[]
       })
@@ -128,6 +130,7 @@ export async function getDay(db: Queryable, date: string): Promise<Day> {
       status: 'planned' | 'eaten' | 'skipped'
       recipeId: string | null
       recipeName: string | null
+      recipeImage: string | null
       templateName: string | null
       foodId: string | null
       name: string | null
@@ -137,7 +140,7 @@ export async function getDay(db: Queryable, date: string): Promise<Day> {
       carbs100: number | null
       fat100: number | null
     }>(
-      `select p.id, p.slot, p.status, p.recipe_id as "recipeId", r.name as "recipeName", t.name as "templateName",
+      `select p.id, p.slot, p.status, p.recipe_id as "recipeId", r.name as "recipeName", r.image_url as "recipeImage", t.name as "templateName",
               pi.food_id as "foodId", pi.food_name as name, pi.quantity_g as grams,
               f.calories_per_100g as kcal100, f.protein_g_per_100g as protein100,
               f.carbs_g_per_100g as carbs100, f.fat_g_per_100g as fat100
@@ -197,6 +200,7 @@ export async function getDay(db: Queryable, date: string): Promise<Day> {
           status: p.status,
           recipeId: p.recipeId,
           recipeName: p.recipeName,
+          recipeImage: recipeImage(p.recipeImage),
           templateName: p.templateName,
           ...sum(plannedItems),
           items: plannedItems,

@@ -122,8 +122,8 @@ export const ProductSchema = z.object({
 })
 export type Product = z.infer<typeof ProductSchema> & { id: string }
 
-// Ricetta dei preferiti (prova del 2026-11-09): gli ingredienti stanno in
-// `servings`, sempre in grammi; `nutrients` è per l'intera ricetta e si
+// Ricetta (prova del 2026-11-09): gli ingredienti stanno in `servings`, per
+// tutte le `portion_count` porzioni, in grammi; `nutrients` è per l'intera ricetta e si
 // ricalcola dagli ingredienti, quindi qui non serve.
 export const RecipeSchema = z.object({
   id: z.string().min(1),
@@ -139,7 +139,17 @@ export const RecipeSchema = z.object({
       }),
     )
     .default([]),
+  // Il procedimento, un passo per elemento (nelle ricette del catalogo c'è).
+  instructions: z.array(z.string()).default([]),
+  // La foto: c'è nei preferiti del catalogo, non nelle ricette create dall'utente.
+  image: z.string().nullish(),
 })
 export type Recipe = z.infer<typeof RecipeSchema>
 
 export const RecipeIdsSchema = z.array(z.string().min(1))
+
+// I preferiti (prova del 2026-11-11, `GET /user/favorites/recipe`): ricette
+// del catalogo YAZIO salvate dall'utente, diverse da quelle che ha creato.
+export const FavoriteRecipesSchema = z.array(
+  z.object({ recipe_id: z.string().min(1), portion_count: z.number().optional() }),
+)

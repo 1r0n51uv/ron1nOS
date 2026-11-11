@@ -156,3 +156,107 @@ describe('import dei preferiti YAZIO (NUT-008)', () => {
     expect(await names(api)).toEqual([])
   })
 })
+
+describe('preferiti YAZIO e procedimento (NUT-033)', () => {
+  const catalogo = {
+    id: 'r-catalogo',
+    name: 'Insalata con cheeseburger',
+    favorite: true,
+    portions: 4,
+    steps: ['  Rosola il manzo.  ', '', 'Condisci e servi.'],
+    items: [
+      { productId: 'p-yogurt', grams: 400 },
+      { productId: 'p-mela', grams: 150 },
+    ],
+  }
+
+  it('importa anche i preferiti del catalogo, con il procedimento e per una porzione', async () => {
+    const { api, fake } = setup()
+    fake.state.recipes.push(catalogo)
+    const res = await api.post('/recipes/yazio/import')
+    expect(res.body).toMatchObject({ created: 3, updated: 0, removedUpstream: 0 })
+    const { recipes } = (await api.get('/recipes')).body
+    const ricetta = recipes.find((r: { name: string }) => r.name === 'Insalata con cheeseburger')
+    expect(ricetta.steps).toEqual(['Rosola il manzo.', 'Condisci e servi.'])
+    // 4 porzioni in YAZIO: qui una ricetta è una porzione.
+    expect(ricetta.items.map((i: { grams: number }) => i.grams)).toEqual([100, 37.5])
+    expect(ricetta.grams).toBe(137.5)
+    // Le ricette create dall'utente restano a una porzione e senza passi.
+    const yogurt = recipes.find((r: { name: string }) => r.name === 'Yogurt e mela')
+    expect(yogurt.steps).toEqual([])
+    expect(yogurt.grams).toBe(350)
+  })
+
+  it('ripetuto non crea doppioni e non sovrascrive il procedimento scritto qui', async () => {
+    const { api, fake } = setup()
+    fake.state.recipes.push(catalogo)
+    await api.post('/recipes/yazio/import')
+    const id = (await api.get('/recipes')).body.recipes.find(
+      (r: { name: string }) => r.name === 'Insalata con cheeseburger',
+    ).id
+    const corrente = (await api.get(`/recipes/${id}`)).body
+    await api.put(`/recipes/${id}`, {
+      name: corrente.name,
+      steps: ['Il mio procedimento.'],
+      items: corrente.items.map((i: { foodId: string; grams: number }) => ({
+        foodId: i.foodId,
+        grams: i.grams,
+      })),
+    })
+
+    fake.state.recipes[2] = { ...catalogo, steps: ['Un passo nuovo di YAZIO.'] }
+    const res = await api.post('/recipes/yazio/import')
+    expect(res.body).toMatchObject({ created: 0, updated: 3 })
+    expect((await api.get(`/recipes/${id}`)).body.steps).toEqual(['Il mio procedimento.'])
+    expect((await api.get('/recipes')).body.recipes).toHaveLength(3)
+  })
+
+  it('un procedimento ancora vuoto qui si riempie con quello di YAZIO', async () => {
+    const { api, fake } = setup()
+    fake.state.recipes.push({ ...catalogo, steps: [] })
+    await api.post('/recipes/yazio/import')
+    const id = (await api.get('/recipes')).body.recipes.find(
+      (r: { name: string }) => r.name === 'Insalata con cheeseburger',
+    ).id
+    expect((await api.get(`/recipes/${id}`)).body.steps).toEqual([])
+
+    fake.state.recipes[2] = { ...catalogo, steps: ['Ora YAZIO ha il procedimento.'] }
+    await api.post('/recipes/yazio/import')
+    expect((await api.get(`/recipes/${id}`)).body.steps).toEqual(['Ora YAZIO ha il procedimento.'])
+  })
+
+  it('un preferito tolto da YAZIO resta, e viene segnalato', async () => {
+    const { api, fake } = setup()
+    fake.state.recipes.push(catalogo)
+    await api.post('/recipes/yazio/import')
+    fake.state.recipes = fake.state.recipes.filter((r) => !r.favorite)
+    const res = await api.post('/recipes/yazio/import')
+    expect(res.body).toMatchObject({ updated: 2, removedUpstream: 1 })
+    expect(await names(api)).toContain('Insalata con cheeseburger')
+  })
+
+  it("importa la foto del preferito e la dà ridimensionata; le ricette tue non ce l'hanno", async () => {
+    const { api, fake } = setup()
+    fake.state.recipes.push({
+      ...catalogo,
+      image: 'https://images.yazio.com/app/recipe/yazio/recipe-243.jpg',
+    })
+    await api.post('/recipes/yazio/import')
+    const { recipes } = (await api.get('/recipes')).body
+    const ricetta = recipes.find((r: { name: string }) => r.name === 'Insalata con cheeseburger')
+    expect(ricetta.imageUrl).toBe(
+      'https://images.yazio-cdn.com/process/w:684/h:558/rt:fill/f:webp/plain/app/recipe/yazio/recipe-243.jpg',
+    )
+    const tua = recipes.find((r: { name: string }) => r.name === 'Yogurt e mela')
+    expect(tua.imageUrl).toBeNull()
+
+    // La foto cambia in YAZIO: al prossimo giro si aggiorna.
+    fake.state.recipes[2] = {
+      ...catalogo,
+      image: 'https://images.yazio.com/app/recipe/yazio/recipe-244.jpg',
+    }
+    await api.post('/recipes/yazio/import')
+    const id = ricetta.id
+    expect((await api.get(`/recipes/${id}`)).body.imageUrl).toContain('recipe-244.jpg')
+  })
+})

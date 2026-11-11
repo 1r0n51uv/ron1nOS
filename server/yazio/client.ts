@@ -23,6 +23,7 @@ import {
   GoalsSchema,
   ProductSchema,
   ProductSearchResultSchema,
+  FavoriteRecipesSchema,
   RecipeIdsSchema,
   RecipeSchema,
   TokenSchema,
@@ -274,8 +275,15 @@ export function createYazioClient(opts: Options) {
         `/products/search?${q({ query, sex: 'male', countries: countries.join(','), locales: locales.join(',') })}`,
       ),
 
-    // Gli id delle ricette preferite (prova del 2026-11-09: /user/recipes).
+    // Gli id delle ricette create dall'utente (/user/recipes).
     recipeIds: (): Promise<string[]> => get(RecipeIdsSchema, '/user/recipes'),
+
+    // Gli id dei preferiti, ricette del catalogo salvate dall'utente: stanno
+    // altrove (`/user/favorites/recipe`, solo nella v15).
+    async favoriteRecipeIds(): Promise<string[]> {
+      const favorites = await get(FavoriteRecipesSchema, '/user/favorites/recipe')
+      return favorites.map((f) => f.recipe_id)
+    },
 
     async recipe(id: string): Promise<Recipe | null> {
       try {

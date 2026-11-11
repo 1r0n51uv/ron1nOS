@@ -7,6 +7,7 @@ import { macrosFor, round, sum } from './day.ts'
 import type { Food } from './foods.ts'
 import { getFood } from './foods.ts'
 import { NotFoundError } from './http.ts'
+import { recipeImage } from './images.ts'
 import type { NewItem } from './meals.ts'
 import { resolveFood } from './meals.ts'
 
@@ -25,6 +26,8 @@ export type Recipe = Macros & {
   notes: string | null
   // Il procedimento, un passo per riga (NUT-030).
   steps: string[]
+  // La foto, se la ricetta viene da YAZIO e ne ha una (NUT-034).
+  imageUrl: string | null
   grams: number
   items: RecipeItem[]
 }
@@ -45,7 +48,11 @@ async function load(db: Queryable, where: string, params: unknown[]): Promise<Re
     name: string
     notes: string | null
     steps: string[]
-  }>(`select id, name, notes, steps from recipes ${where} order by lower(name), id`, params)
+    imageUrl: string | null
+  }>(
+    `select id, name, notes, steps, image_url as "imageUrl" from recipes ${where} order by lower(name), id`,
+    params,
+  )
   if (!recipes.length) return []
   const { rows: items } = await db.query<Row>(
     `select ri.id, ri.recipe_id as "recipeId", ri.food_id as "foodId", ri.food_name as name, ri.quantity_g as grams,
@@ -75,6 +82,7 @@ async function load(db: Queryable, where: string, params: unknown[]): Promise<Re
       })
     return {
       ...r,
+      imageUrl: recipeImage(r.imageUrl),
       ...round(sum(mine)),
       grams: mine.reduce((a, i) => a + i.grams, 0),
       items: mine.map((i) => ({ ...i, ...round(i) })),

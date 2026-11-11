@@ -142,8 +142,8 @@ Accettazione:
 - [ ] Mostra kcal e macro totali.
 - [ ] Si usa per registrare (NUT-003) o pianificare (NUT-009) un pasto in
       un colpo.
-- [ ] I preferiti YAZIO si importano da Impostazioni › Nutrizione ›
-      YAZIO. L'import è ripetibile: la ricetta si riconosce dall'id YAZIO,
+- [ ] Le ricette YAZIO (le tue e i preferiti, NUT-033) si importano da
+      Impostazioni › Nutrizione › YAZIO. L'import è ripetibile: la ricetta si riconosce dall'id YAZIO,
       un nuovo giro aggiorna nome e alimenti senza duplicare né toccare le
       note. Gli ingredienti sono in grammi e si legano al prodotto YAZIO
       già nel catalogo; quelli in altre unità si lasciano fuori. Una
@@ -387,6 +387,43 @@ Accettazione:
 - [ ] Per ogni giorno i 5 pasti con stato, kcal e, se c'è, il pasto
       programmato (id, stato, ricetta, nome), più quota, totali e kcal
       pianificate.
+
+#### NUT-033 · Preferiti YAZIO e procedimento nell'import
+
+Stato: in corso · Origine: nuovo · Serve a IOS-030 dell'app iOS
+
+L'import (NUT-008) leggeva solo `/user/recipes`, cioè le ricette create
+dall'utente: i preferiti del catalogo YAZIO stanno in
+`/user/favorites/recipe` (prova del 2026-11-11, solo nella v15) e non
+entravano.
+
+Accettazione:
+
+- [ ] L'import prende le ricette create dall'utente e i preferiti; una
+      ricetta nelle due liste conta una volta, e il giro resta ripetibile.
+- [ ] Gli ingredienti sono per una porzione: YAZIO li dà per tutte le
+      `portion_count` porzioni, qui si dividono.
+- [ ] Il procedimento di YAZIO (`instructions`) entra alla prima volta o
+      se qui è ancora vuoto; quello già scritto o corretto non si sovrascrive,
+      come le note.
+- [ ] Una ricetta tolta da YAZIO resta qui ed è segnalata (`removedUpstream`).
+
+#### NUT-034 · Foto delle ricette
+
+Stato: in corso · Origine: nuovo · Serve a IOS-030 dell'app iOS
+
+Le ricette dei preferiti di YAZIO hanno una foto; quelle create dall'utente
+no.
+
+Accettazione:
+
+- [ ] L'import (NUT-033) salva l'indirizzo della foto e lo aggiorna a ogni
+      giro. Migrazione `0017`.
+- [ ] La ricetta ha `imageUrl`: la versione ridimensionata (684×558, WebP,
+      circa 30 KB) del CDN pubblico di YAZIO al posto dell'originale da 2-4 MB,
+      oppure null.
+- [ ] Il pasto programmato porta la foto della sua ricetta: `recipeImage`
+      in `GET /nutrition/day` e `imageUrl` in `GET /nutrition/week`.
 
 #### NUT-028 · Alimenti recenti
 

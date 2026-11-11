@@ -3452,18 +3452,19 @@ components:
                       }
                     plan:
                       type: [object, "null"]
-                      required: [id, status, recipeId, name]
+                      required: [id, status, recipeId, name, imageUrl]
                       properties:
                         id: { type: string, format: uuid }
                         status: { type: string, enum: [planned, eaten, skipped] }
                         recipeId: { type: [string, "null"], format: uuid }
                         name: { type: string }
+                        imageUrl: { type: [string, "null"], description: La foto della ricetta (NUT-034). }
     Recipe:
       allOf:
         - { $ref: "#/components/schemas/Macros" }
         - type: object
           description: Kcal e macro dagli alimenti di oggi.
-          required: [id, name, notes, steps, grams, items]
+          required: [id, name, notes, steps, imageUrl, grams, items]
           properties:
             id: { type: string, format: uuid }
             name: { type: string }
@@ -3472,6 +3473,9 @@ components:
               type: array
               description: Il procedimento, un passo per elemento (NUT-030).
               items: { type: string }
+            imageUrl:
+              type: [string, "null"]
+              description: La foto, ridimensionata, per le ricette di YAZIO che ne hanno una (NUT-034).
             grams: { type: number, description: peso totale degli alimenti }
             items:
               type: array
@@ -3632,12 +3636,13 @@ components:
             - allOf:
                 - { $ref: "#/components/schemas/Macros" }
                 - type: object
-                  required: [id, status, recipeId, recipeName, templateName, items]
+                  required: [id, status, recipeId, recipeName, recipeImage, templateName, items]
                   properties:
                     id: { type: string, format: uuid }
                     status: { type: string, enum: [planned, eaten, skipped] }
                     recipeId: { type: [string, "null"] }
                     recipeName: { type: [string, "null"] }
+                    recipeImage: { type: [string, "null"], description: La foto della ricetta (NUT-034). }
                     templateName: { type: [string, "null"] }
                     items:
                       type: array
