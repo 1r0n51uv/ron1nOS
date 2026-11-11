@@ -342,6 +342,52 @@ Accettazione:
 - [x] Gli orari viaggiano nel backup della configurazione (SET-011); un
       backup di prima non li ha e riporta i predefiniti.
 
+#### NUT-030 · Procedimento di una ricetta
+
+Stato: in corso · Origine: nuovo · Serve a IOS-030 dell'app iOS
+
+Una ricetta ha un procedimento, oltre a ingredienti e note.
+
+Accettazione:
+
+- [ ] `steps` è un elenco di passi (fino a 50, ognuno di 1…1000 caratteri,
+      senza spazi ai bordi). Creare e correggere una ricetta lo accetta; creata
+      senza passi è `[]`; una correzione che non lo manda lo lascia com'è.
+- [ ] `GET /nutrition/recipes` e `/recipes/{id}` lo restituiscono.
+- [ ] L'import dei preferiti YAZIO non lo tocca.
+
+#### NUT-031 · Programmare un template fino a una data
+
+Stato: in corso · Origine: nuovo · Serve a IOS-031 dell'app iOS
+
+La settimana tipo (NUT-010) si programma da un giorno fino a una data,
+ripetuta ogni settimana, o per la sola settimana.
+
+Accettazione:
+
+- [ ] `POST /nutrition/templates/{id}/schedule` con `{ from, until? }`
+      crea i pasti pianificati dal giorno `from` a `until` compreso, un giorno
+      della settimana tipo per ogni giorno del calendario. Senza `until` vale
+      fino a domenica della settimana di `from`.
+- [ ] I pasti ancora pianificati di quei giorni si tolgono e si rifanno
+      col template, anche quelli che il template non ha più; i pasti mangiati
+      e saltati restano e non si toccano.
+- [ ] Risponde con quanti pasti creati, tolti e lasciati e il periodo.
+- [ ] Data finale prima di quella iniziale, periodo oltre un anno, data non
+      valida: 400. Template sconosciuto: 404.
+
+#### NUT-032 · La settimana
+
+Stato: in corso · Origine: nuovo · Serve a IOS-032 dell'app iOS
+
+Accettazione:
+
+- [ ] `GET /nutrition/week?from=` dà 7 giorni da quel lunedì (predefinito:
+      questa settimana); una data che non è lunedì è 400.
+- [ ] Per ogni giorno i 5 pasti con stato, kcal e, se c'è, il pasto
+      programmato (id, stato, ricetta, nome), più quota, totali e kcal
+      pianificate.
+
 #### NUT-028 · Alimenti recenti
 
 Stato: fatto (#214) · Origine: nuovo · Serve a IOS-031 dell'app iOS

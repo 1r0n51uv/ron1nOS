@@ -23,11 +23,13 @@ export type Recipe = Macros & {
   id: string
   name: string
   notes: string | null
+  // Il procedimento, un passo per riga (NUT-030).
+  steps: string[]
   grams: number
   items: RecipeItem[]
 }
 
-export type RecipeInput = { name: string; notes: string | null; items: NewItem[] }
+export type RecipeInput = { name: string; notes: string | null; steps?: string[]; items: NewItem[] }
 
 type Row = Omit<RecipeItem, keyof Macros | 'missing'> & {
   recipeId: string
@@ -38,10 +40,12 @@ type Row = Omit<RecipeItem, keyof Macros | 'missing'> & {
 }
 
 async function load(db: Queryable, where: string, params: unknown[]): Promise<Recipe[]> {
-  const { rows: recipes } = await db.query<{ id: string; name: string; notes: string | null }>(
-    `select id, name, notes from recipes ${where} order by lower(name), id`,
-    params,
-  )
+  const { rows: recipes } = await db.query<{
+    id: string
+    name: string
+    notes: string | null
+    steps: string[]
+  }>(`select id, name, notes, steps from recipes ${where} order by lower(name), id`, params)
   if (!recipes.length) return []
   const { rows: items } = await db.query<Row>(
     `select ri.id, ri.recipe_id as "recipeId", ri.food_id as "foodId", ri.food_name as name, ri.quantity_g as grams,
@@ -98,18 +102,18 @@ async function writeItems(db: Queryable, recipeId: string, items: NewItem[]) {
 
 export async function createRecipe(db: Queryable, input: RecipeInput) {
   const { rows } = await db.query<{ id: string }>(
-    'insert into recipes (name, notes) values ($1, $2) returning id',
-    [input.name, input.notes],
+    'insert into recipes (name, notes, steps) values ($1, $2, $3::jsonb) returning id',
+    [input.name, input.notes, JSON.stringify(input.steps ?? [])],
   )
   await writeItems(db, rows[0].id, input.items)
   return rows[0].id
 }
 
-// Sostituisce nome, note e alimenti.
+// Sostituisce nome, note e alimenti, e il procedimento se c'è.
 export async function updateRecipe(db: Queryable, id: string, input: RecipeInput) {
   const { rowCount } = await db.query(
-    'update recipes set name = $2, notes = $3, updated_at = now() where id = $1',
-    [id, input.name, input.notes],
+    'update recipes set name = $2, notes = $3, steps = coalesce($4::jsonb, steps), updated_at = now() where id = $1',
+    [id, input.name, input.notes, input.steps ? JSON.stringify(input.steps) : null],
   )
   if (!rowCount) throw new NotFoundError('Ricetta non trovata')
   await db.query('delete from recipe_items where recipe_id = $1', [id])

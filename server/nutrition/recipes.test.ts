@@ -148,3 +148,64 @@ describe('ricette (NUT-008)', () => {
     ).toBe(404)
   })
 })
+
+describe('procedimento di una ricetta (NUT-030)', () => {
+  it('si salva, si corregge e si legge nell’ordine dei passi', async () => {
+    const f = await foods()
+    const api = nutritionApp(db, { now })
+    const created = await api.post('/recipes', {
+      name: 'Riso e pollo',
+      steps: ['Cuoci il riso.', '  Griglia il pollo.  '],
+      items: [{ foodId: f.riso, grams: 80 }],
+    })
+    expect(created.status).toBe(201)
+    expect(created.body.steps).toEqual(['Cuoci il riso.', 'Griglia il pollo.'])
+
+    const updated = await api.put(`/recipes/${created.body.id}`, {
+      name: 'Riso e pollo',
+      steps: ['Griglia il pollo.', 'Cuoci il riso.', 'Impiatta.'],
+      items: [{ foodId: f.riso, grams: 80 }],
+    })
+    expect(updated.body.steps).toEqual(['Griglia il pollo.', 'Cuoci il riso.', 'Impiatta.'])
+    expect((await api.get(`/recipes/${created.body.id}`)).body.steps).toHaveLength(3)
+  })
+
+  it('una modifica senza passi li lascia come erano', async () => {
+    const f = await foods()
+    const api = nutritionApp(db, { now })
+    const created = await api.post('/recipes', {
+      name: 'Riso',
+      steps: ['Cuoci il riso.'],
+      items: [{ foodId: f.riso, grams: 80 }],
+    })
+    const updated = await api.put(`/recipes/${created.body.id}`, {
+      name: 'Riso basmati',
+      items: [{ foodId: f.riso, grams: 100 }],
+    })
+    expect(updated.body).toMatchObject({ name: 'Riso basmati', steps: ['Cuoci il riso.'] })
+    const cleared = await api.put(`/recipes/${created.body.id}`, {
+      name: 'Riso basmati',
+      steps: [],
+      items: [{ foodId: f.riso, grams: 100 }],
+    })
+    expect(cleared.body.steps).toEqual([])
+  })
+
+  it('senza passi è un elenco vuoto', async () => {
+    const f = await foods()
+    const api = nutritionApp(db, { now })
+    const res = await api.post('/recipes', { name: 'Solo riso', items: [{ foodId: f.riso, grams: 80 }] })
+    expect(res.body.steps).toEqual([])
+  })
+
+  it.each([
+    ['un passo vuoto', ['Cuoci', '  ']],
+    ['un passo troppo lungo', ['x'.repeat(1001)]],
+    ['troppi passi', Array.from({ length: 51 }, () => 'passo')],
+  ])('rifiuta %s', async (_, steps) => {
+    const f = await foods()
+    const api = nutritionApp(db, { now })
+    const res = await api.post('/recipes', { name: 'X', steps, items: [{ foodId: f.riso, grams: 80 }] })
+    expect(res.status).toBe(400)
+  })
+})
