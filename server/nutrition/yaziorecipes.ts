@@ -49,13 +49,22 @@ export async function importYazioRecipes(db: Db, client: YazioClient): Promise<R
       continue
     }
     const items = await toItems(recipe, foodFor)
-    result.skippedItems += recipe.servings.length - items.length
+    // Le voci libere non sono una perdita: finiscono nelle note di una ricetta nuova.
+    result.skippedItems += recipe.servings.filter((s) => s.product_id).length - items.length
     if (!items.length) {
       result.skipped.push({ yazioId, reason: 'no_items' })
       continue
     }
     const created = await db.tx((tx) =>
-      save(tx, yazioId, recipe.name, items, toSteps(recipe.instructions), recipe.image ?? null),
+      save(
+        tx,
+        yazioId,
+        recipe.name,
+        items,
+        toSteps(recipe.instructions),
+        recipe.image ?? null,
+        toNotes(recipe),
+      ),
     )
     result[created ? 'created' : 'updated']++
   }
@@ -68,9 +77,10 @@ export async function importYazioRecipes(db: Db, client: YazioClient): Promise<R
   return result
 }
 
-// Solo grammi: la prova del 2026-11-09 li ha trovati ovunque; ml o altre
-// unità non si convertono a occhio. YAZIO li dà per tutte le porzioni della
-// ricetta: qui una ricetta è una porzione, come quando la si mangia.
+// Grammi e millilitri (1 ml = 1 g, come per gli altri liquidi del catalogo:
+// scartarli falserebbe le kcal); altre unità non si convertono a occhio.
+// YAZIO li dà per tutte le porzioni della ricetta: qui una ricetta è una
+// porzione, come quando la si mangia.
 async function toItems(
   recipe: Recipe,
   foodFor: (productId: string) => Promise<{ id: string; name: string } | null>,
@@ -78,11 +88,21 @@ async function toItems(
   const items: Item[] = []
   const portions = Math.max(1, recipe.portion_count)
   for (const s of recipe.servings) {
-    if (s.base_unit !== 'g' || !(s.amount > 0)) continue
+    if (!s.product_id || !s.amount || !(s.amount > 0)) continue
+    const unit = s.base_unit ?? 'g'
+    if (unit !== 'g' && unit !== 'ml') continue
     const food = await foodFor(s.product_id)
     if (food) items.push({ foodId: food.id, name: food.name, grams: round1(s.amount / portions) })
   }
   return items
+}
+
+// Le voci libere ("Sale e pepe, a piacere") diventano le note di una ricetta nuova.
+function toNotes(recipe: Recipe) {
+  const libere = recipe.servings
+    .filter((s) => !s.product_id && s.name.trim())
+    .map((s) => (s.note ? `${s.name.trim()} (${s.note.trim()})` : s.name.trim()))
+  return libere.length ? `Anche: ${libere.join(', ')}.` : null
 }
 
 // L'alimento già nel catalogo (stesso prodotto YAZIO) si riusa; altrimenti
@@ -109,16 +129,17 @@ async function save(
   items: Item[],
   steps: string[],
   image: string | null,
+  notes: string | null,
 ) {
   // Il procedimento di YAZIO entra alla prima volta o se qui è ancora vuoto:
   // quello scritto o corretto qui non si sovrascrive.
   const { rows } = await db.query<{ id: string }>(
-    `insert into recipes (name, yazio_recipe_id, steps, image_url) values ($1, $2, $3::jsonb, $4)
+    `insert into recipes (name, yazio_recipe_id, steps, image_url, notes) values ($1, $2, $3::jsonb, $4, $5)
      on conflict (yazio_recipe_id) where yazio_recipe_id is not null
      do update set name = excluded.name, image_url = excluded.image_url, updated_at = now(),
        steps = case when recipes.steps = '[]'::jsonb then excluded.steps else recipes.steps end
      returning id, (xmax = 0) as inserted`,
-    [name, yazioId, JSON.stringify(steps), image],
+    [name, yazioId, JSON.stringify(steps), image, notes],
   )
   const row = rows[0] as { id: string; inserted: boolean }
   await db.query('delete from recipe_items where recipe_id = $1', [row.id])

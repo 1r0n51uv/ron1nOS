@@ -402,7 +402,11 @@ Accettazione:
 - [ ] L'import prende le ricette create dall'utente e i preferiti; una
       ricetta nelle due liste conta una volta, e il giro resta ripetibile.
 - [ ] Gli ingredienti sono per una porzione: YAZIO li dà per tutte le
-      `portion_count` porzioni, qui si dividono.
+      `portion_count` porzioni, qui si dividono. I millilitri contano come
+      grammi (1 ml = 1 g); le altre unità restano fuori e si segnalano.
+- [ ] Le voci libere dei preferiti ("Sale e pepe, a piacere"), senza
+      prodotto né quantità, non rompono l'import: entrano nelle note di una
+      ricetta nuova (`Anche: …`) e non si contano tra gli esclusi.
 - [ ] Il procedimento di YAZIO (`instructions`) entra alla prima volta o
       se qui è ancora vuoto; quello già scritto o corretto non si sovrascrive,
       come le note.
