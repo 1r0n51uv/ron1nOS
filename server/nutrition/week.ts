@@ -13,7 +13,13 @@ export type WeekSlot = {
   state: 'empty' | 'planned' | 'eaten' | 'skipped'
   // Kcal del pasto mangiato, o di quello pianificato; 0 se vuoto.
   kcal: number
-  plan: { id: string; status: 'planned' | 'eaten' | 'skipped'; recipeId: string | null; name: string } | null
+  plan: {
+    id: string
+    status: 'planned' | 'eaten' | 'skipped'
+    recipeId: string | null
+    name: string
+    imageUrl: string | null
+  } | null
 }
 
 export type WeekDay = {
@@ -48,6 +54,7 @@ export async function getWeek(db: Queryable, from: string): Promise<Week> {
                 status: p.status,
                 recipeId: p.recipeId,
                 name: p.recipeName ?? p.items[0]?.name ?? '',
+                imageUrl: p.recipeImage,
               }
             : null,
         }

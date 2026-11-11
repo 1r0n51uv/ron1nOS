@@ -1,7 +1,8 @@
-// Import dei preferiti YAZIO tra le ricette (NUT-008). Ripetibile: la
-// ricetta si riconosce da `yazio_recipe_id`, quindi un nuovo giro aggiorna
-// nome e alimenti senza duplicare. Le ricette tolte dai preferiti restano
-// qui (potrebbero essere già pianificate). Le note non si toccano.
+// Import delle ricette YAZIO (NUT-008, NUT-033): quelle create dall'utente e
+// i preferiti del catalogo. Ripetibile: la ricetta si riconosce da
+// `yazio_recipe_id`, quindi un nuovo giro aggiorna nome e alimenti senza
+// duplicare. Le ricette tolte da YAZIO restano qui (potrebbero essere già
+// pianificate). Note e procedimento già scritti qui non si toccano.
 import type { Db, Queryable } from '../db.ts'
 import type { YazioClient } from '../yazio/client.ts'
 import type { Recipe } from '../yazio/schemas.ts'
@@ -21,8 +22,18 @@ export type RecipeImport = {
 
 type Item = { foodId: string; name: string; grams: number }
 
+const round1 = (n: number) => Math.round(n * 10) / 10
+
+// Il procedimento come lo vuole la ricetta: passi puliti, al massimo 50 di 1000 caratteri.
+const toSteps = (instructions: string[]) =>
+  instructions
+    .map((s) => s.trim().slice(0, 1000))
+    .filter(Boolean)
+    .slice(0, 50)
+
 export async function importYazioRecipes(db: Db, client: YazioClient): Promise<RecipeImport> {
-  const ids = await client.recipeIds()
+  // Le create dall'utente e i preferiti; una ricetta in entrambi conta una volta.
+  const ids = [...new Set([...(await client.recipeIds()), ...(await client.favoriteRecipeIds())])]
   const result: RecipeImport = { created: 0, updated: 0, skipped: [], skippedItems: 0, removedUpstream: 0 }
   const foods = new Map<string, { id: string; name: string } | null>()
 
@@ -43,7 +54,9 @@ export async function importYazioRecipes(db: Db, client: YazioClient): Promise<R
       result.skipped.push({ yazioId, reason: 'no_items' })
       continue
     }
-    const created = await db.tx((tx) => save(tx, yazioId, recipe.name, items))
+    const created = await db.tx((tx) =>
+      save(tx, yazioId, recipe.name, items, toSteps(recipe.instructions), recipe.image ?? null),
+    )
     result[created ? 'created' : 'updated']++
   }
 
@@ -56,16 +69,18 @@ export async function importYazioRecipes(db: Db, client: YazioClient): Promise<R
 }
 
 // Solo grammi: la prova del 2026-11-09 li ha trovati ovunque; ml o altre
-// unità non si convertono a occhio.
+// unità non si convertono a occhio. YAZIO li dà per tutte le porzioni della
+// ricetta: qui una ricetta è una porzione, come quando la si mangia.
 async function toItems(
   recipe: Recipe,
   foodFor: (productId: string) => Promise<{ id: string; name: string } | null>,
 ) {
   const items: Item[] = []
+  const portions = Math.max(1, recipe.portion_count)
   for (const s of recipe.servings) {
     if (s.base_unit !== 'g' || !(s.amount > 0)) continue
     const food = await foodFor(s.product_id)
-    if (food) items.push({ foodId: food.id, name: food.name, grams: s.amount })
+    if (food) items.push({ foodId: food.id, name: food.name, grams: round1(s.amount / portions) })
   }
   return items
 }
@@ -87,13 +102,23 @@ async function resolve(db: Queryable, client: YazioClient, productId: string) {
 }
 
 // true se la ricetta è nuova.
-async function save(db: Queryable, yazioId: string, name: string, items: Item[]) {
+async function save(
+  db: Queryable,
+  yazioId: string,
+  name: string,
+  items: Item[],
+  steps: string[],
+  image: string | null,
+) {
+  // Il procedimento di YAZIO entra alla prima volta o se qui è ancora vuoto:
+  // quello scritto o corretto qui non si sovrascrive.
   const { rows } = await db.query<{ id: string }>(
-    `insert into recipes (name, yazio_recipe_id) values ($1, $2)
+    `insert into recipes (name, yazio_recipe_id, steps, image_url) values ($1, $2, $3::jsonb, $4)
      on conflict (yazio_recipe_id) where yazio_recipe_id is not null
-     do update set name = excluded.name, updated_at = now()
+     do update set name = excluded.name, image_url = excluded.image_url, updated_at = now(),
+       steps = case when recipes.steps = '[]'::jsonb then excluded.steps else recipes.steps end
      returning id, (xmax = 0) as inserted`,
-    [name, yazioId],
+    [name, yazioId, JSON.stringify(steps), image],
   )
   const row = rows[0] as { id: string; inserted: boolean }
   await db.query('delete from recipe_items where recipe_id = $1', [row.id])

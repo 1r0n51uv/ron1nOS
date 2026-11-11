@@ -345,4 +345,27 @@ describe('settimana (NUT-032)', () => {
     const { api } = await setup()
     expect((await api.get('/week?from=2026-10-21')).status).toBe(400)
   })
+
+  it('porta la foto della ricetta programmata, nella settimana e nel giorno', async () => {
+    const { api, recipe } = await setup()
+    await db.query(`update recipes set image_url = $2 where id = $1`, [
+      recipe.id,
+      'https://images.yazio.com/app/recipe/yazio/recipe-1.jpg',
+    ])
+    await api.put('/plans', {
+      date: '2026-10-21',
+      slot: 'lunch',
+      items: [{ recipeId: recipe.id, factor: 1 }],
+    })
+    const atteso =
+      'https://images.yazio-cdn.com/process/w:684/h:558/rt:fill/f:webp/plain/app/recipe/yazio/recipe-1.jpg'
+    const settimana = (await api.get('/week?from=2026-10-19')).body
+    const pranzo = settimana.days[2].slots.find((s: { slot: string }) => s.slot === 'lunch')
+    expect(pranzo.plan.imageUrl).toBe(atteso)
+    const giorno = (await api.get('/day?date=2026-10-21')).body
+    expect(giorno.slots.find((s: { slot: string }) => s.slot === 'lunch').planned.recipeImage).toBe(atteso)
+    // Un pasto senza foto: null.
+    const vuoto = settimana.days[0].slots[0]
+    expect(vuoto.plan).toBeNull()
+  })
 })
