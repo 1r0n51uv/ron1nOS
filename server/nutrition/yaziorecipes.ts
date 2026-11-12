@@ -144,7 +144,7 @@ async function save(
   const { rows } = await db.query<{ id: string }>(
     `insert into recipes (name, yazio_recipe_id, steps, image_url, notes) values ($1, $2, $3::jsonb, $4, $5)
      on conflict (yazio_recipe_id) where yazio_recipe_id is not null
-     do update set name = excluded.name, image_url = excluded.image_url, updated_at = now(),
+     do update set name = excluded.name, image_url = coalesce(excluded.image_url, recipes.image_url), updated_at = now(),
        steps = case when recipes.steps = '[]'::jsonb then excluded.steps else recipes.steps end
      returning id, (xmax = 0) as inserted`,
     [name, yazioId, JSON.stringify(steps), image, notes],

@@ -32,6 +32,8 @@ export type Recipe = Macros & {
   steps: string[]
   // La foto, se la ricetta viene da YAZIO e ne ha una (NUT-034).
   imageUrl: string | null
+  // La foto in preparazione o non riuscita (NUT-036).
+  photo: { state: 'generating' | 'failed'; error: string | null } | null
   actions: RecipeAction[]
   grams: number
   items: RecipeItem[]
@@ -61,8 +63,11 @@ async function load(db: Queryable, where: string, params: unknown[]): Promise<Re
     steps: string[]
     actions: RecipeAction[]
     imageUrl: string | null
+    photoState: 'generating' | 'failed' | null
+    photoError: string | null
   }>(
-    `select id, name, notes, steps, actions, image_url as "imageUrl" from recipes ${where} order by lower(name), id`,
+    `select id, name, notes, steps, actions, image_url as "imageUrl", photo_state as "photoState",
+            photo_error as "photoError" from recipes ${where} order by lower(name), id`,
     params,
   )
   if (!recipes.length) return []
@@ -92,9 +97,11 @@ async function load(db: Queryable, where: string, params: unknown[]): Promise<Re
               )
         return { ...i, ...m, missing: kcal100 === null }
       })
+    const { photoState, photoError, ...rest } = r
     return {
-      ...r,
+      ...rest,
       imageUrl: recipeImage(r.imageUrl),
+      photo: photoState ? { state: photoState, error: photoError } : null,
       ...round(sum(mine)),
       grams: mine.reduce((a, i) => a + i.grams, 0),
       items: mine.map((i) => ({ ...i, ...round(i) })),

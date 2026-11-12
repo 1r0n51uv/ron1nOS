@@ -7,6 +7,7 @@ Il server segue il tag `main` dell'immagine; per tornare indietro c'è
 
 ## 2026-11-12
 
+- Foto delle ricette generate dall'agente image-chef del dojo: `POST /nutrition/recipes/{id}/photo/generate` avvia il lavoro, `GET /nutrition/recipes/{id}/photo` serve il file, `photo` nella ricetta dà lo stato (NUT-036) ([#246](https://github.com/1r0n51uv/ron1nOS/pull/246))
 - Azioni collegate alle ricette, come scongelare il pesce la sera prima, e rinvio dei promemoria dei pasti configurabile (NUT-035) ([#245](https://github.com/1r0n51uv/ron1nOS/pull/245))
 
 ## 2026-11-11

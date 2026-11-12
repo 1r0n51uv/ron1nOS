@@ -1992,6 +1992,50 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+  /nutrition/recipes/{id}/photo/generate:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      summary: Genera la foto di una ricetta con l'agente image-chef del dojo (NUT-036)
+      description: >-
+        Avvia il lavoro e torna subito. Lo stato sta in `photo` della ricetta:
+        `generating`, poi, a lavoro finito, `photo` è null e `imageUrl` punta
+        a `/nutrition/recipes/{id}/photo`; se non riesce `photo.state` è
+        `failed` con il motivo. Un lavoro fermo da più di 10 minuti si può rifare.
+      operationId: generateRecipePhoto
+      responses:
+        "202":
+          description: Lavoro avviato; la ricetta ha `photo.state` generating.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Recipe" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: "`photo_in_progress`: la foto è già in preparazione."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503":
+          description: "`photos_not_configured` (mancano `HERMES_URL` e `HERMES_API_KEY`) o database non pronto."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /nutrition/recipes/{id}/photo:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: La foto generata di una ricetta (NUT-036)
+      operationId: getRecipePhoto
+      responses:
+        "200":
+          description: L'immagine (PNG, JPEG o WebP).
+          content:
+            image/png: { schema: { type: string, format: binary } }
+            image/jpeg: { schema: { type: string, format: binary } }
+            image/webp: { schema: { type: string, format: binary } }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/recipes/{id}:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
@@ -3468,7 +3512,7 @@ components:
         - { $ref: "#/components/schemas/Macros" }
         - type: object
           description: Kcal e macro dagli alimenti di oggi.
-          required: [id, name, notes, steps, imageUrl, actions, grams, items]
+          required: [id, name, notes, steps, imageUrl, photo, actions, grams, items]
           properties:
             id: { type: string, format: uuid }
             name: { type: string }
@@ -3480,6 +3524,15 @@ components:
             imageUrl:
               type: [string, "null"]
               description: La foto, ridimensionata, per le ricette di YAZIO che ne hanno una (NUT-034).
+            photo:
+              description: "La foto generata in preparazione o non riuscita (NUT-036); null altrimenti."
+              oneOf:
+                - type: "null"
+                - type: object
+                  required: [state, error]
+                  properties:
+                    state: { type: string, enum: [generating, failed] }
+                    error: { type: [string, "null"] }
             actions:
               type: array
               description: Le azioni collegate, promemoria prima del pasto (NUT-035).

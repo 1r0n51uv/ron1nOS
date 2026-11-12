@@ -12,6 +12,7 @@ import { createGlancesClient } from './glances.ts'
 import { createExternalSearch } from './nutrition/foodsearch.ts'
 import { hasPending } from './nutrition/diarywrite.ts'
 import { FLUSH_STEPS, SYNC_STEPS } from './nutrition/fromyazio.ts'
+import { createPhotoGenerator } from './nutrition/photos.ts'
 import { createSyncRunner } from './nutrition/yazio.ts'
 import { isModuleDisabled } from './preferences/modules.ts'
 import { createQbtClient } from './qbittorrent.ts'
@@ -68,7 +69,11 @@ const app = createApp({
   glances: createGlancesClient(config.glances),
   staticDir: config.staticDir,
   database,
-  nutrition: { external: createExternalSearch(config.foods), sync },
+  nutrition: {
+    external: createExternalSearch(config.foods),
+    sync,
+    photos: config.photos && createPhotoGenerator(config.photos),
+  },
   auth: config.auth,
   workout: { catalog },
   documents: { vault: documentsKey ? createVault(documentsKey) : undefined },
