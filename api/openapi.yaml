@@ -3526,7 +3526,7 @@ components:
         actions:
           type: array
           maxItems: 10
-          description: Come `steps`: omesse in una modifica restano come sono; alla creazione valgono [].
+          description: "Come `steps`: omesse in una modifica restano come sono; alla creazione valgono []."
           items: { $ref: "#/components/schemas/RecipeAction" }
         items:
           type: array
