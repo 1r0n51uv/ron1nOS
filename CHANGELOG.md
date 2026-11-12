@@ -5,6 +5,10 @@ in alto. Ogni PR aggiunge la sua riga in cima, sotto il giorno del merge.
 Il server segue il tag `main` dell'immagine; per tornare indietro c'è
 `sha-<commit>`.
 
+## 2026-11-12
+
+- Azioni collegate alle ricette, come scongelare il pesce la sera prima, e rinvio dei promemoria dei pasti configurabile (NUT-035) ([#245](https://github.com/1r0n51uv/ron1nOS/pull/245))
+
 ## 2026-11-11
 
 - L'import YAZIO non si ferma più sulle voci libere dei preferiti ("Sale e pepe, a piacere"), che vanno nelle note, e conta i millilitri come grammi invece di scartarli (NUT-033) ([#243](https://github.com/1r0n51uv/ron1nOS/pull/243))

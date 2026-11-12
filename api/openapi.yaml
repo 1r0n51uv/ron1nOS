@@ -3452,19 +3452,23 @@ components:
                       }
                     plan:
                       type: [object, "null"]
-                      required: [id, status, recipeId, name, imageUrl]
+                      required: [id, status, recipeId, name, imageUrl, actions]
                       properties:
                         id: { type: string, format: uuid }
                         status: { type: string, enum: [planned, eaten, skipped] }
                         recipeId: { type: [string, "null"], format: uuid }
                         name: { type: string }
                         imageUrl: { type: [string, "null"], description: La foto della ricetta (NUT-034). }
+                        actions:
+                          type: array
+                          description: Le azioni attive della ricetta (NUT-035).
+                          items: { $ref: "#/components/schemas/RecipeAction" }
     Recipe:
       allOf:
         - { $ref: "#/components/schemas/Macros" }
         - type: object
           description: Kcal e macro dagli alimenti di oggi.
-          required: [id, name, notes, steps, imageUrl, grams, items]
+          required: [id, name, notes, steps, imageUrl, actions, grams, items]
           properties:
             id: { type: string, format: uuid }
             name: { type: string }
@@ -3476,6 +3480,10 @@ components:
             imageUrl:
               type: [string, "null"]
               description: La foto, ridimensionata, per le ricette di YAZIO che ne hanno una (NUT-034).
+            actions:
+              type: array
+              description: Le azioni collegate, promemoria prima del pasto (NUT-035).
+              items: { $ref: "#/components/schemas/RecipeAction" }
             grams: { type: number, description: peso totale degli alimenti }
             items:
               type: array
@@ -3491,6 +3499,19 @@ components:
                       grams: { type: number }
                       missing:
                         { type: boolean, description: "L'alimento è stato eliminato: la riga non conta." }
+    RecipeAction:
+      type: object
+      description: >-
+        Un promemoria collegato a una ricetta (NUT-035): `daysBefore` giorni
+        prima del pasto, all'ora `time`. L'app iOS lo programma; il backend lo
+        salva e basta.
+      required: [id, title, daysBefore, time, enabled]
+      properties:
+        id: { type: string, minLength: 1, maxLength: 64, description: Lo sceglie il client. }
+        title: { type: string, minLength: 1, maxLength: 100 }
+        daysBefore: { type: integer, minimum: 0, maximum: 14 }
+        time: { $ref: "#/components/schemas/ReminderTime" }
+        enabled: { type: boolean }
     RecipeInput:
       type: object
       required: [name, items]
@@ -3502,6 +3523,11 @@ components:
           maxItems: 50
           description: Omesso, in una modifica resta com'è; alla creazione vale [].
           items: { type: string, minLength: 1, maxLength: 1000 }
+        actions:
+          type: array
+          maxItems: 10
+          description: "Come `steps`: omesse in una modifica restano come sono; alla creazione valgono []."
+          items: { $ref: "#/components/schemas/RecipeAction" }
         items:
           type: array
           minItems: 1
@@ -3979,6 +4005,11 @@ components:
           uniqueItems: true
           description: "Avvisi dell'acqua, salvati in ordine. Predefiniti: 10:00, 13:00, 16:00, 19:00."
           items: { $ref: "#/components/schemas/ReminderTime" }
+        snooze:
+          type: integer
+          minimum: 5
+          maximum: 120
+          description: Di quanti minuti `Rimanda` sposta il promemoria di un pasto. Predefinito 15.
     PreferencesNavOrder:
       type: array
       description: Tutte le voci spostabili della barra, una volta ciascuna.
@@ -4009,7 +4040,7 @@ components:
         reminders:
           allOf:
             - $ref: "#/components/schemas/PreferencesReminders"
-            - required: [meals, water]
+            - required: [meals, water, snooze]
     PreferencesPatch:
       type: object
       additionalProperties: false

@@ -307,6 +307,29 @@ describe('programmazione di un template (NUT-031)', () => {
 })
 
 describe('settimana (NUT-032)', () => {
+  it('porta le azioni attive della ricetta (NUT-035)', async () => {
+    const { api, recipe } = await setup()
+    const fish = { id: 'a1', title: 'Scongela', daysBefore: 1, time: '21:00', enabled: true }
+    const off = { id: 'a2', title: 'Spesa', daysBefore: 2, time: '18:00', enabled: false }
+    const current = (await api.get(`/recipes/${recipe.id}`)).body
+    await api.put(`/recipes/${recipe.id}`, {
+      name: current.name,
+      actions: [fish, off],
+      items: current.items.map((i: { foodId: string; grams: number }) => ({
+        foodId: i.foodId,
+        grams: i.grams,
+      })),
+    })
+    await api.put('/plans', {
+      date: '2026-10-21',
+      slot: 'lunch',
+      items: [{ recipeId: recipe.id, factor: 1 }],
+    })
+    const day = (await api.get('/week?from=2026-10-19')).body.days[2]
+    const lunch = day.slots.find((s: { slot: string }) => s.slot === 'lunch')
+    expect(lunch.plan.actions).toEqual([fish])
+  })
+
   it('parte da lunedì e dà ricetta, stato e kcal di ogni pasto', async () => {
     const { api, recipe } = await setup()
     await api.put('/plans', {
