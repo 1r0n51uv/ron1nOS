@@ -72,7 +72,10 @@ describe('rotte delle preferenze (SET-002)', () => {
     expect(res.body.reminders).toEqual({
       meals: { ...DEFAULT_PREFERENCES.reminders.meals, dinner: '20:30' },
       water: ['09:00', '11:00'],
+      snooze: 15,
     })
+    expect((await api().patch({ reminders: { snooze: 20 } })).body.reminders.snooze).toBe(20)
+    expect((await api().patch({ reminders: { snooze: 2 } })).status).toBe(400)
     expect((await api().get()).body.reminders.water).toEqual(['09:00', '11:00'])
     const bad = await api().patch({ reminders: { meals: { dinner: '8 di sera' } } })
     expect(bad.status).toBe(400)

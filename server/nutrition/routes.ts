@@ -142,6 +142,15 @@ const ShoppingPatch = z
   .partial()
   .strict()
 
+// Un'azione collegata a una ricetta (NUT-035): `id` lo sceglie il client.
+const RecipeActionInput = z.object({
+  id: z.string().trim().min(1).max(64),
+  title: z.string().trim().min(1).max(100),
+  daysBefore: z.number().int().min(0).max(14),
+  time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Orario non valido, atteso HH:MM'),
+  enabled: z.boolean(),
+})
+
 const RecipeInput = z.object({
   name: z.string().trim().min(1).max(200),
   notes: z.preprocess(
@@ -151,6 +160,8 @@ const RecipeInput = z.object({
   // Il procedimento, un passo per elemento (NUT-030). Omesso in una modifica
   // resta com'è: la dashboard web non lo conosce.
   steps: z.array(z.string().trim().min(1).max(1000)).max(50).optional(),
+  // Le azioni collegate (NUT-035). Omesse in una modifica restano come sono.
+  actions: z.array(RecipeActionInput).max(10).optional(),
   items: z
     .array(
       z.union([z.object({ foodId: z.uuid(), grams: Grams }), z.object({ food: Candidate, grams: Grams })]),

@@ -6,6 +6,7 @@ import { addDays, weekday } from './dates.ts'
 import type { Day, Macros } from './day.ts'
 import { getDay } from './day.ts'
 import { InvalidRequestError } from './http.ts'
+import type { RecipeAction } from './recipes.ts'
 import type { Slot } from './schemas.ts'
 
 export type WeekSlot = {
@@ -19,6 +20,8 @@ export type WeekSlot = {
     recipeId: string | null
     name: string
     imageUrl: string | null
+    // Le azioni attive della ricetta (NUT-035).
+    actions: RecipeAction[]
   } | null
 }
 
@@ -35,6 +38,23 @@ export type Week = { from: string; days: WeekDay[] }
 export async function getWeek(db: Queryable, from: string): Promise<Week> {
   if (weekday(from) !== 1) throw new InvalidRequestError('La settimana parte da lunedì')
   const days = await Promise.all([0, 1, 2, 3, 4, 5, 6].map((n) => getDay(db, addDays(from, n))))
+  const recipeIds = [
+    ...new Set(
+      days.flatMap((d) => d.slots.flatMap((s) => (s.planned?.recipeId ? [s.planned.recipeId] : []))),
+    ),
+  ]
+  const actions = new Map<string, RecipeAction[]>()
+  if (recipeIds.length) {
+    const { rows } = await db.query<{ id: string; actions: RecipeAction[] }>(
+      'select id, actions from recipes where id = any($1)',
+      [recipeIds],
+    )
+    for (const r of rows)
+      actions.set(
+        r.id,
+        r.actions.filter((a) => a.enabled),
+      )
+  }
   return {
     from,
     days: days.map((d) => ({
@@ -55,6 +75,7 @@ export async function getWeek(db: Queryable, from: string): Promise<Week> {
                 recipeId: p.recipeId,
                 name: p.recipeName ?? p.items[0]?.name ?? '',
                 imageUrl: p.recipeImage,
+                actions: (p.recipeId && actions.get(p.recipeId)) || [],
               }
             : null,
         }

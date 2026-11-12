@@ -37,6 +37,8 @@ export const Reminders = z.object({
     .max(12)
     .refine(unique, 'Orari ripetuti')
     .transform((list) => [...list].sort()),
+  // Di quanti minuti `Rimanda` sposta il promemoria di un pasto.
+  snooze: z.number().int().min(5).max(120),
 })
 
 export const DEFAULT_REMINDERS: z.infer<typeof Reminders> = {
@@ -48,6 +50,7 @@ export const DEFAULT_REMINDERS: z.infer<typeof Reminders> = {
     dinner: '20:00',
   },
   water: ['10:00', '13:00', '16:00', '19:00'],
+  snooze: 15,
 }
 
 export const Preferences = z.object({
@@ -78,7 +81,11 @@ export const PreferencesPatch = z
     navOrder: Preferences.shape.navOrder,
     formats: Preferences.shape.formats.partial(),
     reminders: z
-      .object({ meals: Reminders.shape.meals.partial().strict(), water: Reminders.shape.water })
+      .object({
+        meals: Reminders.shape.meals.partial().strict(),
+        water: Reminders.shape.water,
+        snooze: Reminders.shape.snooze,
+      })
       .partial()
       .strict(),
   })
@@ -104,6 +111,7 @@ export function applyPatch(current: Preferences, patch: PreferencesPatch): Prefe
     reminders: {
       meals: { ...current.reminders.meals, ...patch.reminders?.meals },
       water: patch.reminders?.water ?? current.reminders.water,
+      snooze: patch.reminders?.snooze ?? current.reminders.snooze,
     },
   }
 }
@@ -143,6 +151,7 @@ export function normalize(saved: unknown): Preferences {
         SLOTS.map((slot) => [slot, pick(Time, meals[slot], d.reminders.meals[slot])]),
       ) as Preferences['reminders']['meals'],
       water: pick(Reminders.shape.water, reminders.water, d.reminders.water),
+      snooze: pick(Reminders.shape.snooze, reminders.snooze, d.reminders.snooze),
     },
   }
 }

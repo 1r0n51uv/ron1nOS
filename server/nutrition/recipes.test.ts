@@ -149,6 +149,48 @@ describe('ricette (NUT-008)', () => {
   })
 })
 
+describe('azioni collegate a una ricetta (NUT-035)', () => {
+  const scongela = { id: 'a1', title: 'Scongela il pesce', daysBefore: 1, time: '21:00', enabled: true }
+  const spesa = { id: 'a2', title: 'Compra il limone', daysBefore: 2, time: '18:30', enabled: false }
+
+  it('si salvano, si correggono e senza si lasciano com’erano', async () => {
+    const f = await foods()
+    const api = nutritionApp(db, { now })
+    const created = await api.post('/recipes', {
+      name: 'Pesce al forno',
+      actions: [scongela, spesa],
+      items: [{ foodId: f.pollo, grams: 150 }],
+    })
+    expect(created.status).toBe(201)
+    expect(created.body.actions).toEqual([scongela, spesa])
+    const kept = await api.put(`/recipes/${created.body.id}`, {
+      name: 'Pesce al forno',
+      items: [{ foodId: f.pollo, grams: 150 }],
+    })
+    expect(kept.body.actions).toEqual([scongela, spesa])
+    const cleared = await api.put(`/recipes/${created.body.id}`, {
+      name: 'Pesce al forno',
+      actions: [],
+      items: [{ foodId: f.pollo, grams: 150 }],
+    })
+    expect(cleared.body.actions).toEqual([])
+  })
+
+  it.each([
+    ['un orario che non è tale', { ...scongela, time: '9 di sera' }],
+    ['troppi giorni prima', { ...scongela, daysBefore: 15 }],
+    ['un titolo vuoto', { ...scongela, title: ' ' }],
+  ])('rifiuta %s', async (_, action) => {
+    const f = await foods()
+    const res = await nutritionApp(db, { now }).post('/recipes', {
+      name: 'Pesce',
+      actions: [action],
+      items: [{ foodId: f.pollo, grams: 150 }],
+    })
+    expect(res.status).toBe(400)
+  })
+})
+
 describe('procedimento di una ricetta (NUT-030)', () => {
   it('si salva, si corregge e si legge nell’ordine dei passi', async () => {
     const f = await foods()

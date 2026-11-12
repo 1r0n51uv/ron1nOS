@@ -62,6 +62,7 @@ describe('preferenze (SET-002)', () => {
         dinner: '20:00',
       },
       water: ['10:00', '13:00', '16:00', '19:00'],
+      snooze: 15,
     })
   })
 

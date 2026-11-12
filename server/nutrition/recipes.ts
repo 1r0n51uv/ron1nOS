@@ -20,6 +20,10 @@ export type RecipeItem = Macros & {
   missing: boolean
 }
 
+// Un'azione collegata a una ricetta (NUT-035): un promemoria `daysBefore`
+// giorni prima del pasto, all'ora `time`.
+export type RecipeAction = { id: string; title: string; daysBefore: number; time: string; enabled: boolean }
+
 export type Recipe = Macros & {
   id: string
   name: string
@@ -28,11 +32,18 @@ export type Recipe = Macros & {
   steps: string[]
   // La foto, se la ricetta viene da YAZIO e ne ha una (NUT-034).
   imageUrl: string | null
+  actions: RecipeAction[]
   grams: number
   items: RecipeItem[]
 }
 
-export type RecipeInput = { name: string; notes: string | null; steps?: string[]; items: NewItem[] }
+export type RecipeInput = {
+  name: string
+  notes: string | null
+  steps?: string[]
+  actions?: RecipeAction[]
+  items: NewItem[]
+}
 
 type Row = Omit<RecipeItem, keyof Macros | 'missing'> & {
   recipeId: string
@@ -48,9 +59,10 @@ async function load(db: Queryable, where: string, params: unknown[]): Promise<Re
     name: string
     notes: string | null
     steps: string[]
+    actions: RecipeAction[]
     imageUrl: string | null
   }>(
-    `select id, name, notes, steps, image_url as "imageUrl" from recipes ${where} order by lower(name), id`,
+    `select id, name, notes, steps, actions, image_url as "imageUrl" from recipes ${where} order by lower(name), id`,
     params,
   )
   if (!recipes.length) return []
@@ -110,18 +122,25 @@ async function writeItems(db: Queryable, recipeId: string, items: NewItem[]) {
 
 export async function createRecipe(db: Queryable, input: RecipeInput) {
   const { rows } = await db.query<{ id: string }>(
-    'insert into recipes (name, notes, steps) values ($1, $2, $3::jsonb) returning id',
-    [input.name, input.notes, JSON.stringify(input.steps ?? [])],
+    'insert into recipes (name, notes, steps, actions) values ($1, $2, $3::jsonb, $4::jsonb) returning id',
+    [input.name, input.notes, JSON.stringify(input.steps ?? []), JSON.stringify(input.actions ?? [])],
   )
   await writeItems(db, rows[0].id, input.items)
   return rows[0].id
 }
 
-// Sostituisce nome, note e alimenti, e il procedimento se c'è.
+// Sostituisce nome, note e alimenti, e il procedimento e le azioni se ci sono.
 export async function updateRecipe(db: Queryable, id: string, input: RecipeInput) {
   const { rowCount } = await db.query(
-    'update recipes set name = $2, notes = $3, steps = coalesce($4::jsonb, steps), updated_at = now() where id = $1',
-    [id, input.name, input.notes, input.steps ? JSON.stringify(input.steps) : null],
+    `update recipes set name = $2, notes = $3, steps = coalesce($4::jsonb, steps),
+            actions = coalesce($5::jsonb, actions), updated_at = now() where id = $1`,
+    [
+      id,
+      input.name,
+      input.notes,
+      input.steps ? JSON.stringify(input.steps) : null,
+      input.actions ? JSON.stringify(input.actions) : null,
+    ],
   )
   if (!rowCount) throw new NotFoundError('Ricetta non trovata')
   await db.query('delete from recipe_items where recipe_id = $1', [id])
