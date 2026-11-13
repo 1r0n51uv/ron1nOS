@@ -5,6 +5,10 @@ in alto. Ogni PR aggiunge la sua riga in cima, sotto il giorno del merge.
 Il server segue il tag `main` dell'immagine; per tornare indietro c'è
 `sha-<commit>`.
 
+## 2026-11-13
+
+- Le foto generate da image-chef si leggono dalla cartella condivisa col dojo con il nome del file che l'agente indica (o, se manca, l'immagine più recente): `image-chef` non copia più file (NUT-036) ([#247](https://github.com/1r0n51uv/ron1nOS/pull/247))
+
 ## 2026-11-12
 
 - Foto delle ricette generate dall'agente image-chef del dojo: `POST /nutrition/recipes/{id}/photo/generate` avvia il lavoro, `GET /nutrition/recipes/{id}/photo` serve il file, `photo` nella ricetta dà lo stato (NUT-036) ([#246](https://github.com/1r0n51uv/ron1nOS/pull/246))

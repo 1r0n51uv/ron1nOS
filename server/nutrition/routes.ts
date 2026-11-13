@@ -571,7 +571,7 @@ export function nutritionRoutes({
   app.get('/recipes/:id/photo', async (c) => {
     const id = check(Id, c.req.param('id'))
     if (!photos) throw new NotFoundError('Foto non trovata')
-    const { data, type } = await readPhoto(photos.dir, id)
+    const { data, type } = await readPhoto(c.get('db'), photos.dir, id)
     return c.body(new Uint8Array(data), 200, {
       'Content-Type': type,
       'Cache-Control': 'private, max-age=86400',

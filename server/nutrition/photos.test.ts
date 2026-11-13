@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, rm, utimes, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -8,7 +8,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { testDb } from '../testing/db.ts'
 import { nutritionApp, resetNutrition, seedFood } from '../testing/nutrition.ts'
 import type { PhotoGenerator } from './photos.ts'
-import { createPhotoGenerator, PhotoError, photoPrompt } from './photos.ts'
+import { createPhotoGenerator, fileNameFrom, PhotoError, photoPrompt } from './photos.ts'
 
 let db: Awaited<ReturnType<typeof testDb>>
 let dir: string
@@ -51,7 +51,10 @@ describe('foto generata di una ricetta (NUT-036)', () => {
     const id = await recipe()
     const photos: PhotoGenerator = {
       dir,
-      generate: async (r) => writeFile(join(dir, `${r.id}.png`), 'PNG'),
+      generate: async () => {
+        await writeFile(join(dir, 'openai_gpt-image-2_1.png'), 'PNG')
+        return 'openai_gpt-image-2_1.png'
+      },
     }
     const api = nutritionApp(db, { photos })
     const started = await api.post(`/recipes/${id}/photo/generate`)
@@ -66,6 +69,31 @@ describe('foto generata di una ricetta (NUT-036)', () => {
     expect(file.status).toBe(200)
     expect(file.headers.get('content-type')).toBe('image/png')
     expect(await file.text()).toBe('PNG')
+  })
+
+  it('senza il nome nella risposta prende l’immagine più recente creata dopo la richiesta', async () => {
+    const id = await recipe()
+    await writeFile(join(dir, 'vecchia.png'), 'VECCHIA')
+    await utimes(join(dir, 'vecchia.png'), new Date('2020-01-01'), new Date('2020-01-01'))
+    const photos: PhotoGenerator = {
+      dir,
+      generate: async () => {
+        await writeFile(join(dir, 'nuova.png'), 'NUOVA')
+        return null
+      },
+    }
+    const api = nutritionApp(db, { photos })
+    await api.post(`/recipes/${id}/photo/generate`)
+    expect((await settled(api, id)).photo).toBeNull()
+    const file = await api.app.request(`/api/v1/nutrition/recipes/${id}/photo`)
+    expect(await file.text()).toBe('NUOVA')
+  })
+
+  it('un nome con un percorso non esce dalla cartella', async () => {
+    const id = await recipe()
+    await db.query(`update recipes set photo_file = '../segreto.png' where id = $1`, [id])
+    const api = nutritionApp(db, { photos: { dir, generate: async () => null } })
+    expect((await api.get(`/recipes/${id}/photo`)).status).toBe(404)
   })
 
   it('un errore del dojo resta nella ricetta, e si può riprovare', async () => {
@@ -84,7 +112,7 @@ describe('foto generata di una ricetta (NUT-036)', () => {
 
   it('senza il file dopo la risposta la ricetta resta senza foto', async () => {
     const id = await recipe()
-    const api = nutritionApp(db, { photos: { dir, generate: async () => undefined } })
+    const api = nutritionApp(db, { photos: { dir, generate: async () => null } })
     await api.post(`/recipes/${id}/photo/generate`)
     const done = await settled(api, id)
     expect(done.photo).toEqual({ state: 'failed', error: 'Image Chef non ha salvato la foto' })
@@ -96,7 +124,10 @@ describe('foto generata di una ricetta (NUT-036)', () => {
     let release: () => void = () => undefined
     const photos: PhotoGenerator = {
       dir,
-      generate: () => new Promise<void>((resolve) => (release = resolve)),
+      generate: () =>
+        new Promise<string | null>((resolve) => {
+          release = () => resolve(null)
+        }),
     }
     const api = nutritionApp(db, { photos })
     expect((await api.post(`/recipes/${id}/photo/generate`)).status).toBe(202)
@@ -113,7 +144,7 @@ describe('foto generata di una ricetta (NUT-036)', () => {
       `update recipes set photo_state = 'generating', photo_started_at = now() - interval '1 hour' where id = $1`,
       [id],
     )
-    const api = nutritionApp(db, { photos: { dir, generate: async () => undefined } })
+    const api = nutritionApp(db, { photos: { dir, generate: async () => null } })
     expect((await api.post(`/recipes/${id}/photo/generate`)).status).toBe(202)
     await settled(api, id)
   })
@@ -128,9 +159,20 @@ describe('foto generata di una ricetta (NUT-036)', () => {
   })
 
   it('ricetta sconosciuta: 404', async () => {
-    const api = nutritionApp(db, { photos: { dir, generate: async () => undefined } })
+    const api = nutritionApp(db, { photos: { dir, generate: async () => null } })
     const res = await api.post('/recipes/00000000-0000-4000-8000-000000000000/photo/generate')
     expect(res.status).toBe(404)
+  })
+})
+
+describe('nome del file nella risposta', () => {
+  it.each([
+    ['FATTO /opt/data/profiles/image-chef/cache/generated/images/openai_codex_1.png', 'openai_codex_1.png'],
+    ['FATTO `foto.webp`', 'foto.webp'],
+    ['FATTO', null],
+    ['FATTO ../../etc/passwd', null],
+  ])('%s', (answer, name) => {
+    expect(fileNameFrom(answer)).toBe(name)
   })
 })
 
@@ -143,7 +185,7 @@ describe('richiesta a image-chef', () => {
   } as unknown as Parameters<typeof photoPrompt>[0]
 
   it('mette i dati nel blocco RICETTA e il percorso fuori', () => {
-    expect(photoPrompt(sample, '/opt/data/work/foto-ricette/r1.png')).toBe(
+    expect(photoPrompt(sample)).toBe(
       [
         'RICETTA',
         'id: r1',
@@ -152,7 +194,6 @@ describe('richiesta a image-chef', () => {
         'procedimento:',
         '1. Griglia.',
         'FINE RICETTA',
-        'FILE: /opt/data/work/foto-ricette/r1.png',
       ].join('\n'),
     )
   })
@@ -160,17 +201,17 @@ describe('richiesta a image-chef', () => {
   it('chiama il profile image-chef con la chiave del gateway', async () => {
     const fetchMock = vi.fn(
       async () =>
-        new Response(JSON.stringify({ choices: [{ message: { content: 'FATTO /x.png' } }] }), {
+        new Response(JSON.stringify({ choices: [{ message: { content: 'FATTO /x/x.png' } }] }), {
           status: 200,
         }),
     )
     vi.stubGlobal('fetch', fetchMock)
-    const gen = createPhotoGenerator({ url: 'http://dojo-gateway:8642/', key: 'k', dir, agentDir: '/a' })
-    await gen.generate(sample)
+    const gen = createPhotoGenerator({ url: 'http://dojo-gateway:8642/', key: 'k', dir })
+    expect(await gen.generate(sample)).toBe('x.png')
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
     expect(url).toBe('http://dojo-gateway:8642/p/image-chef/v1/chat/completions')
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer k')
-    expect(JSON.parse(init.body as string).messages[0].content).toContain('FILE: /a/r1.png')
+    expect(JSON.parse(init.body as string).messages[0].content).toContain('nome: Pollo')
   })
 
   it.each([['ERRORE login ChatGPT scaduto', 'login ChatGPT scaduto']])(
@@ -181,13 +222,13 @@ describe('richiesta a image-chef', () => {
         async () =>
           new Response(JSON.stringify({ choices: [{ message: { content: answer } }] }), { status: 200 }),
       )
-      const gen = createPhotoGenerator({ url: 'http://x', key: 'k', dir, agentDir: '/a' })
+      const gen = createPhotoGenerator({ url: 'http://x', key: 'k', dir })
       await expect(gen.generate(sample)).rejects.toThrow(reason)
     },
   )
 
   it('dojo spento o errore HTTP: motivo leggibile', async () => {
-    const gen = createPhotoGenerator({ url: 'http://x', key: 'k', dir, agentDir: '/a' })
+    const gen = createPhotoGenerator({ url: 'http://x', key: 'k', dir })
     vi.stubGlobal('fetch', async () => Promise.reject(new TypeError('fetch failed')))
     await expect(gen.generate(sample)).rejects.toThrow('Il dojo non risponde')
     vi.stubGlobal('fetch', async () => new Response('no', { status: 401 }))
