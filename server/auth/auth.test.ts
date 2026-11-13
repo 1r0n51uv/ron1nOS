@@ -8,7 +8,7 @@ import { hashPassword } from './password.ts'
 import { SESSION_COOKIE } from './routes.ts'
 import { createSession, touchSession } from './sessions.ts'
 
-const PASSWORD = 'una password abbastanza lunga'
+const PASSWORD = '4827'
 
 let db: Awaited<ReturnType<typeof testDb>>
 let passwordHash: string
@@ -73,9 +73,15 @@ describe('login (AUTH-002, AUTH-003)', () => {
   })
 
   it('password sbagliata: 401 invalid_password, nessun cookie', async () => {
-    const res = await login(app(), 'sbagliata')
+    const res = await login(app(), '0000')
     expect(res.status).toBe(401)
-    expect(await res.json()).toEqual({ error: 'invalid_password', message: 'Password non valida' })
+    expect(await res.json()).toEqual({ error: 'invalid_password', message: 'Codice non valido' })
+    expect(res.headers.get('set-cookie')).toBeNull()
+  })
+
+  it.each(['', '123', '12345', 'abcd', ' 482'])('un codice come "%s" non è accettato', async (code) => {
+    const res = await login(app(), code)
+    expect(res.status).toBe(401)
     expect(res.headers.get('set-cookie')).toBeNull()
   })
 
@@ -233,7 +239,7 @@ describe('login spento (senza AUTH_PASSWORD_HASH)', () => {
 describe('limite ai tentativi (AUTH-004)', () => {
   it('al sesto tentativo sbagliato risponde 429 anche con la password giusta', async () => {
     const a = app()
-    for (let i = 0; i < 5; i++) expect((await login(a, 'sbagliata', '10.9.9.9')).status).toBe(401)
+    for (let i = 0; i < 5; i++) expect((await login(a, '0000', '10.9.9.9')).status).toBe(401)
     const blocked = await login(a, PASSWORD, '10.9.9.9')
     expect(blocked.status).toBe(429)
     expect(await blocked.json()).toEqual({

@@ -14,7 +14,7 @@ let db: Awaited<ReturnType<typeof testDb>>
 let passwordHash: string
 beforeAll(async () => {
   db = await testDb()
-  passwordHash = await hashPassword('password di prova')
+  passwordHash = await hashPassword('4827')
 })
 afterAll(() => db.drop())
 
@@ -22,7 +22,7 @@ async function signedIn(app: ReturnType<typeof createApp>) {
   const res = await app.request('/api/v1/auth/login', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ password: 'password di prova' }),
+    body: JSON.stringify({ password: '4827' }),
   })
   return res.headers.get('set-cookie')!.split(';')[0]
 }

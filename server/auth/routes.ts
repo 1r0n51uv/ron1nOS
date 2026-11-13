@@ -1,4 +1,4 @@
-// Login della dashboard (docs/specs/auth.md): una sola password, sessioni
+// Login della dashboard (docs/specs/auth.md): un solo codice a 4 cifre, sessioni
 // in Postgres, cookie HttpOnly. Senza AUTH_PASSWORD_HASH il login è spento
 // e la dashboard resta aperta a chi è nella tailnet, come prima.
 import type { Context, MiddlewareHandler } from 'hono'
@@ -38,7 +38,7 @@ export type AuthDeps = {
 const PUBLIC = new Set(['GET /api/v1/health', 'POST /api/v1/auth/login'])
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
 
-const loginBody = z.object({ password: z.string().min(1).max(1024) })
+const loginBody = z.object({ password: z.string().regex(/^\d{4}$/) })
 const tokenBody = z.object({ name: z.string().trim().min(1).max(60) })
 
 const unauthenticated = (c: Context) =>
@@ -137,7 +137,7 @@ export function createAuth({
     if (!parsed.success || !(await verifyPassword(parsed.data.password, passwordHash!))) {
       limiter.fail(ip)
       console.warn(`login non riuscito da ${ip}`)
-      return c.json({ error: 'invalid_password', message: 'Password non valida' }, 401)
+      return c.json({ error: 'invalid_password', message: 'Codice non valido' }, 401)
     }
     const db = database.db
     if (!db || database.status() !== 'ok') return dbUnavailable(c)

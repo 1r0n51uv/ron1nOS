@@ -48,7 +48,7 @@ describe('Impostazioni › Account (SET-007)', () => {
     await waitFor(() => expect(others).toHaveBeenCalled())
   })
 
-  it('con il login spento lo dice, e spiega comunque la password', async () => {
+  it('con il login spento lo dice, e spiega comunque il codice', async () => {
     vi.spyOn(authSource, 'me').mockResolvedValue({ enabled: false })
     const list = vi.spyOn(authSource, 'sessions')
     renderWithProviders(<AccountSection />)

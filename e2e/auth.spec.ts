@@ -10,19 +10,16 @@ test('senza sessione si va al login e poi si torna alla pagina richiesta', async
   await expect(page).toHaveURL(/\/login\?next=%2Fpasti$/)
   await expect(page.getByRole('heading', { name: 'ron1nOS' })).toBeVisible()
 
-  await page.getByLabel('Password').fill('sbagliata')
-  await page.getByRole('button', { name: 'Accedi' }).click()
-  await expect(page.getByRole('alert')).toHaveText('Password non valida')
+  await page.getByLabel('Codice').fill('0000')
+  await expect(page.getByRole('alert')).toHaveText('Codice non valido')
 
-  await page.getByLabel('Password').fill(E2E_PASSWORD)
-  await page.getByRole('button', { name: 'Accedi' }).click()
+  await page.getByLabel('Codice').fill(E2E_PASSWORD)
   await expect(page).toHaveURL(/\/pasti$/)
 })
 
 test('Esci in Impostazioni chiude la sessione', async ({ page }) => {
   await page.goto('/login')
-  await page.getByLabel('Password').fill(E2E_PASSWORD)
-  await page.getByRole('button', { name: 'Accedi' }).click()
+  await page.getByLabel('Codice').fill(E2E_PASSWORD)
   await expect(page).toHaveURL(/\/$/)
 
   await page.goto('/impostazioni/account')
@@ -42,14 +39,14 @@ test('API senza sessione: 401, health sì', async ({ request }) => {
   expect(await res.json()).toMatchObject({ error: 'unauthenticated' })
 })
 
-test('dopo 5 password sbagliate il login si blocca per 15 minuti', async ({ playwright, baseURL }) => {
+test('dopo 5 codici sbagliati il login si blocca per 15 minuti', async ({ playwright, baseURL }) => {
   // Un indirizzo tutto suo, per non bloccare gli altri test.
   const request = await playwright.request.newContext({
     baseURL,
     extraHTTPHeaders: { 'x-forwarded-for': '198.51.100.7' },
   })
   for (let i = 0; i < 5; i++) {
-    expect((await request.post('/api/v1/auth/login', { data: { password: 'no' } })).status()).toBe(401)
+    expect((await request.post('/api/v1/auth/login', { data: { password: '0000' } })).status()).toBe(401)
   }
   const blocked = await request.post('/api/v1/auth/login', { data: { password: E2E_PASSWORD } })
   expect(blocked.status()).toBe(429)

@@ -26,7 +26,7 @@ beforeAll(async () => {
   app = createApp({
     qbt: fakeQbt(),
     database: { db, status: () => 'ok' },
-    auth: { passwordHash: await hashPassword('una password abbastanza lunga') },
+    auth: { passwordHash: await hashPassword('4827') },
     documents: { vault: createVault(randomBytes(32)), now: () => new Date('2026-10-22T10:00:00Z') },
   })
   const { rows } = await db.query<{ id: string; key: string }>('select id, key from document_types')

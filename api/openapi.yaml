@@ -21,11 +21,11 @@ security:
 paths:
   /auth/login:
     post:
-      summary: Entra con la password della dashboard (AUTH-001, AUTH-002)
+      summary: Entra con il codice a 4 cifre della dashboard (AUTH-001, AUTH-002, AUTH-007)
       description: >
         Crea una sessione di 30 giorni, rinnovata a ogni uso, e la mette nel
         cookie `ron1nos_session` (HttpOnly, Secure, SameSite=Strict). Dopo 5
-        password sbagliate in 15 minuti dallo stesso indirizzo risponde 429
+        codici sbagliati in 15 minuti dallo stesso indirizzo risponde 429
         per 15 minuti (AUTH-004).
       operationId: login
       security: []
@@ -37,7 +37,7 @@ paths:
               type: object
               required: [password]
               properties:
-                password: { type: string, minLength: 1, maxLength: 1024 }
+                password: { type: string, pattern: "^[0-9]{4}$", description: Il codice a 4 cifre. }
       responses:
         "200":
           description: Sessione creata.
@@ -53,7 +53,7 @@ paths:
                   enabled: { type: boolean, const: true }
                   expiresAt: { type: string, format: date-time }
         "401":
-          description: "`invalid_password`: password non valida."
+          description: "`invalid_password`: codice non valido."
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }

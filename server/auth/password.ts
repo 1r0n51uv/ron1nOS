@@ -1,5 +1,5 @@
-// Password della dashboard (AUTH-002): nel .env c'è solo l'hash scrypt,
-// generato con `npm run auth:hash`. Formato: scrypt$N$r$p$sale$hash, sale e
+// Codice della dashboard (AUTH-002, AUTH-007): nel .env c'è solo l'hash scrypt,
+// del codice, generato con `npm run auth:hash`. Formato: scrypt$N$r$p$sale$hash, sale e
 // hash in base64.
 import { randomBytes, scrypt as scryptCb, timingSafeEqual } from 'node:crypto'
 import { promisify } from 'node:util'
@@ -42,6 +42,9 @@ export async function verifyPassword(password: string, stored: string): Promise<
     return false
   }
 }
+
+// Il codice di accesso: esattamente 4 cifre (AUTH-007).
+export const isAccessCode = (value: string) => /^\d{4}$/.test(value)
 
 export function isPasswordHash(value: string) {
   return /^scrypt\$\d+\$\d+\$\d+\$[A-Za-z0-9+/=]+\$[A-Za-z0-9+/=]+$/.test(value)

@@ -37,25 +37,39 @@ beforeEach(() => {
 })
 
 describe('LoginPage (AUTH-001)', () => {
-  it('solo il campo password e il marchio; Accedi spento finché è vuoto', () => {
+  it('solo il campo del codice e il marchio; Accedi spento finché non sono 4 cifre', () => {
     show()
     expect(screen.getByRole('heading', { name: 'ron1nOS' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password')
+    const field = screen.getByLabelText('Codice')
+    expect(field).toHaveAttribute('type', 'password')
+    expect(field).toHaveAttribute('inputmode', 'numeric')
     expect(screen.queryAllByRole('textbox')).toHaveLength(0)
     expect(screen.getByRole('button', { name: 'Accedi' })).toBeDisabled()
+    fireEvent.change(field, { target: { value: '12' } })
+    expect(screen.getByRole('button', { name: 'Accedi' })).toBeDisabled()
+    expect(mutate).not.toHaveBeenCalled()
   })
 
-  it('invia la password', () => {
+  it('alla quarta cifra invia il codice, tenendo solo le cifre', () => {
     show()
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'segreta' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Accedi' }))
-    expect(mutate).toHaveBeenCalledWith('segreta', expect.anything())
+    fireEvent.change(screen.getByLabelText('Codice'), { target: { value: '4a8-27x9' } })
+    expect(screen.getByLabelText('Codice')).toHaveValue('4827')
+    expect(mutate).toHaveBeenCalledTimes(1)
+    expect(mutate).toHaveBeenCalledWith('4827', expect.anything())
   })
 
-  it('password sbagliata: il messaggio del backend, senza altro', () => {
-    show('/login', { error: new ApiError('invalid_password', 'Password non valida', 401) })
-    expect(screen.getByRole('alert')).toHaveTextContent('Password non valida')
-    expect(screen.getByLabelText('Password')).toHaveAttribute('aria-invalid', 'true')
+  it('Accedi invia il codice se non è già partito', () => {
+    show()
+    fireEvent.change(screen.getByLabelText('Codice'), { target: { value: '1234' } })
+    mutate.mockClear()
+    fireEvent.click(screen.getByRole('button', { name: 'Accedi' }))
+    expect(mutate).toHaveBeenCalledWith('1234', expect.anything())
+  })
+
+  it('codice sbagliato: il messaggio del backend, senza altro', () => {
+    show('/login', { error: new ApiError('invalid_password', 'Codice non valido', 401) })
+    expect(screen.getByRole('alert')).toHaveTextContent('Codice non valido')
+    expect(screen.getByLabelText('Codice')).toHaveAttribute('aria-invalid', 'true')
   })
 
   it('già dentro: torna alla pagina richiesta', () => {
