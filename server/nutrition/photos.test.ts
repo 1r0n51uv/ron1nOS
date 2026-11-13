@@ -3,6 +3,7 @@ import { mkdtemp, rm, utimes, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
+import sharp from 'sharp'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { testDb } from '../testing/db.ts'
@@ -24,6 +25,11 @@ afterEach(async () => {
   vi.unstubAllGlobals()
   await rm(dir, { recursive: true, force: true })
 })
+
+const png = (width: number, height: number) =>
+  sharp({ create: { width, height, channels: 3, background: '#c33' } })
+    .png()
+    .toBuffer()
 
 async function recipe() {
   const pollo = await seedFood(db, { name: 'Petto di pollo', kcal: 110, protein: 23, carbs: 0, fat: 1.2 })
@@ -52,7 +58,7 @@ describe('foto generata di una ricetta (NUT-036)', () => {
     const photos: PhotoGenerator = {
       dir,
       generate: async () => {
-        await writeFile(join(dir, 'openai_gpt-image-2_1.png'), 'PNG')
+        await writeFile(join(dir, 'openai_gpt-image-2_1.png'), await png(1536, 1024))
         return 'openai_gpt-image-2_1.png'
       },
     }
@@ -67,18 +73,34 @@ describe('foto generata di una ricetta (NUT-036)', () => {
 
     const file = await api.app.request(`/api/v1/nutrition/recipes/${id}/photo`)
     expect(file.status).toBe(200)
-    expect(file.headers.get('content-type')).toBe('image/png')
-    expect(await file.text()).toBe('PNG')
+    expect(file.headers.get('content-type')).toBe('image/jpeg')
+    const meta = await sharp(Buffer.from(await file.arrayBuffer())).metadata()
+    expect([meta.width, meta.height, meta.format]).toEqual([1026, 837, 'jpeg'])
+  })
+
+  it('foto di forme diverse escono tutte della stessa misura', async () => {
+    const id = await recipe()
+    for (const [name, w, h] of [
+      ['quadrata.png', 1024, 1024],
+      ['verticale.png', 800, 1200],
+    ] as const) {
+      await writeFile(join(dir, name), await png(w, h))
+      await db.query(`update recipes set photo_file = $2 where id = $1`, [id, name])
+      const api = nutritionApp(db, { photos: { dir, generate: async () => null } })
+      const res = await api.app.request(`/api/v1/nutrition/recipes/${id}/photo`)
+      const meta = await sharp(Buffer.from(await res.arrayBuffer())).metadata()
+      expect([meta.width, meta.height]).toEqual([1026, 837])
+    }
   })
 
   it('senza il nome nella risposta prende l’immagine più recente creata dopo la richiesta', async () => {
     const id = await recipe()
-    await writeFile(join(dir, 'vecchia.png'), 'VECCHIA')
+    await writeFile(join(dir, 'vecchia.png'), await png(10, 10))
     await utimes(join(dir, 'vecchia.png'), new Date('2020-01-01'), new Date('2020-01-01'))
     const photos: PhotoGenerator = {
       dir,
       generate: async () => {
-        await writeFile(join(dir, 'nuova.png'), 'NUOVA')
+        await writeFile(join(dir, 'nuova.png'), await png(300, 200))
         return null
       },
     }
@@ -86,7 +108,8 @@ describe('foto generata di una ricetta (NUT-036)', () => {
     await api.post(`/recipes/${id}/photo/generate`)
     expect((await settled(api, id)).photo).toBeNull()
     const file = await api.app.request(`/api/v1/nutrition/recipes/${id}/photo`)
-    expect(await file.text()).toBe('NUOVA')
+    expect(file.status).toBe(200)
+    expect(file.headers.get('content-type')).toBe('image/jpeg')
   })
 
   it('un nome con un percorso non esce dalla cartella', async () => {

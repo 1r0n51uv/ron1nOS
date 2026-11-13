@@ -5,6 +5,8 @@
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 
+import sharp from 'sharp'
+
 import type { Queryable } from '../db.ts'
 import { ConflictError, NotFoundError } from './http.ts'
 import type { Recipe } from './recipes.ts'
@@ -103,6 +105,27 @@ async function newestSince(dir: string, since: number) {
   return found.sort((a, b) => b.mtime - a.mtime)[0] ?? null
 }
 
+// Tutte le foto escono della stessa misura, con lo stesso rapporto di quelle
+// di YAZIO (684×558), in JPEG: l'agente può dare immagini diverse e da
+// 2 MB, il telefono ne riceve di uguali e leggere. Si tengono in memoria le
+// ultime, ognuna legata a nome e data del file.
+export const PHOTO_SIZE = { width: 1026, height: 837 } as const
+const MAX_CACHED = 40
+const cache = new Map<string, Buffer>()
+
+async function normalized(path: string, key: string): Promise<Buffer> {
+  const hit = cache.get(key)
+  if (hit) return hit
+  const data = await sharp(path)
+    .rotate()
+    .resize({ ...PHOTO_SIZE, fit: 'cover', position: 'centre' })
+    .jpeg({ quality: 85, mozjpeg: true })
+    .toBuffer()
+  cache.set(key, data)
+  if (cache.size > MAX_CACHED) cache.delete(cache.keys().next().value!)
+  return data
+}
+
 export async function readPhoto(db: Queryable, dir: string, id: string) {
   const { rows } = await db.query<{ photoFile: string | null }>(
     'select photo_file as "photoFile" from recipes where id = $1',
@@ -110,7 +133,12 @@ export async function readPhoto(db: Queryable, dir: string, id: string) {
   )
   const file = await photoFile(dir, rows[0]?.photoFile ?? null)
   if (!file) throw new NotFoundError('Foto non trovata')
-  return { data: await readFile(file.path), type: file.type }
+  try {
+    return { data: await normalized(file.path, `${file.name}:${file.mtime}`), type: 'image/jpeg' }
+  } catch {
+    // Un file che sharp non legge si serve com'è.
+    return { data: await readFile(file.path), type: file.type }
+  }
 }
 
 // Avvia il lavoro e torna subito. Un solo lavoro per ricetta alla volta.
