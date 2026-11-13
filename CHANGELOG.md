@@ -7,6 +7,7 @@ Il server segue il tag `main` dell'immagine; per tornare indietro c'è
 
 ## 2026-11-13
 
+- Le foto generate escono tutte della stessa misura (JPEG 1026×837, come il rapporto di quelle di YAZIO) e pesano meno di 200 KB invece di 2 MB (NUT-036) ([#248](https://github.com/1r0n51uv/ron1nOS/pull/248))
 - Le foto generate da image-chef si leggono dalla cartella condivisa col dojo con il nome del file che l'agente indica (o, se manca, l'immagine più recente): `image-chef` non copia più file (NUT-036) ([#247](https://github.com/1r0n51uv/ron1nOS/pull/247))
 
 ## 2026-11-12

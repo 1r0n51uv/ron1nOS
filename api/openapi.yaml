@@ -2026,14 +2026,15 @@ paths:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
     get:
       summary: La foto generata di una ricetta (NUT-036)
+      description: >-
+        Sempre JPEG di 1026×837 (lo stesso rapporto delle foto di YAZIO): il
+        server ritaglia e ridimensiona l'immagine dell'agente.
       operationId: getRecipePhoto
       responses:
         "200":
-          description: L'immagine (PNG, JPEG o WebP).
+          description: L'immagine, JPEG di 1026×837.
           content:
-            image/png: { schema: { type: string, format: binary } }
             image/jpeg: { schema: { type: string, format: binary } }
-            image/webp: { schema: { type: string, format: binary } }
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
   /nutrition/recipes/{id}:
