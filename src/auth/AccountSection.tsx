@@ -32,10 +32,10 @@ export function AccountSection() {
           </p>
         </WidgetCard>
       )}
-      <WidgetCard title="Password">
+      <WidgetCard title="Codice">
         <p className="m-0 text-sm text-ink-muted">
-          La password sta come hash nel <span className="font-mono">.env</span> del server, quindi non si
-          cambia da qui. Per una nuova: sul server lancia il comando qui sotto, metti il risultato in{' '}
+          Il codice a 4 cifre sta come hash nel <span className="font-mono">.env</span> del server, quindi non
+          si cambia da qui. Per uno nuovo: sul server lancia il comando qui sotto, metti il risultato in{' '}
           <span className="font-mono">AUTH_PASSWORD_HASH</span> e riavvia lo stack.
         </p>
         <code className="block rounded-xl border border-glass-border bg-glass px-3.5 py-2.5 font-mono text-[13px]">

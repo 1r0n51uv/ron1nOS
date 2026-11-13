@@ -1,7 +1,7 @@
-// npm run auth:hash: chiede la password e stampa la riga per il .env.
+// npm run auth:hash: chiede il codice a 4 cifre e stampa la riga per il .env.
 import { createInterface } from 'node:readline'
 
-import { hashPassword } from './password.ts'
+import { hashPassword, isAccessCode } from './password.ts'
 
 async function ask(question: string) {
   const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: process.stdin.isTTY })
@@ -17,13 +17,13 @@ async function ask(question: string) {
   return value
 }
 
-const password = await ask('Password della dashboard: ')
-if (password.length < 12) {
-  console.error('Serve una password di almeno 12 caratteri.')
+const password = await ask('Codice della dashboard (4 cifre): ')
+if (!isAccessCode(password)) {
+  console.error('Servono esattamente 4 cifre.')
   process.exit(1)
 }
-if ((await ask('Ripeti la password: ')) !== password) {
-  console.error('Le due password non coincidono.')
+if ((await ask('Ripeti il codice: ')) !== password) {
+  console.error('I due codici non coincidono.')
   process.exit(1)
 }
 // Gli $ vanno tra apici singoli nel .env, così Docker non li espande.

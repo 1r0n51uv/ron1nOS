@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 
-import { hashPassword, isPasswordHash, verifyPassword } from './password.ts'
+import { hashPassword, isAccessCode, isPasswordHash, verifyPassword } from './password.ts'
 
 describe('password della dashboard (AUTH-002)', () => {
   it('la password giusta passa, quella sbagliata no', async () => {
@@ -19,5 +19,12 @@ describe('password della dashboard (AUTH-002)', () => {
     expect(await verifyPassword('x', 'non-un-hash')).toBe(false)
     expect(await verifyPassword('x', 'scrypt$1$1$1$$')).toBe(false)
     expect(isPasswordHash('bcrypt$abc')).toBe(false)
+  })
+})
+
+describe('isAccessCode (AUTH-007)', () => {
+  it('solo 4 cifre', () => {
+    expect(isAccessCode('0482')).toBe(true)
+    for (const bad of ['', '123', '12345', 'abcd', '12 4', '١٢٣٤']) expect(isAccessCode(bad)).toBe(false)
   })
 })

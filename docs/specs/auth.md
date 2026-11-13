@@ -25,9 +25,9 @@ Stato: fatto (#97)
 Accettazione:
 
 - [ ] Senza sessione valida ogni pagina porta a `/login`, con il solo
-      campo password e il marchio ron1n.
+      campo del codice e il marchio ron1n.
 - [ ] Dopo il login si torna alla pagina richiesta.
-- [ ] Password sbagliata: `Password non valida`, senza dire altro.
+- [ ] Codice sbagliato: `Codice non valido`, senza dire altro.
 - [ ] `Esci` nelle impostazioni chiude la sessione.
 
 #### AUTH-002 · Sessione web
@@ -62,7 +62,7 @@ Stato: fatto (#100)
 
 Accettazione:
 
-- [ ] Dopo 5 password sbagliate in 15 minuti dallo stesso indirizzo il
+- [ ] Dopo 5 codici sbagliati in 15 minuti dallo stesso indirizzo il
       login risponde `429` per 15 minuti.
 - [ ] I tentativi falliti finiscono nei log senza la password.
 
@@ -92,6 +92,27 @@ Accettazione:
 - [x] `GET /auth/tokens` segna con `current: true` il token della
       richiesta (`Authorization: Bearer`); dal sito, con il cookie, tutti
       `false`.
+
+#### AUTH-007 · Codice a 4 cifre
+
+Stato: fatto
+
+Al posto della password lunga si entra con un codice di 4 cifre, comodo da
+digitare sul tablet. Il resto non cambia: stesso hash scrypt in
+`AUTH_PASSWORD_HASH`, stessa sessione, stesso limite ai tentativi.
+
+Accettazione:
+
+- [x] La pagina di login ha il solo campo `Codice`, con tastiera numerica;
+      alla quarta cifra il codice parte da solo, e se è sbagliato il campo
+      si svuota.
+- [x] Codice sbagliato: `Codice non valido`, senza dire altro.
+- [x] Il backend accetta solo 4 cifre (`^[0-9]{4}$`); `npm run auth:hash`
+      chiede un codice di 4 cifre.
+- [x] La pagina di login si adatta anche a un tablet in verticale.
+
+Chi aveva già un `AUTH_PASSWORD_HASH` di una password lunga deve generarne
+uno nuovo: la vecchia password non entra più.
 
 ## Decisioni
 

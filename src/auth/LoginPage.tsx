@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input'
 import { ApiError } from '@/lib/api'
 import { safeNext, useLogin, useMe } from './data'
 
-// Pagina di login (AUTH-001): solo la password, poi si torna alla pagina
-// richiesta.
+const CODE_LENGTH = 4
+
+// Pagina di login (AUTH-001, AUTH-007): solo il codice a 4 cifre, poi si torna
+// alla pagina richiesta. Alla quarta cifra il codice parte da solo.
 export function LoginPage() {
   const [params] = useSearchParams()
   const next = safeNext(params.get('next'))
@@ -28,14 +30,27 @@ export function LoginPage() {
       : 'Backend non raggiungibile'
     : null
 
+  function send(code: string) {
+    if (code.length !== CODE_LENGTH || login.isPending) return
+    login.mutate(code, {
+      onSuccess: () => navigate(next, { replace: true }),
+      onError: () => setPassword(''),
+    })
+  }
+
+  function change(value: string) {
+    const code = value.replace(/\D/g, '').slice(0, CODE_LENGTH)
+    setPassword(code)
+    send(code)
+  }
+
   function submit(event: FormEvent) {
     event.preventDefault()
-    if (!password) return
-    login.mutate(password, { onSuccess: () => navigate(next, { replace: true }) })
+    send(password)
   }
 
   return (
-    <div className="relative flex min-h-screen min-w-[1024px] items-center justify-center p-5">
+    <div className="relative flex min-h-screen items-center justify-center p-5">
       <div
         aria-hidden="true"
         className="pointer-events-none fixed top-[120px] -right-10 font-kanji text-[520px] leading-none font-bold text-white/[0.035]"
@@ -45,7 +60,7 @@ export function LoginPage() {
       <form
         onSubmit={submit}
         aria-label="Accesso"
-        className="relative flex w-[400px] flex-col gap-5 rounded-[28px] p-8 glass-panel"
+        className="relative flex w-full max-w-[400px] flex-col gap-5 rounded-[28px] p-8 glass-panel"
       >
         <div className="flex items-center gap-3.5">
           <HankoMark size={48} decorative />
@@ -56,18 +71,21 @@ export function LoginPage() {
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor={fieldId} className="text-[13px] text-ink-muted">
-            Password
+            Codice
           </label>
           <Input
             id={fieldId}
             type="password"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={CODE_LENGTH}
             autoComplete="current-password"
             autoFocus
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => change(e.target.value)}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
-            className="font-mono"
+            className="text-center font-mono text-2xl tracking-[0.5em]"
           />
           {error ? (
             <span id={errorId} role="alert" className="text-[13px] text-brand-text">
@@ -75,7 +93,7 @@ export function LoginPage() {
             </span>
           ) : null}
         </div>
-        <Button type="submit" disabled={!password || login.isPending}>
+        <Button type="submit" disabled={password.length !== CODE_LENGTH || login.isPending}>
           Accedi
         </Button>
       </form>
