@@ -19,7 +19,7 @@ export type Config = {
   // OpenFoodFacts e USDA per la ricerca alimenti (NUT-004, NUT-005).
   foods: ExternalConfig
   // Foto delle ricette generate da image-chef nel dojo (NUT-036): attiva solo con URL e chiave del gateway.
-  photos?: { url: string; key: string; dir: string; agentDir: string }
+  photos?: { url: string; key: string; dir: string }
   // Login della dashboard (AUTH-002): hash scrypt della password.
   auth: { passwordHash?: string; cookieSecure: boolean }
   // Modulo Documenti (DOC-015): chiave AES-256 in base64.
@@ -51,7 +51,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
             url: env.HERMES_URL,
             key: env.HERMES_API_KEY,
             dir: env.RECIPE_PHOTOS_DIR || 'data/foto-ricette',
-            agentDir: env.RECIPE_PHOTOS_AGENT_DIR || '/opt/data/work/foto-ricette',
           }
         : undefined,
     foods: {
