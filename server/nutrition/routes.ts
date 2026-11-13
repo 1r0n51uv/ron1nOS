@@ -12,7 +12,14 @@ import { addDays, localHour, mondayOf, today } from './dates.ts'
 import { getDay } from './day.ts'
 import type { ExternalSearch } from './foodsearch.ts'
 import { addGoal, goalFor, goalHistory } from './goals.ts'
-import { check, ConflictError, InvalidRequestError, readJson, YazioUnavailableError } from './http.ts'
+import {
+  check,
+  ConflictError,
+  InvalidRequestError,
+  NotFoundError,
+  readJson,
+  YazioUnavailableError,
+} from './http.ts'
 import { logMeal, nextSlot, removeItem, setGrams, slotForHour } from './meals.ts'
 import { Amount, Day, Grams, Slot } from './schemas.ts'
 import { deletePlan, setPlan, setPlanStatus } from './plans.ts'
@@ -21,6 +28,8 @@ import { countUnmatched, listUnmatched, setEquivalent } from './matching.ts'
 import { getReport } from './report.ts'
 import { recentFoods } from './foods.ts'
 import { findBarcode, searchFoods } from './search.ts'
+import type { PhotoGenerator } from './photos.ts'
+import { readPhoto, startPhoto } from './photos.ts'
 import { getWeek } from './week.ts'
 import { importYazioRecipes } from './yaziorecipes.ts'
 import { yazioSearch } from './yaziosearch.ts'
@@ -67,6 +76,8 @@ export type NutritionDeps = {
   // configurato e il diario resta solo in ron1nOS.
   yazio?: (db: Queryable) => YazioClient
   syncSteps?: SyncStep[]
+  // Foto delle ricette generate dall'agente image-chef del dojo (NUT-036); senza, la rotta risponde 503.
+  photos?: PhotoGenerator
   // Chi fa i giri, condiviso con il giro periodico di index.ts; senza, lo
   // si costruisce da yazio e syncSteps.
   sync?: SyncRunner
@@ -257,6 +268,7 @@ export function nutritionRoutes({
   now = () => new Date(),
   external = offline,
   yazio,
+  photos,
   syncSteps = SYNC_STEPS,
   sync = createSyncRunner({ yazio, steps: syncSteps, flushSteps: FLUSH_STEPS, hasPending, now }),
 }: NutritionDeps) {
@@ -541,6 +553,29 @@ export function nutritionRoutes({
       if (err instanceof YazioError) throw new YazioUnavailableError('YAZIO non risponde')
       throw err
     }
+  })
+
+  // Foto generata (NUT-036): si avvia e torna subito; lo stato sta nella ricetta.
+  app.post('/recipes/:id/photo/generate', async (c) => {
+    const id = check(Id, c.req.param('id'))
+    if (!photos) {
+      return c.json(
+        { error: 'photos_not_configured', message: 'La generazione delle foto non è configurata' },
+        503,
+      )
+    }
+    await startPhoto(c.get('db'), photos, id)
+    return c.json(await getRecipe(c.get('db'), id), 202)
+  })
+
+  app.get('/recipes/:id/photo', async (c) => {
+    const id = check(Id, c.req.param('id'))
+    if (!photos) throw new NotFoundError('Foto non trovata')
+    const { data, type } = await readPhoto(photos.dir, id)
+    return c.body(new Uint8Array(data), 200, {
+      'Content-Type': type,
+      'Cache-Control': 'private, max-age=86400',
+    })
   })
 
   app.put('/recipes/:id', async (c) => {

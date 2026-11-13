@@ -18,6 +18,8 @@ export type Config = {
   yazio?: YazioConfig & { tokenKey: string }
   // OpenFoodFacts e USDA per la ricerca alimenti (NUT-004, NUT-005).
   foods: ExternalConfig
+  // Foto delle ricette generate da image-chef nel dojo (NUT-036): attiva solo con URL e chiave del gateway.
+  photos?: { url: string; key: string; dir: string; agentDir: string }
   // Login della dashboard (AUTH-002): hash scrypt della password.
   auth: { passwordHash?: string; cookieSecure: boolean }
   // Modulo Documenti (DOC-015): chiave AES-256 in base64.
@@ -43,6 +45,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     },
     databaseUrl: env.DATABASE_URL || undefined,
     yazio: yazioConfig(env),
+    photos:
+      env.HERMES_URL && env.HERMES_API_KEY
+        ? {
+            url: env.HERMES_URL,
+            key: env.HERMES_API_KEY,
+            dir: env.RECIPE_PHOTOS_DIR || 'data/foto-ricette',
+            agentDir: env.RECIPE_PHOTOS_AGENT_DIR || '/opt/data/work/foto-ricette',
+          }
+        : undefined,
     foods: {
       offUrl: (env.OFF_URL ?? 'https://world.openfoodfacts.org').replace(/\/+$/, ''),
       offSearchUrl: (env.OFF_SEARCH_URL ?? 'https://search.openfoodfacts.org').replace(/\/+$/, ''),
