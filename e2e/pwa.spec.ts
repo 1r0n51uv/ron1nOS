@@ -4,6 +4,9 @@ test.use({ storageState: { cookies: [], origins: [] } })
 
 test('la dashboard si può installare: manifest, icone e service worker', async ({ page, request }) => {
   await page.goto('/login')
+  // Dietro Cloudflare Access il manifest senza cookie torna come pagina di
+  // login: serve la richiesta con le credenziali.
+  await expect(page.locator('link[rel="manifest"]')).toHaveAttribute('crossorigin', 'use-credentials')
   const href = await page.locator('link[rel="manifest"]').getAttribute('href')
   const manifest = await (await request.get(href!)).json()
   expect(manifest).toMatchObject({ name: 'ron1nOS', display: 'standalone', start_url: '/' })
