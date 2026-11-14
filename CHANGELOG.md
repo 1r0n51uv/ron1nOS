@@ -5,6 +5,10 @@ in alto. Ogni PR aggiunge la sua riga in cima, sotto il giorno del merge.
 Il server segue il tag `main` dell'immagine; per tornare indietro c'è
 `sha-<commit>`.
 
+## 2026-11-14
+
+- L'installazione come app funziona dietro Cloudflare Access: il manifest viene richiesto con i cookie, altrimenti Chrome riceveva la pagina di login (PWA-001) ([#250](https://github.com/1r0n51uv/ron1nOS/pull/250))
+
 ## 2026-11-13
 
 - Il login chiede un codice di 4 cifre al posto della password, e la dashboard si installa come app su tablet (manifest, icone, service worker); `AUTH_PASSWORD_HASH` va rigenerato con `npm run auth:hash` (AUTH-007) ([#249](https://github.com/1r0n51uv/ron1nOS/pull/249))

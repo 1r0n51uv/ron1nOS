@@ -21,6 +21,9 @@ Accettazione:
 
 - [x] `manifest.webmanifest` con nome, `display: standalone`, colori del
       tema e icone 192, 512 e maskable 512; `apple-touch-icon` per iPad.
+- [x] Il link al manifest manda i cookie (`crossorigin="use-credentials"`):
+      dietro Cloudflare Access, senza, il browser riceve la pagina di login
+      al posto del manifest e non offre l'installazione.
 - [x] Un service worker (`sw.js`) registrato in produzione: rete per
       prima, e senza rete mostra la pagina di avvio. Non mette in cache le
       API né i dati.
