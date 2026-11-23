@@ -431,6 +431,25 @@ Accettazione:
 - [ ] Il pasto programmato porta la foto della sua ricetta: `recipeImage`
       in `GET /nutrition/day` e `imageUrl` in `GET /nutrition/week`.
 
+#### NUT-037 · Categorie e ricette composte
+
+Stato: in corso · Origine: nuovo · Serve a IOS-046 dell'app iOS
+
+Le ricette si dividono per momento e temperatura e si possono comporre.
+
+Accettazione:
+
+- [ ] La ricetta ha `categories`: zero o più fra `lunch`, `dinner`, `snack`,
+      `cold`, `hot`. Si impostano con `POST`/`PUT` (omesse in una modifica
+      restano) o da sole con `PATCH /nutrition/recipes/{id}`. Migrazione `0021`.
+- [ ] Una ricetta composta ha `parts`: altre ricette con ruolo (`course`,
+      `side`, `bread`) e porzioni, al posto degli alimenti. Kcal, macro, peso e
+      `items` sono la somma delle parti per le loro porzioni, quindi piano,
+      spesa e foto funzionano come per una ricetta semplice.
+- [ ] Una parte è una ricetta semplice: né la stessa ricetta né un'altra
+      composta. Eliminare una ricetta usata come parte dà 409 `recipe_in_use`.
+- [ ] Rotte in `api/openapi.yaml`, con test.
+
 #### NUT-028 · Alimenti recenti
 
 Stato: fatto (#214) · Origine: nuovo · Serve a IOS-031 dell'app iOS
