@@ -23,7 +23,16 @@ import {
 import { logMeal, nextSlot, removeItem, setGrams, slotForHour } from './meals.ts'
 import { Amount, Day, Grams, Slot } from './schemas.ts'
 import { deletePlan, setPlan, setPlanStatus } from './plans.ts'
-import { createRecipe, deleteRecipe, getRecipe, listRecipes, updateRecipe } from './recipes.ts'
+import {
+  CATEGORIES,
+  createRecipe,
+  deleteRecipe,
+  getRecipe,
+  listRecipes,
+  ROLES,
+  setCategories,
+  updateRecipe,
+} from './recipes.ts'
 import { countUnmatched, listUnmatched, setEquivalent } from './matching.ts'
 import { getReport } from './report.ts'
 import { recentFoods } from './foods.ts'
@@ -162,24 +171,44 @@ const RecipeActionInput = z.object({
   enabled: z.boolean(),
 })
 
-const RecipeInput = z.object({
-  name: z.string().trim().min(1).max(200),
-  notes: z.preprocess(
-    (v) => (typeof v === 'string' && v.trim() === '' ? null : v),
-    z.string().trim().max(2000).nullable().default(null),
-  ),
-  // Il procedimento, un passo per elemento (NUT-030). Omesso in una modifica
-  // resta com'è: la dashboard web non lo conosce.
-  steps: z.array(z.string().trim().min(1).max(1000)).max(50).optional(),
-  // Le azioni collegate (NUT-035). Omesse in una modifica restano come sono.
-  actions: z.array(RecipeActionInput).max(10).optional(),
-  items: z
-    .array(
-      z.union([z.object({ foodId: z.uuid(), grams: Grams }), z.object({ food: Candidate, grams: Grams })]),
-    )
-    .min(1)
-    .max(50),
-})
+const RecipeCategories = z.array(z.enum(CATEGORIES)).max(CATEGORIES.length)
+
+const RecipeInput = z
+  .object({
+    name: z.string().trim().min(1).max(200),
+    notes: z.preprocess(
+      (v) => (typeof v === 'string' && v.trim() === '' ? null : v),
+      z.string().trim().max(2000).nullable().default(null),
+    ),
+    // Il procedimento, un passo per elemento (NUT-030). Omesso in una modifica
+    // resta com'è: la dashboard web non lo conosce.
+    steps: z.array(z.string().trim().min(1).max(1000)).max(50).optional(),
+    // Le azioni collegate (NUT-035). Omesse in una modifica restano come sono.
+    actions: z.array(RecipeActionInput).max(10).optional(),
+    // Le categorie (NUT-037). Omesse in una modifica restano come sono.
+    categories: RecipeCategories.optional(),
+    // Una ricetta composta (NUT-037) ha `parts` al posto di `items`.
+    parts: z
+      .array(
+        z.object({
+          role: z.enum(ROLES),
+          recipeId: z.uuid(),
+          factor: z.number().finite().min(0.1).max(10).default(1),
+        }),
+      )
+      .max(10)
+      .optional(),
+    items: z
+      .array(
+        z.union([z.object({ foodId: z.uuid(), grams: Grams }), z.object({ food: Candidate, grams: Grams })]),
+      )
+      .max(50)
+      .optional(),
+  })
+  .refine((r) => (r.parts?.length ?? 0) > 0 !== (r.items?.length ?? 0) > 0, {
+    path: ['items'],
+    message: 'Servono gli alimenti o le parti, non entrambi',
+  })
 
 // Programmazione di un template (NUT-031): da `from` fino a `until`, o fino
 // alla fine della settimana di `from`.
@@ -583,6 +612,15 @@ export function nutritionRoutes({
     const input = await readJson(c, RecipeInput)
     const db = c.get('db')
     await db.tx((tx) => updateRecipe(tx, id, input))
+    return c.json(await getRecipe(db, id))
+  })
+
+  // Le sole categorie (NUT-037).
+  app.patch('/recipes/:id', async (c) => {
+    const id = check(Id, c.req.param('id'))
+    const { categories } = await readJson(c, z.object({ categories: RecipeCategories }).strict())
+    const db = c.get('db')
+    await setCategories(db, id, [...new Set(categories)])
     return c.json(await getRecipe(db, id))
   })
 

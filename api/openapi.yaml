@@ -2070,11 +2070,40 @@ paths:
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
+    patch:
+      summary: Cambia le sole categorie di una ricetta (NUT-037)
+      operationId: setRecipeCategories
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [categories]
+              properties:
+                categories:
+                  type: array
+                  maxItems: 5
+                  items: { $ref: "#/components/schemas/RecipeCategory" }
+      responses:
+        "200":
+          description: La ricetta aggiornata.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Recipe" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/DatabaseUnavailable" }
     delete:
       summary: Elimina una ricetta (NUT-008)
       operationId: deleteRecipe
       responses:
         "204": { description: Eliminata. }
+        "409":
+          description: "`recipe_in_use`: la ricetta fa parte di una composta."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
         "400": { $ref: "#/components/responses/InvalidRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/DatabaseUnavailable" }
@@ -3513,11 +3542,21 @@ components:
         - { $ref: "#/components/schemas/Macros" }
         - type: object
           description: Kcal e macro dagli alimenti di oggi.
-          required: [id, name, notes, steps, imageUrl, photo, actions, grams, items]
+          required: [id, name, notes, categories, parts, steps, imageUrl, photo, actions, grams, items]
           properties:
             id: { type: string, format: uuid }
             name: { type: string }
             notes: { type: [string, "null"] }
+            categories:
+              type: array
+              description: Le categorie della ricetta (NUT-037).
+              items: { $ref: "#/components/schemas/RecipeCategory" }
+            parts:
+              type: array
+              description: >-
+                Le ricette che compongono questa, una per ruolo (NUT-037); vuoto per una
+                ricetta semplice. In una composta `items` e i totali sono la somma delle parti.
+              items: { $ref: "#/components/schemas/RecipePart" }
             steps:
               type: array
               description: Il procedimento, un passo per elemento (NUT-030).
@@ -3547,12 +3586,29 @@ components:
                   - type: object
                     required: [id, foodId, name, grams, missing]
                     properties:
-                      id: { type: string, format: uuid }
+                      id: { type: string }
                       foodId: { type: [string, "null"], format: uuid }
                       name: { type: string }
                       grams: { type: number }
                       missing:
                         { type: boolean, description: "L'alimento è stato eliminato: la riga non conta." }
+    RecipeCategory:
+      type: string
+      enum: [lunch, dinner, snack, cold, hot]
+      description: Pranzo, cena, spuntino, freddo, caldo (NUT-037).
+    RecipePart:
+      type: object
+      description: Una ricetta dentro una composta (NUT-037), per `factor` porzioni.
+      required: [id, role, recipeId, name, imageUrl, factor, kcal]
+      properties:
+        id: { type: string, format: uuid }
+        role:
+          { type: string, enum: [course, side, bread], description: "Portata, contorno, pane o crackers." }
+        recipeId: { type: string, format: uuid }
+        name: { type: string }
+        imageUrl: { type: [string, "null"] }
+        factor: { type: number, minimum: 0.1, maximum: 10 }
+        kcal: { type: number, description: "kcal della parte, già per `factor`." }
     RecipeAction:
       type: object
       description: >-
@@ -3568,10 +3624,30 @@ components:
         enabled: { type: boolean }
     RecipeInput:
       type: object
-      required: [name, items]
+      required: [name]
+      description: Servono `items` (ricetta semplice) oppure `parts` (composta, NUT-037), non entrambi.
       properties:
         name: { type: string, minLength: 1, maxLength: 200 }
         notes: { type: [string, "null"], maxLength: 2000, description: Una stringa vuota vale null. }
+        categories:
+          type: array
+          maxItems: 5
+          description: "Omesse, in una modifica restano come sono; alla creazione valgono []."
+          items: { $ref: "#/components/schemas/RecipeCategory" }
+        parts:
+          type: array
+          minItems: 1
+          maxItems: 10
+          description: >-
+            Ricette semplici (mai la stessa ricetta né una composta), con ruolo e porzioni.
+            Una ricetta usata come parte non si può eliminare (409 `recipe_in_use`).
+          items:
+            type: object
+            required: [role, recipeId]
+            properties:
+              role: { type: string, enum: [course, side, bread] }
+              recipeId: { type: string, format: uuid }
+              factor: { type: number, minimum: 0.1, maximum: 10, default: 1 }
         steps:
           type: array
           maxItems: 50

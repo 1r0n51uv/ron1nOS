@@ -5,6 +5,10 @@ in alto. Ogni PR aggiunge la sua riga in cima, sotto il giorno del merge.
 Il server segue il tag `main` dell'immagine; per tornare indietro c'è
 `sha-<commit>`.
 
+## 2026-11-15
+
+- Le ricette hanno le categorie (pranzo, cena, spuntino, freddo, caldo) e possono essere composte da altre ricette (portata, contorno, pane o crackers); `PATCH /nutrition/recipes/{id}` cambia le sole categorie (NUT-037)
+
 ## 2026-11-14
 
 - L'installazione come app funziona dietro Cloudflare Access: il manifest viene richiesto con i cookie, altrimenti Chrome riceveva la pagina di login (PWA-001) ([#250](https://github.com/1r0n51uv/ron1nOS/pull/250))

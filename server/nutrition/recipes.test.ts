@@ -250,4 +250,181 @@ describe('procedimento di una ricetta (NUT-030)', () => {
     const res = await api.post('/recipes', { name: 'X', steps, items: [{ foodId: f.riso, grams: 80 }] })
     expect(res.status).toBe(400)
   })
+
+  describe('categorie (NUT-037)', () => {
+    it('si salvano alla creazione e cambiano da sole con PATCH', async () => {
+      const f = await foods()
+      const api = nutritionApp(db, { now })
+      const created = await api.post('/recipes', {
+        name: 'Insalata di riso',
+        categories: ['lunch', 'cold'],
+        items: [{ foodId: f.riso, grams: 80 }],
+      })
+      expect(created.body.categories).toEqual(['lunch', 'cold'])
+      const patched = await api.patch(`/recipes/${created.body.id}`, {
+        categories: ['dinner', 'dinner', 'hot'],
+      })
+      expect(patched.status).toBe(200)
+      expect(patched.body.categories).toEqual(['dinner', 'hot'])
+      expect(patched.body.items).toHaveLength(1)
+    })
+
+    it('senza categorie è un elenco vuoto, e una modifica che le omette le lascia', async () => {
+      const f = await foods()
+      const api = nutritionApp(db, { now })
+      const created = await api.post('/recipes', { name: 'Riso', items: [{ foodId: f.riso, grams: 80 }] })
+      expect(created.body.categories).toEqual([])
+      await api.patch(`/recipes/${created.body.id}`, { categories: ['snack'] })
+      const updated = await api.put(`/recipes/${created.body.id}`, {
+        name: 'Riso',
+        items: [{ foodId: f.riso, grams: 90 }],
+      })
+      expect(updated.body.categories).toEqual(['snack'])
+    })
+
+    it('rifiuta una categoria che non esiste e PATCH su una ricetta assente', async () => {
+      const f = await foods()
+      const api = nutritionApp(db, { now })
+      const bad = await api.post('/recipes', {
+        name: 'X',
+        categories: ['brunch'],
+        items: [{ foodId: f.riso, grams: 80 }],
+      })
+      expect(bad.status).toBe(400)
+      const missing = await api.patch('/recipes/00000000-0000-4000-8000-000000000000', { categories: [] })
+      expect(missing.status).toBe(404)
+    })
+  })
+
+  describe('ricette composte (NUT-037)', () => {
+    async function parti() {
+      const f = await foods()
+      const api = nutritionApp(db, { now })
+      const pollo = await api.post('/recipes', { name: 'Pollo', items: [{ foodId: f.pollo, grams: 150 }] })
+      const zucchine = await api.post('/recipes', {
+        name: 'Zucchine',
+        items: [{ foodId: f.zucchine, grams: 200 }],
+      })
+      const riso = await api.post('/recipes', { name: 'Crackers', items: [{ foodId: f.riso, grams: 40 }] })
+      return { api, f, pollo: pollo.body.id, zucchine: zucchine.body.id, crackers: riso.body.id }
+    }
+
+    it('somma kcal, macro e alimenti delle parti, per porzioni', async () => {
+      const { api, pollo, zucchine, crackers } = await parti()
+      const res = await api.post('/recipes', {
+        name: 'Pranzo leggero',
+        categories: ['lunch'],
+        parts: [
+          { role: 'course', recipeId: pollo },
+          { role: 'side', recipeId: zucchine, factor: 1.5 },
+          { role: 'bread', recipeId: crackers, factor: 0.5 },
+        ],
+      })
+      expect(res.status).toBe(201)
+      // 165 + 51 + 70 kcal; 150 + 300 + 20 g.
+      expect(res.body).toMatchObject({ kcal: 286, grams: 470 })
+      expect(res.body.items.map((i: { name: string; grams: number }) => [i.name, i.grams])).toEqual([
+        ['Petto di pollo', 150],
+        ['Zucchine', 300],
+        ['Riso basmati', 20],
+      ])
+      expect(
+        res.body.parts.map((p: { role: string; name: string; factor: number; kcal: number }) => [
+          p.role,
+          p.name,
+          p.factor,
+          p.kcal,
+        ]),
+      ).toEqual([
+        ['course', 'Pollo', 1, 165],
+        ['side', 'Zucchine', 1.5, 51],
+        ['bread', 'Crackers', 0.5, 70],
+      ])
+    })
+
+    it('una ricetta semplice non ha parti, e una composta si può programmare', async () => {
+      const { api, pollo, zucchine } = await parti()
+      expect((await api.get(`/recipes/${pollo}`)).body.parts).toEqual([])
+      const composed = await api.post('/recipes', {
+        name: 'Cena',
+        parts: [
+          { role: 'course', recipeId: pollo },
+          { role: 'side', recipeId: zucchine },
+        ],
+      })
+      const plan = await api.put('/plans', {
+        date: '2026-10-22',
+        slot: 'dinner',
+        items: [{ recipeId: composed.body.id, factor: 1 }],
+      })
+      expect(plan.status).toBe(200)
+      expect(plan.body.slots.find((s: { slot: string }) => s.slot === 'dinner').planned.kcal).toBe(199)
+    })
+
+    it('si corregge cambiando le parti, o tornando ad alimenti', async () => {
+      const { api, f, pollo, zucchine } = await parti()
+      const created = await api.post('/recipes', {
+        name: 'Cena',
+        parts: [{ role: 'course', recipeId: pollo }],
+      })
+      const more = await api.put(`/recipes/${created.body.id}`, {
+        name: 'Cena',
+        parts: [
+          { role: 'course', recipeId: pollo },
+          { role: 'side', recipeId: zucchine },
+        ],
+      })
+      expect(more.body.parts).toHaveLength(2)
+      const simple = await api.put(`/recipes/${created.body.id}`, {
+        name: 'Cena',
+        items: [{ foodId: f.riso, grams: 100 }],
+      })
+      expect(simple.body.parts).toEqual([])
+      expect(simple.body.kcal).toBe(350)
+    })
+
+    it('non si annida, non contiene se stessa e non vuole alimenti insieme alle parti', async () => {
+      const { api, f, pollo, zucchine } = await parti()
+      const composed = await api.post('/recipes', {
+        name: 'Cena',
+        parts: [{ role: 'course', recipeId: pollo }],
+      })
+      const nested = await api.post('/recipes', {
+        name: 'Doppia',
+        parts: [{ role: 'course', recipeId: composed.body.id }],
+      })
+      expect(nested.status).toBe(400)
+      const self = await api.put(`/recipes/${zucchine}`, {
+        name: 'Zucchine',
+        parts: [{ role: 'side', recipeId: zucchine }],
+      })
+      expect(self.status).toBe(400)
+      const both = await api.post('/recipes', {
+        name: 'Misto',
+        parts: [{ role: 'course', recipeId: pollo }],
+        items: [{ foodId: f.riso, grams: 10 }],
+      })
+      expect(both.status).toBe(400)
+      const none = await api.post('/recipes', { name: 'Vuota' })
+      expect(none.status).toBe(400)
+      const absent = await api.post('/recipes', {
+        name: 'Fantasma',
+        parts: [{ role: 'course', recipeId: '00000000-0000-4000-8000-000000000000' }],
+      })
+      expect(absent.status).toBe(404)
+    })
+
+    it('una ricetta usata da una composta non si elimina; la composta sì', async () => {
+      const { api, pollo } = await parti()
+      const composed = await api.post('/recipes', {
+        name: 'Cena',
+        parts: [{ role: 'course', recipeId: pollo }],
+      })
+      const blocked = await api.delete(`/recipes/${pollo}`)
+      expect(blocked.status).toBe(409)
+      expect(blocked.body.error).toBe('recipe_in_use')
+      expect((await api.delete(`/recipes/${composed.body.id}`)).status).toBe(204)
+      expect((await api.delete(`/recipes/${pollo}`)).status).toBe(204)
+    })
+  })
 })
